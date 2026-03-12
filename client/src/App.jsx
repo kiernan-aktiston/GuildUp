@@ -203,14 +203,14 @@ function TabBar({ active, onSwitch }) {
     <div style={{
       position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
       width: "100%", maxWidth: 430, display: "flex", zIndex: 100,
-      borderTop: `1px solid ${C.border}`,
+      borderTop: `1px solid ${C.border}`, background: "#1a1a2e",
     }}>
       {TABS.map(t => {
         const isActive = active === t.key;
         return (
           <button key={t.key} onClick={() => onSwitch(t.key)} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            background: isActive ? t.color : `${t.color}33`,
+            background: isActive ? t.color : "#1a1a2e",
             border: "none", cursor: "pointer",
             padding: "10px 0 env(safe-area-inset-bottom, 10px)",
             transition: "all 0.25s ease",
@@ -272,6 +272,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
     { id: "q1", name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2, stats: ["str", "spi"] },
     { id: "q2", name: "Journal Entry", desc: "Write half a page in your journal", xp: 15, gold: 2, stats: ["int", "spi"] },
     { id: "q3", name: "Expand your Network", desc: "Send a personalized message to someone you want in your network", xp: 15, gold: 2, stats: ["cha", "agi"] },
+    { id: "q4", name: "Connect with a Mentor", desc: "Have a meaningful conversation with a potential mentor", xp: 15, gold: 2, stats: ["cha", "int"] },
   ];
 
   // Weekly quests — auto-tracked based on rituals completed this week
@@ -283,7 +284,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
   const weeklyQuests = [
     { name: "Weekly Workout Goal", desc: "Complete 4+ workouts this week", xp: 50, gold: 10, progress: workoutsDone, target: 4 },
     { name: "Knowledge Seeker", desc: "Read 5+ times this week", xp: 50, gold: 10, progress: readsDone, target: 5 },
-    { name: "Connect with a Mentor", desc: "Have a meaningful conversation with a potential mentor", xp: 50, gold: 10, progress: reachOutsDone, target: 5 },
+    { name: "Community Builder", desc: "Reach out to someone 5+ times this week", xp: 50, gold: 10, progress: reachOutsDone, target: 5 },
   ];
 
   return (
@@ -316,31 +317,36 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
               border: `1px solid ${r.done ? C.ritualDone + "33" : "#4a2a2a44"}`,
               transition: "all 0.3s ease",
             }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 6,
-                border: `2px solid ${r.done ? C.ritualDone : C.xp + "66"}`,
-                background: r.done ? C.ritualDone : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.3s",
-              }}>
-                {r.done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
-              </div>
-              <span style={{ fontSize: 18 }}>{r.emoji}</span>
-              <span style={{
-                flex: 1, fontSize: 14, fontWeight: 500,
-                color: r.done ? C.textMuted : C.text,
-                textDecoration: r.done ? "line-through" : "none",
-              }}>{r.name}</span>
+              {/* Start button on left */}
               {!r.done && (
                 <button onClick={() => onOpenRitual(r)} style={{
                   padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
                   background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
                   color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
                   boxShadow: `0 2px 8px ${C.ritualDone}44`,
+                  flexShrink: 0,
                 }}>
                   Start
                 </button>
               )}
+              {r.done && <span style={{ color: C.ritualDone, fontSize: 18, flexShrink: 0 }}>✓</span>}
+              <span style={{ fontSize: 18 }}>{r.emoji}</span>
+              <span style={{
+                flex: 1, fontSize: 14, fontWeight: 500,
+                color: r.done ? C.textMuted : C.text,
+                textDecoration: r.done ? "line-through" : "none",
+              }}>{r.name}</span>
+              {/* Yellow checkbox on right when incomplete, green when done */}
+              <div style={{
+                width: 22, height: 22, borderRadius: 6,
+                border: `2px solid ${r.done ? C.ritualDone : C.gold}`,
+                background: r.done ? C.ritualDone : `${C.gold}22`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.3s",
+              }}>
+                {r.done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                {!r.done && <span style={{ color: C.gold, fontSize: 10, fontWeight: 700 }}>○</span>}
+              </div>
             </div>
           ))}
         </div>
@@ -354,37 +360,50 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         }}>
           Daily Quests
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {quests.map((q) => {
             const done = completedQuests.includes(q.id);
             return (
-              <div key={q.id}
-                onClick={() => !done && onCompleteQuest && onCompleteQuest(q.id, q.xp, q.gold, q.stats)}
-                style={{
-                  padding: "14px 16px", borderRadius: 10, cursor: done ? "default" : "pointer",
-                  background: done ? `${C.ritualDone}11` : C.surface,
-                  border: `1px solid ${done ? C.ritualDone + "33" : C.border}`,
-                  transition: "all 0.2s",
+              <div key={q.id} style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 14px", borderRadius: 10,
+                background: done
+                  ? `linear-gradient(90deg, ${C.ritualDone}18, ${C.ritualDone}08)`
+                  : C.surface,
+                border: `1px solid ${done ? C.ritualDone + "33" : C.border}`,
+                transition: "all 0.3s ease",
+              }}>
+                {/* Conquered button on left */}
+                {!done && (
+                  <button onClick={() => onCompleteQuest && onCompleteQuest(q.id, q.xp, q.gold, q.stats)} style={{
+                    padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+                    background: `linear-gradient(135deg, ${C.xp}, #6d28d9)`,
+                    color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+                    boxShadow: `0 2px 8px ${C.xp}44`,
+                    flexShrink: 0,
+                  }}>
+                    Conquered
+                  </button>
+                )}
+                {done && <span style={{ color: C.ritualDone, fontSize: 18, flexShrink: 0 }}>✓</span>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 14, fontWeight: 600,
+                    color: done ? C.textMuted : C.text,
+                    textDecoration: done ? "line-through" : "none",
+                  }}>{q.name}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{q.desc}</div>
+                </div>
+                {/* Yellow checkbox right when incomplete, green when done */}
+                <div style={{
+                  width: 22, height: 22, borderRadius: 6,
+                  border: `2px solid ${done ? C.ritualDone : C.gold}`,
+                  background: done ? C.ritualDone : `${C.gold}22`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
                 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{
-                      fontSize: 14, fontWeight: 600, marginBottom: 3,
-                      color: done ? C.textMuted : C.text,
-                      textDecoration: done ? "line-through" : "none",
-                    }}>{q.name}</div>
-                    <div style={{ fontSize: 12, color: C.textMuted }}>{q.desc}</div>
-                  </div>
-                  <div style={{ textAlign: "right", minWidth: 60 }}>
-                    {done ? (
-                      <span style={{ color: C.ritualDone, fontSize: 14 }}>✓</span>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: C.xp }}>+{q.xp} XP</div>
-                        <div style={{ fontSize: 11, color: C.gold }}>+{q.gold} 🪙</div>
-                      </>
-                    )}
-                  </div>
+                  {done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                  {!done && <span style={{ color: C.gold, fontSize: 10, fontWeight: 700 }}>○</span>}
                 </div>
               </div>
             );
