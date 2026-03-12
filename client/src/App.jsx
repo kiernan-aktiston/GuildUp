@@ -50,18 +50,28 @@ const CLASSES = {
 };
 
 const RANK_TITLES = {
-  1: "Novice", 2: "Initiate", 3: "Apprentice", 4: "Journeyman", 5: "Adept",
-  6: "Veteran", 7: "Elite", 8: "Champion", 9: "Legend",
+  1: "Novice", 5: "Initiate", 10: "Apprentice", 15: "Journeyman", 20: "Adept",
+  25: "Veteran", 30: "Elite", 35: "Champion", 40: "Legend", 50: "Myth",
 };
+
+function getRank(level) {
+  const milestones = [50, 40, 35, 30, 25, 20, 15, 10, 5, 1];
+  for (const m of milestones) {
+    if (level >= m && RANK_TITLES[m]) return RANK_TITLES[m];
+  }
+  return "Novice";
+}
 
 // ============================================
 // LEVELING ENGINE
 // ============================================
 
-// XP required to reach next level (gradual scaling)
+// XP required to reach next level (custom curve from game bible)
+const XP_TABLE = [0, 5, 25, 75, 150, 200, 300, 350, 400, 450];
 function xpForLevel(level) {
-  // Level 1→2: 100, Level 2→3: 150, Level 3→4: 200, etc.
-  return 100 + (level - 1) * 50;
+  if (level <= 9) return XP_TABLE[level] || 5;
+  // Level 10+: 550 base + 50 per level above 10
+  return 550 + (level - 10) * 50;
 }
 
 // Total XP from level 1 to reach a given level
@@ -247,9 +257,9 @@ function XPBar({ xp = 340, maxXp = 500, level = 4 }) {
 // ============================================
 // QUESTS SCREEN
 // ============================================
-function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warrior", playerLevel = 1 }) {
+function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [], onCompleteQuest, playerClass = "warrior", playerLevel = 1 }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
-  const rank = RANK_TITLES[Math.min(playerLevel, 9)] || (playerLevel <= 24 ? "Veteran" : "Elite");
+  const rank = getRank(playerLevel);
   const rituals = [
     { name: "Bodyweight Workout", emoji: "⚔️" },
     { name: "Walk/Jog 20min", emoji: "🏹" },
@@ -259,9 +269,21 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warr
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
 
   const quests = [
-    { name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2 },
-    { name: "Journal Entry", desc: "Write half a page in your journal", xp: 15, gold: 2 },
-    { name: "Compliment a Stranger", desc: "Genuine compliment to someone new", xp: 15, gold: 2 },
+    { id: "q1", name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2, stats: ["str", "spi"] },
+    { id: "q2", name: "Journal Entry", desc: "Write half a page in your journal", xp: 15, gold: 2, stats: ["int", "spi"] },
+    { id: "q3", name: "Expand your Network", desc: "Send a personalized message to someone you want in your network", xp: 15, gold: 2, stats: ["cha", "agi"] },
+  ];
+
+  // Weekly quests — auto-tracked based on rituals completed this week
+  const ritualsCompletedCount = Object.values(completedRituals).filter(Boolean).length;
+  const workoutsDone = completedRituals["Bodyweight Workout"] ? 1 : 0;
+  const readsDone = completedRituals["Read 20min"] ? 1 : 0;
+  const reachOutsDone = completedRituals["Reach Out"] ? 1 : 0;
+
+  const weeklyQuests = [
+    { name: "Weekly Workout Goal", desc: "Complete 4+ workouts this week", xp: 50, gold: 10, progress: workoutsDone, target: 4 },
+    { name: "Knowledge Seeker", desc: "Read 5+ times this week", xp: 50, gold: 10, progress: readsDone, target: 5 },
+    { name: "Connect with a Mentor", desc: "Have a meaningful conversation with a potential mentor", xp: 50, gold: 10, progress: reachOutsDone, target: 5 },
   ];
 
   return (
@@ -294,7 +316,6 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warr
               border: `1px solid ${r.done ? C.ritualDone + "33" : "#4a2a2a44"}`,
               transition: "all 0.3s ease",
             }}>
-              {/* Checkbox */}
               <div style={{
                 width: 22, height: 22, borderRadius: 6,
                 border: `2px solid ${r.done ? C.ritualDone : C.xp + "66"}`,
@@ -304,14 +325,12 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warr
               }}>
                 {r.done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
               </div>
-
               <span style={{ fontSize: 18 }}>{r.emoji}</span>
               <span style={{
                 flex: 1, fontSize: 14, fontWeight: 500,
                 color: r.done ? C.textMuted : C.text,
                 textDecoration: r.done ? "line-through" : "none",
               }}>{r.name}</span>
-
               {!r.done && (
                 <button onClick={() => onOpenRitual(r)} style={{
                   padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
@@ -328,7 +347,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warr
       </div>
 
       {/* Daily Quests */}
-      <div>
+      <div style={{ marginBottom: 24 }}>
         <div style={{
           fontSize: 13, fontWeight: 700, color: C.gold, letterSpacing: 1.5,
           textTransform: "uppercase", marginBottom: 12, fontFamily: "'Cinzel', serif",
@@ -336,23 +355,87 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warr
           Daily Quests
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {quests.map((q, i) => (
-            <div key={i} style={{
-              padding: "14px 16px", borderRadius: 10,
-              background: C.surface, border: `1px solid ${C.border}`,
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>{q.name}</div>
-                  <div style={{ fontSize: 12, color: C.textMuted }}>{q.desc}</div>
-                </div>
-                <div style={{ textAlign: "right", minWidth: 60 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.xp }}>+{q.xp} XP</div>
-                  <div style={{ fontSize: 11, color: C.gold }}>+{q.gold} 🪙</div>
+          {quests.map((q) => {
+            const done = completedQuests.includes(q.id);
+            return (
+              <div key={q.id}
+                onClick={() => !done && onCompleteQuest && onCompleteQuest(q.id, q.xp, q.gold, q.stats)}
+                style={{
+                  padding: "14px 16px", borderRadius: 10, cursor: done ? "default" : "pointer",
+                  background: done ? `${C.ritualDone}11` : C.surface,
+                  border: `1px solid ${done ? C.ritualDone + "33" : C.border}`,
+                  transition: "all 0.2s",
+                }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{
+                      fontSize: 14, fontWeight: 600, marginBottom: 3,
+                      color: done ? C.textMuted : C.text,
+                      textDecoration: done ? "line-through" : "none",
+                    }}>{q.name}</div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>{q.desc}</div>
+                  </div>
+                  <div style={{ textAlign: "right", minWidth: 60 }}>
+                    {done ? (
+                      <span style={{ color: C.ritualDone, fontSize: 14 }}>✓</span>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: C.xp }}>+{q.xp} XP</div>
+                        <div style={{ fontSize: 11, color: C.gold }}>+{q.gold} 🪙</div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Weekly Quests */}
+      <div>
+        <div style={{
+          fontSize: 13, fontWeight: 700, color: C.gold, letterSpacing: 1.5,
+          textTransform: "uppercase", marginBottom: 12, fontFamily: "'Cinzel', serif",
+        }}>
+          Weekly Quests
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {weeklyQuests.map((q, i) => {
+            const done = q.progress >= q.target;
+            return (
+              <div key={i} style={{
+                padding: "14px 16px", borderRadius: 10,
+                background: done ? `${C.ritualDone}11` : C.surface,
+                border: `1px solid ${done ? C.ritualDone + "33" : C.border}`,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div>
+                    <div style={{
+                      fontSize: 14, fontWeight: 600, marginBottom: 3,
+                      color: done ? C.ritualDone : C.text,
+                    }}>{q.name} {done && "✓"}</div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>{q.desc}</div>
+                  </div>
+                  <div style={{ textAlign: "right", minWidth: 60 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: C.xp }}>+{q.xp} XP</div>
+                    <div style={{ fontSize: 11, color: C.gold }}>+{q.gold} 🪙</div>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div style={{ height: 4, background: C.surfaceLight, borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    width: `${Math.min((q.progress / q.target) * 100, 100)}%`, height: "100%", borderRadius: 2,
+                    background: done ? C.ritualDone : C.xp,
+                    transition: "width 0.5s ease",
+                  }} />
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                  {q.progress} / {q.target} this week
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -678,7 +761,7 @@ function RitualDetailScreen({ ritual, onBack }) {
 // ============================================
 function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
-  const rank = RANK_TITLES[Math.min(playerLevel, 9)] || (playerLevel <= 24 ? "Veteran" : "Elite");
+  const rank = getRank(playerLevel);
   const maxStat = Math.max(playerStats.str || 10, playerStats.agi || 10, playerStats.int || 10, playerStats.spi || 10, playerStats.cha || 10, 1);
   const stats = [
     { label: "Strength", pct: ((playerStats.str || 10) / maxStat) * 100, color: "#ef4444" },
@@ -916,29 +999,137 @@ function StoreScreen({ playerGold = 247 }) {
 // ============================================
 // GUILD SCREEN (placeholder)
 // ============================================
-function GuildScreen() {
+function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJoinByCode }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [guildName, setGuildName] = useState("");
+  const [guildDesc, setGuildDesc] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [error, setError] = useState("");
+
+  const inputStyle = {
+    width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 14,
+    background: C.surfaceLight, border: `1px solid ${C.border}`,
+    color: C.text, outline: "none",
+  };
+
+  if (!userGuild && !showCreate && !showJoin) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
+        animation: "fadeIn 0.3s ease",
+      }}>
+        <div style={{ fontSize: 64, marginBottom: 16 }}>🏰</div>
+        <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.tabGuild, marginBottom: 8 }}>No Guild Yet</h3>
+        <p style={{ color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6, marginBottom: 32 }}>
+          Join forces with others. Create a guild or enter an invite code.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
+          <button onClick={() => setShowCreate(true)} style={{
+            padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.tabGuild}, #16a34a)`,
+            color: "#fff", fontSize: 15, fontWeight: 700, width: "100%",
+          }}>Create a Guild</button>
+          <button onClick={() => setShowJoin(true)} style={{
+            padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: C.surfaceLight, border: `1px solid ${C.border}`,
+            color: C.text, fontSize: 15, fontWeight: 500, width: "100%",
+          }}>Join with Invite Code</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showCreate) {
+    return (
+      <div style={{ padding: "40px 24px 120px", animation: "fadeIn 0.3s ease" }}>
+        <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: C.gold, marginBottom: 20 }}>Create Guild</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <input type="text" placeholder="Guild Name" value={guildName} onChange={e => setGuildName(e.target.value)} style={inputStyle} />
+          <input type="text" placeholder="Description (optional)" value={guildDesc} onChange={e => setGuildDesc(e.target.value)} style={inputStyle} />
+          {error && <div style={{ color: "#ef4444", fontSize: 13 }}>{error}</div>}
+          <button onClick={async () => {
+            if (!guildName.trim()) return;
+            try { await onCreateGuild(guildName, guildDesc); setShowCreate(false); }
+            catch (e) { setError(e.message); }
+          }} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.tabGuild}, #16a34a)`,
+            color: "#fff", fontSize: 15, fontWeight: 700,
+          }}>Found Guild</button>
+          <button onClick={() => setShowCreate(false)} style={{
+            background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 14,
+          }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showJoin) {
+    return (
+      <div style={{ padding: "40px 24px 120px", animation: "fadeIn 0.3s ease" }}>
+        <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: C.gold, marginBottom: 20 }}>Join Guild</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <input type="text" placeholder="Enter invite code" value={inviteCode} onChange={e => setInviteCode(e.target.value)} style={inputStyle} />
+          {error && <div style={{ color: "#ef4444", fontSize: 13 }}>{error}</div>}
+          <button onClick={async () => {
+            if (!inviteCode.trim()) return;
+            try { await onJoinByCode(inviteCode); setShowJoin(false); }
+            catch (e) { setError(e.message || "Invalid invite code"); }
+          }} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            color: "#000", fontSize: 15, fontWeight: 700,
+          }}>Join</button>
+          <button onClick={() => setShowJoin(false)} style={{
+            background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 14,
+          }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show guild info
+  const guild = userGuild?.guilds || {};
   return (
-    <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
-      animation: "fadeIn 0.3s ease",
-    }}>
-      <div style={{ fontSize: 64, marginBottom: 16 }}>🏰</div>
-      <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.tabGuild, marginBottom: 8 }}>No Guild Yet</h3>
-      <p style={{ color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6, marginBottom: 32 }}>
-        Join forces with others. Create a guild or enter an invite code.
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
-        <button style={{
-          padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
-          background: `linear-gradient(135deg, ${C.tabGuild}, #16a34a)`,
-          color: "#fff", fontSize: 15, fontWeight: 700, width: "100%",
-        }}>Create a Guild</button>
-        <button style={{
-          padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
-          background: C.surfaceLight, border: `1px solid ${C.border}`,
-          color: C.text, fontSize: 15, fontWeight: 500, width: "100%",
-        }}>Join with Invite Code</button>
+    <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease" }}>
+      <div style={{
+        padding: 20, borderRadius: 16, textAlign: "center", marginBottom: 20,
+        background: C.surface, border: `1px solid ${C.border}`,
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 8 }}>🏰</div>
+        <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.tabGuild }}>{guild.name || "Guild"}</h3>
+        {guild.description && <p style={{ color: C.textMuted, fontSize: 13, marginTop: 4 }}>{guild.description}</p>}
+        <div style={{
+          marginTop: 16, padding: "8px 14px", background: C.surfaceLight, borderRadius: 8, display: "inline-block",
+        }}>
+          <span style={{ fontSize: 12, color: C.textMuted }}>Invite Code: </span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.gold, fontFamily: "monospace" }}>{guild.invite_code || "—"}</span>
+        </div>
+      </div>
+
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14, fontFamily: "'Cinzel', serif" }}>
+        Members
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {guildMembers.map((m, i) => {
+          const p = m.profiles || {};
+          const memberClass = CLASSES[p.class] || { emoji: "⚔️", title: "Adventurer" };
+          return (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 12, padding: 14,
+              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+            }}>
+              <span style={{ fontSize: 24 }}>{memberClass.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{p.display_name || "Member"}</div>
+                <div style={{ fontSize: 12, color: C.textMuted }}>Lv.{p.level || 1} {memberClass.title}</div>
+              </div>
+              {m.role === "leader" && <span style={{ fontSize: 11, color: C.gold }}>👑 Leader</span>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1296,7 +1487,7 @@ function InterviewScreen({ onComplete }) {
 // ============================================
 function ClassRevealScreen({ className, startingLevel, onContinue }) {
   const cls = CLASSES[className] || CLASSES.warrior;
-  const rank = RANK_TITLES[startingLevel] || "Novice";
+  const rank = getRank(startingLevel);
 
   return (
     <div style={{
@@ -1466,6 +1657,10 @@ export default function GuildUpMockup() {
   // Level up modal
   const [levelUpData, setLevelUpData] = useState(null);
 
+  // Guild state
+  const [userGuild, setUserGuild] = useState(null);
+  const [guildMembers, setGuildMembers] = useState([]);
+
   // Load profile from Supabase into local state
   const loadProfile = async (uid) => {
     try {
@@ -1494,6 +1689,39 @@ export default function GuildUpMockup() {
     }
   };
 
+  // Load today's completed rituals from Supabase
+  const loadTodayRituals = async (uid) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("daily_rituals").select("*").eq("user_id", uid).eq("ritual_date", today).maybeSingle();
+      if (data) {
+        const completed = {};
+        if (data.bodyweight_workout) completed["Bodyweight Workout"] = true;
+        if (data.walk_jog) completed["Walk/Jog 20min"] = true;
+        if (data.read_20) completed["Read 20min"] = true;
+        if (data.pray_meditate) completed["Pray/Meditate 10min"] = true;
+        if (data.reach_out) completed["Reach Out"] = true;
+        setCompletedRituals(completed);
+      }
+    } catch (e) { console.error("Failed to load rituals:", e); }
+  };
+
+  // Load guild
+  const loadGuild = async (uid) => {
+    try {
+      const { data } = await supabase
+        .from("guild_members").select("*, guilds(*)").eq("user_id", uid).maybeSingle();
+      if (data) {
+        setUserGuild(data);
+        const { data: members } = await supabase
+          .from("guild_members").select("*, profiles(display_name, class, level)")
+          .eq("guild_id", data.guild_id);
+        setGuildMembers(members || []);
+      }
+    } catch (e) { console.error("Failed to load guild:", e); }
+  };
+
   // Check for existing session on load
   useEffect(() => {
     const checkSession = async () => {
@@ -1501,16 +1729,22 @@ export default function GuildUpMockup() {
       if (session?.user) {
         setUserId(session.user.id);
         const onboarded = await loadProfile(session.user.id);
-        setScreen(onboarded ? "dashboard" : "welcome");
+        if (onboarded) {
+          await loadTodayRituals(session.user.id);
+          await loadGuild(session.user.id);
+          setScreen("dashboard");
+        } else {
+          setScreen("interviewIntro");
+        }
       } else {
-        setScreen("auth");
+        setScreen("welcome");
       }
     };
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        setScreen("auth");
+        setScreen("welcome");
         setUserId(null);
       }
     });
@@ -1530,7 +1764,7 @@ export default function GuildUpMockup() {
         if (data.user) {
           setUserId(data.user.id);
           setPlayerName(displayName || email.split("@")[0]);
-          setScreen("welcome");
+          setScreen("interviewIntro");
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -1539,10 +1773,12 @@ export default function GuildUpMockup() {
           setUserId(data.user.id);
           const onboarded = await loadProfile(data.user.id);
           if (onboarded) {
+            await loadTodayRituals(data.user.id);
+            await loadGuild(data.user.id);
             setScreen("dashboard");
           } else {
             setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
-            setScreen("welcome");
+            setScreen("interviewIntro");
           }
         }
       }
@@ -1554,7 +1790,7 @@ export default function GuildUpMockup() {
   // Sign out — real Supabase
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setScreen("auth");
+    setScreen("welcome");
     setUserId(null);
     setPlayerName("Adventurer");
     setPlayerClass("warrior");
@@ -1565,6 +1801,8 @@ export default function GuildUpMockup() {
     setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
     setCompletedRituals({});
     setCompletedQuests([]);
+    setUserGuild(null);
+    setGuildMembers([]);
     setTab("quests");
   };
 
@@ -1640,12 +1878,90 @@ export default function GuildUpMockup() {
     setPlayerXP(newXP);
   };
 
-  const handleRitualComplete = (ritualName) => {
+  const handleRitualComplete = async (ritualName) => {
     if (completedRituals[ritualName]) return;
     setCompletedRituals(prev => ({ ...prev, [ritualName]: true }));
     const stat = ACTIVITY_STAT_MAP[ritualName] || "str";
     awardXP(10, stat);
     setPlayerGold(prev => prev + 2);
+
+    // Save ritual to Supabase
+    if (userId) {
+      const today = new Date().toISOString().split("T")[0];
+      const ritualColumn = {
+        "Bodyweight Workout": "bodyweight_workout",
+        "Walk/Jog 20min": "walk_jog",
+        "Read 20min": "read_20",
+        "Pray/Meditate 10min": "pray_meditate",
+        "Reach Out": "reach_out",
+      }[ritualName];
+      if (ritualColumn) {
+        await supabase.from("daily_rituals").upsert({
+          user_id: userId, ritual_date: today, [ritualColumn]: true,
+        }, { onConflict: "user_id,ritual_date" });
+      }
+      // Save XP/gold/tally to profile
+      const profile = { xp: playerXP + 10, gold: playerGold + 2 };
+      profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
+      saveProfile(profile);
+    }
+  };
+
+  // Daily quest completion
+  const handleQuestComplete = async (questId, xpReward, goldReward, statCategories) => {
+    if (completedQuests.includes(questId)) return;
+    setCompletedQuests(prev => [...prev, questId]);
+
+    // Tally all stats for dual-stat quests
+    const stats = Array.isArray(statCategories) ? statCategories : [statCategories];
+    stats.forEach(stat => {
+      if (stat) setActivityTally(prev => ({ ...prev, [stat]: prev[stat] + 1 }));
+    });
+    awardXP(xpReward, null); // XP awarded without double-tallying
+    setPlayerGold(prev => prev + goldReward);
+
+    if (userId) {
+      const today = new Date().toISOString().split("T")[0];
+      await supabase.from("quest_progress").insert({
+        user_id: userId, quest_id: questId, quest_date: today,
+      });
+      const profile = { xp: playerXP + xpReward, gold: playerGold + goldReward };
+      stats.forEach(stat => {
+        if (stat) profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
+      });
+      saveProfile(profile);
+    }
+  };
+
+  // Guild handlers
+  const handleCreateGuild = async (name, description) => {
+    if (!userId) return;
+    try {
+      const { data: guild, error } = await supabase
+        .from("guilds").insert({ name, description, leader_id: userId }).select().single();
+      if (error) throw error;
+      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
+      setUserGuild({ guilds: guild, guild_id: guild.id });
+      setGuildMembers([{ user_id: userId, role: "leader", profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
+    } catch (e) {
+      console.error("Failed to create guild:", e);
+    }
+  };
+
+  const handleJoinByCode = async (code) => {
+    if (!userId) return;
+    try {
+      const { data: guild, error } = await supabase
+        .from("guilds").select("*").eq("invite_code", code).single();
+      if (error) throw new Error("Invalid invite code");
+      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
+      setUserGuild({ guilds: guild, guild_id: guild.id });
+      const { data: members } = await supabase
+        .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
+      setGuildMembers(members || []);
+    } catch (e) {
+      console.error("Failed to join guild:", e);
+    }
   };
 
   const xpNeeded = xpForLevel(playerLevel);
@@ -1682,8 +1998,34 @@ export default function GuildUpMockup() {
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 2 }}>GUILDUP</div>
           </div>
         )}
+        {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
         {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} />}
-        {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("interview")} />}
+        {screen === "interviewIntro" && (
+          <div style={{
+            minHeight: "100vh", display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", padding: 32,
+            animation: "fadeIn 0.4s ease",
+          }}>
+            <div style={{ fontSize: 64, marginBottom: 24 }}>🎭</div>
+            <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: C.gold, marginBottom: 12, textAlign: "center" }}>
+              Time to Discover Your Class
+            </h2>
+            <p style={{ color: C.textMuted, lineHeight: 1.7, fontSize: 15, textAlign: "center", marginBottom: 12 }}>
+              Answer 10 quick questions. The first 5 reveal your personality and determine your class.
+              The last 5 assess your current habits and set your starting level.
+            </p>
+            <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginBottom: 40 }}>
+              There are no wrong answers — just be honest.
+            </p>
+            <button onClick={() => setScreen("interview")} style={{
+              width: "100%", maxWidth: 300, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+              color: "#000", fontSize: 16, fontWeight: 700,
+            }}>
+              Begin
+            </button>
+          </div>
+        )}
         {screen === "interview" && <InterviewScreen onComplete={handleInterviewComplete} />}
         {screen === "reveal" && (
           <ClassRevealScreen className={playerClass} startingLevel={playerLevel} onContinue={() => setScreen("dashboard")} />
@@ -1704,6 +2046,8 @@ export default function GuildUpMockup() {
                   <QuestsScreen
                     onOpenRitual={(r) => setShowRitualDetail(r)}
                     completedRituals={completedRituals}
+                    completedQuests={completedQuests}
+                    onCompleteQuest={handleQuestComplete}
                     playerClass={playerClass}
                     playerLevel={playerLevel}
                   />
@@ -1717,7 +2061,13 @@ export default function GuildUpMockup() {
                 )}
                 {tab === "battle" && <BattleScreen />}
                 {tab === "store" && <StoreScreen playerGold={playerGold} />}
-                {tab === "guild" && <GuildScreen />}
+                {tab === "guild" && <GuildScreen
+                  userId={userId}
+                  onCreateGuild={handleCreateGuild}
+                  onJoinByCode={handleJoinByCode}
+                  userGuild={userGuild}
+                  guildMembers={guildMembers}
+                />}
               </>
             )}
             {!showRitualDetail && <XPBar xp={xpInLevel} maxXp={xpNeeded} level={playerLevel} />}
