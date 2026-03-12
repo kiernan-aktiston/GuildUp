@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
 // ============================================
 // DESIGN TOKENS
@@ -675,7 +676,7 @@ function RitualDetailScreen({ ritual, onBack }) {
 // ============================================
 // AVATAR / PROFILE SCREEN
 // ============================================
-function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0 }) {
+function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = RANK_TITLES[Math.min(playerLevel, 9)] || (playerLevel <= 24 ? "Veteran" : "Elite");
   const maxStat = Math.max(playerStats.str || 10, playerStats.agi || 10, playerStats.int || 10, playerStats.spi || 10, playerStats.cha || 10, 1);
@@ -725,7 +726,7 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
 
         {/* Name & Class */}
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-          Adventurer
+          {playerName}
         </div>
         <div style={{ fontSize: 14, color: cls.color, fontWeight: 600, marginBottom: 2 }}>
           {cls.title}
@@ -768,6 +769,17 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
           </div>
         ))}
       </div>
+
+      {/* Sign Out */}
+      {onSignOut && (
+        <button onClick={onSignOut} style={{
+          width: "100%", marginTop: 24, padding: "14px", borderRadius: 12,
+          background: "transparent", border: `1px solid #7f1d1d`,
+          color: "#fca5a5", fontSize: 14, fontWeight: 500, cursor: "pointer",
+        }}>
+          Sign Out
+        </button>
+      )}
     </div>
   );
 }
@@ -927,6 +939,86 @@ function GuildScreen() {
           background: C.surfaceLight, border: `1px solid ${C.border}`,
           color: C.text, fontSize: 15, fontWeight: 500, width: "100%",
         }}>Join with Invite Code</button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// AUTH SCREEN
+// ============================================
+function AuthScreen({ onAuth, serverError }) {
+  const [mode, setMode] = useState("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const displayError = error || serverError;
+
+  const inputStyle = {
+    width: "100%", padding: "14px 16px", borderRadius: 12, fontSize: 15,
+    background: C.surfaceLight, border: `1px solid ${C.border}`,
+    color: C.text, outline: "none",
+  };
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!email || !password) { setError("Email and password required"); return; }
+    if (mode === "signup" && !displayName) { setError("Display name required"); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    setLoading(true);
+    try {
+      await onAuth({ email, password, displayName, mode });
+    } catch (e) {
+      setError(e.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: 24 }}>
+      <div style={{ textAlign: "center", marginBottom: 40, animation: "fadeIn 0.4s ease" }}>
+        <div style={{ fontSize: 56, marginBottom: 8 }}>⚔️</div>
+        <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 32, color: C.gold, letterSpacing: 2 }}>GUILDUP</h1>
+        <p style={{ color: C.textMuted, marginTop: 8 }}>Forge yourself. Find your guild.</p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, animation: "fadeIn 0.6s ease" }}>
+        {mode === "signup" && (
+          <input
+            type="text" placeholder="Display Name" value={displayName}
+            onChange={e => setDisplayName(e.target.value)} style={inputStyle}
+          />
+        )}
+        <input
+          type="email" placeholder="Email" value={email}
+          onChange={e => setEmail(e.target.value)} style={inputStyle}
+        />
+        <input
+          type="password" placeholder="Password (min 6 characters)" value={password}
+          onChange={e => setPassword(e.target.value)} style={inputStyle}
+          onKeyDown={e => e.key === "Enter" && handleSubmit()}
+        />
+
+        {displayError && <div style={{ color: "#ef4444", fontSize: 13, textAlign: "center" }}>{displayError}</div>}
+
+        <button onClick={handleSubmit} disabled={loading} style={{
+          width: "100%", padding: "16px", borderRadius: 12, border: "none", cursor: loading ? "not-allowed" : "pointer",
+          background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: "#000", fontSize: 16, fontWeight: 700, opacity: loading ? 0.6 : 1,
+        }}>
+          {loading ? "..." : mode === "signup" ? "Create Account" : "Sign In"}
+        </button>
+
+        <button
+          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); }}
+          style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 14, marginTop: 8, textAlign: "center" }}
+        >
+          {mode === "signin" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+        </button>
       </div>
     </div>
   );
@@ -1348,11 +1440,16 @@ function LevelUpModal({ level, oldClass, newClass, distribution, onClose }) {
 // MAIN APP
 // ============================================
 export default function GuildUpMockup() {
-  const [screen, setScreen] = useState("welcome");
+  const [screen, setScreen] = useState("loading");
   const [tab, setTab] = useState("quests");
   const [showRitualDetail, setShowRitualDetail] = useState(null);
+  const [authError, setAuthError] = useState("");
+
+  // User ID from Supabase
+  const [userId, setUserId] = useState(null);
 
   // Player state
+  const [playerName, setPlayerName] = useState("Adventurer");
   const [playerClass, setPlayerClass] = useState("warrior");
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerXP, setPlayerXP] = useState(0);
@@ -1369,7 +1466,121 @@ export default function GuildUpMockup() {
   // Level up modal
   const [levelUpData, setLevelUpData] = useState(null);
 
-  const handleInterviewComplete = (cls, level) => {
+  // Load profile from Supabase into local state
+  const loadProfile = async (uid) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles").select("*").eq("id", uid).single();
+      if (error || !data) return false;
+      setPlayerName(data.display_name || "Adventurer");
+      setPlayerClass(data.class || "warrior");
+      setPlayerLevel(data.level || 1);
+      setPlayerXP(data.xp || 0);
+      setPlayerGold(data.gold || 100);
+      setPlayerStats({
+        str: data.stat_str || 10, agi: data.stat_agi || 10,
+        int: data.stat_int || 10, spi: data.stat_spi || 10,
+        cha: data.stat_cha || 10,
+      });
+      setActivityTally({
+        str: data.tally_str || 0, agi: data.tally_agi || 0,
+        int: data.tally_int || 0, spi: data.tally_spi || 0,
+        cha: data.tally_cha || 0,
+      });
+      return data.onboarding_complete;
+    } catch (e) {
+      console.error("Failed to load profile:", e);
+      return false;
+    }
+  };
+
+  // Check for existing session on load
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+        const onboarded = await loadProfile(session.user.id);
+        setScreen(onboarded ? "dashboard" : "welcome");
+      } else {
+        setScreen("auth");
+      }
+    };
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setScreen("auth");
+        setUserId(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Auth handler — real Supabase
+  const handleAuth = async ({ email, password, displayName, mode }) => {
+    setAuthError("");
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email, password,
+          options: { data: { display_name: displayName } }
+        });
+        if (error) throw error;
+        if (data.user) {
+          setUserId(data.user.id);
+          setPlayerName(displayName || email.split("@")[0]);
+          setScreen("welcome");
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (data.user) {
+          setUserId(data.user.id);
+          const onboarded = await loadProfile(data.user.id);
+          if (onboarded) {
+            setScreen("dashboard");
+          } else {
+            setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
+            setScreen("welcome");
+          }
+        }
+      }
+    } catch (e) {
+      setAuthError(e.message || "Authentication failed");
+    }
+  };
+
+  // Sign out — real Supabase
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setScreen("auth");
+    setUserId(null);
+    setPlayerName("Adventurer");
+    setPlayerClass("warrior");
+    setPlayerLevel(1);
+    setPlayerXP(0);
+    setPlayerStats({ str: 10, agi: 10, int: 10, spi: 10, cha: 10 });
+    setPlayerGold(100);
+    setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
+    setCompletedRituals({});
+    setCompletedQuests([]);
+    setTab("quests");
+  };
+
+  // Save profile to Supabase
+  const saveProfile = async (updates) => {
+    if (!userId) return;
+    try {
+      await supabase.from("profiles").update({
+        ...updates, updated_at: new Date().toISOString(),
+      }).eq("id", userId);
+    } catch (e) {
+      console.error("Failed to save profile:", e);
+    }
+  };
+
+  const handleInterviewComplete = async (cls, level) => {
     setPlayerClass(cls);
     setPlayerLevel(level);
     const baseStats = { str: 10, agi: 10, int: 10, spi: 10, cha: 10 };
@@ -1389,13 +1600,23 @@ export default function GuildUpMockup() {
     };
     const weights = classWeights[cls] || classWeights.warrior;
     const dist = distributeStatPoints(weights, startBonus);
-    setPlayerStats({
+    const newStats = {
       str: baseStats.str + dist.str, agi: baseStats.agi + dist.agi,
       int: baseStats.int + dist.int, spi: baseStats.spi + dist.spi,
       cha: baseStats.cha + dist.cha,
-    });
-    setPlayerXP(totalXpForLevel(level));
+    };
+    setPlayerStats(newStats);
+    const startingXP = totalXpForLevel(level);
+    setPlayerXP(startingXP);
     setScreen("reveal");
+
+    // Save to Supabase
+    saveProfile({
+      class: cls, level, xp: startingXP, gold: 100,
+      stat_str: newStats.str, stat_agi: newStats.agi,
+      stat_int: newStats.int, stat_spi: newStats.spi, stat_cha: newStats.cha,
+      onboarding_complete: true, display_name: playerName,
+    });
   };
 
   const awardXP = (amount, statCategory) => {
@@ -1455,6 +1676,13 @@ export default function GuildUpMockup() {
           />
         )}
 
+        {screen === "loading" && (
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 2 }}>GUILDUP</div>
+          </div>
+        )}
+        {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} />}
         {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("interview")} />}
         {screen === "interview" && <InterviewScreen onComplete={handleInterviewComplete} />}
         {screen === "reveal" && (
@@ -1484,6 +1712,7 @@ export default function GuildUpMockup() {
                   <AvatarScreen
                     playerClass={playerClass} playerLevel={playerLevel}
                     playerStats={playerStats} playerGold={playerGold}
+                    playerName={playerName} onSignOut={handleSignOut}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
