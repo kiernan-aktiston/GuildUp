@@ -778,16 +778,16 @@ function RitualDetailScreen({ ritual, onBack }) {
 // ============================================
 // AVATAR / PROFILE SCREEN
 // ============================================
-function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut }) {
+function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut, avatarUrl, onAvatarUpload }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const maxStat = Math.max(playerStats.str || 10, playerStats.agi || 10, playerStats.int || 10, playerStats.spi || 10, playerStats.cha || 10, 1);
   const stats = [
-    { label: "Strength", pct: ((playerStats.str || 10) / maxStat) * 100, color: "#ef4444" },
-    { label: "Agility", pct: ((playerStats.agi || 10) / maxStat) * 100, color: "#22c55e" },
-    { label: "Intelligence", pct: ((playerStats.int || 10) / maxStat) * 100, color: "#3b82f6" },
-    { label: "Spirit", pct: ((playerStats.spi || 10) / maxStat) * 100, color: "#a855f7" },
-    { label: "Charisma", pct: ((playerStats.cha || 10) / maxStat) * 100, color: "#f59e0b" },
+    { label: "Strength", value: playerStats.str || 10, pct: ((playerStats.str || 10) / maxStat) * 100, color: "#ef4444" },
+    { label: "Agility", value: playerStats.agi || 10, pct: ((playerStats.agi || 10) / maxStat) * 100, color: "#22c55e" },
+    { label: "Intelligence", value: playerStats.int || 10, pct: ((playerStats.int || 10) / maxStat) * 100, color: "#3b82f6" },
+    { label: "Spirit", value: playerStats.spi || 10, pct: ((playerStats.spi || 10) / maxStat) * 100, color: "#a855f7" },
+    { label: "Charisma", value: playerStats.cha || 10, pct: ((playerStats.cha || 10) / maxStat) * 100, color: "#f59e0b" },
   ];
 
   return (
@@ -804,16 +804,22 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
           background: `linear-gradient(135deg, ${C.surfaceLight}, ${C.surface})`,
           display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: `0 8px 32px ${cls.color}22`,
-          marginBottom: 16, position: "relative",
-        }}>
-          {/* Placeholder avatar */}
-          <div style={{
-            width: 100, height: 100, borderRadius: 50,
-            border: `2px dashed ${C.border}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{ fontSize: 13, color: C.textDim, textAlign: "center", lineHeight: 1.3 }}>Profile<br/>Photo</span>
-          </div>
+          marginBottom: 12, position: "relative",
+          cursor: "pointer",
+        }}
+        onClick={() => document.getElementById("avatar-upload")?.click()}
+        >
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{
+              width: 100, height: 100, borderRadius: 50,
+              border: `2px dashed ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{ fontSize: 13, color: C.textDim, textAlign: "center", lineHeight: 1.3 }}>Tap to<br/>Upload</span>
+            </div>
+          )}
           {/* Class icon overlay */}
           <div style={{
             position: "absolute", bottom: -4, right: -4,
@@ -825,6 +831,26 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
             <span style={{ fontSize: 18 }}>{cls.emoji}</span>
           </div>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          id="avatar-upload" type="file" accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onAvatarUpload) onAvatarUpload(file);
+            e.target.value = "";
+          }}
+        />
+
+        {/* Upload button */}
+        <button onClick={() => document.getElementById("avatar-upload")?.click()} style={{
+          padding: "6px 16px", borderRadius: 8, border: `1px solid ${C.border}`,
+          background: C.surfaceLight, color: C.textMuted, fontSize: 12,
+          cursor: "pointer", marginBottom: 12,
+        }}>
+          📷 {avatarUrl ? "Change Photo" : "Upload Photo"}
+        </button>
 
         {/* Name & Class */}
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
@@ -847,7 +873,7 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
         <span style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>+{statPointsForLevel(playerLevel + 1)} stat points</span>
       </div>
 
-      {/* Character Traits (relative bars — user never sees raw numbers) */}
+      {/* Character Traits (with numeric values) */}
       <div style={{
         padding: "16px", borderRadius: 12,
         background: C.surface, border: `1px solid ${C.border}`,
@@ -860,6 +886,7 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
           <div key={i} style={{ marginBottom: i < 4 ? 10 : 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 12, color: C.textMuted }}>{s.label}</span>
+              <span style={{ fontSize: 12, color: s.color, fontWeight: 600 }}>{s.value}</span>
             </div>
             <div style={{ height: 6, background: C.surfaceLight, borderRadius: 3, overflow: "hidden" }}>
               <div style={{
@@ -1680,6 +1707,9 @@ export default function GuildUpMockup() {
   const [userGuild, setUserGuild] = useState(null);
   const [guildMembers, setGuildMembers] = useState([]);
 
+  // Avatar photo
+  const [avatarUrl, setAvatarUrl] = useState(null);
+
   // Load profile from Supabase into local state
   const loadProfile = async (uid) => {
     try {
@@ -1688,8 +1718,20 @@ export default function GuildUpMockup() {
       if (error || !data) return false;
       setPlayerName(data.display_name || "Adventurer");
       setPlayerClass(data.class || "warrior");
-      setPlayerLevel(data.level || 1);
-      setPlayerXP(data.xp || 0);
+
+      // Recalculate correct level from total XP (fixes stale level data)
+      let correctLevel = data.level || 1;
+      const storedXP = data.xp || 0;
+      while (storedXP >= totalXpForLevel(correctLevel + 1)) {
+        correctLevel++;
+      }
+      if (correctLevel !== (data.level || 1)) {
+        // Level was out of sync — fix it in Supabase
+        console.log(`Level corrected: ${data.level} → ${correctLevel}`);
+        supabase.from("profiles").update({ level: correctLevel }).eq("id", uid);
+      }
+      setPlayerLevel(correctLevel);
+      setPlayerXP(storedXP);
       setPlayerGold(data.gold || 100);
       setPlayerStats({
         str: data.stat_str || 10, agi: data.stat_agi || 10,
@@ -1701,6 +1743,7 @@ export default function GuildUpMockup() {
         int: data.tally_int || 0, spi: data.tally_spi || 0,
         cha: data.tally_cha || 0,
       });
+      if (data.avatar_url) setAvatarUrl(data.avatar_url);
       return data.onboarding_complete;
     } catch (e) {
       console.error("Failed to load profile:", e);
@@ -1724,6 +1767,18 @@ export default function GuildUpMockup() {
         setCompletedRituals(completed);
       }
     } catch (e) { console.error("Failed to load rituals:", e); }
+  };
+
+  // Load today's completed quests from Supabase
+  const loadTodayQuests = async (uid) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("quest_progress").select("quest_id").eq("user_id", uid).eq("quest_date", today);
+      if (data && data.length > 0) {
+        setCompletedQuests(data.map(d => d.quest_id));
+      }
+    } catch (e) { console.error("Failed to load quests:", e); }
   };
 
   // Load guild
@@ -1750,6 +1805,7 @@ export default function GuildUpMockup() {
         const onboarded = await loadProfile(session.user.id);
         if (onboarded) {
           await loadTodayRituals(session.user.id);
+          await loadTodayQuests(session.user.id);
           await loadGuild(session.user.id);
           setScreen("dashboard");
         } else {
@@ -1793,6 +1849,7 @@ export default function GuildUpMockup() {
           const onboarded = await loadProfile(data.user.id);
           if (onboarded) {
             await loadTodayRituals(data.user.id);
+            await loadTodayQuests(data.user.id);
             await loadGuild(data.user.id);
             setScreen("dashboard");
           } else {
@@ -1822,6 +1879,7 @@ export default function GuildUpMockup() {
     setCompletedQuests([]);
     setUserGuild(null);
     setGuildMembers([]);
+    setAvatarUrl(null);
     setTab("quests");
   };
 
@@ -1834,6 +1892,24 @@ export default function GuildUpMockup() {
       }).eq("id", userId);
     } catch (e) {
       console.error("Failed to save profile:", e);
+    }
+  };
+
+  const handleAvatarUpload = async (file) => {
+    if (!userId || !file) return;
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars").upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      // Add cache buster
+      const urlWithBust = `${publicUrl}?t=${Date.now()}`;
+      setAvatarUrl(urlWithBust);
+      saveProfile({ avatar_url: urlWithBust });
+    } catch (e) {
+      console.error("Failed to upload avatar:", e);
     }
   };
 
@@ -1881,18 +1957,43 @@ export default function GuildUpMockup() {
       setActivityTally(prev => ({ ...prev, [statCategory]: prev[statCategory] + 1 }));
     }
     const newXP = playerXP + amount;
-    const xpNeeded = totalXpForLevel(playerLevel + 1);
-    if (newXP >= xpNeeded) {
-      const newLevel = playerLevel + 1;
-      const oldClass = playerClass;
-      const result = processLevelUp(newLevel, playerStats, activityTally);
-      setPlayerLevel(newLevel);
-      setPlayerStats(result.newStats);
-      setPlayerClass(result.newClass);
+
+    // Handle multiple level-ups in a loop
+    let currentLevel = playerLevel;
+    let currentStats = { ...playerStats };
+    let currentClass = playerClass;
+    let currentTally = { ...activityTally };
+    if (statCategory) currentTally[statCategory] = (currentTally[statCategory] || 0) + 1;
+    let lastLevelUp = null;
+
+    while (newXP >= totalXpForLevel(currentLevel + 1)) {
+      const newLevel = currentLevel + 1;
+      const oldClass = currentClass;
+      const result = processLevelUp(newLevel, currentStats, currentTally);
+      currentLevel = newLevel;
+      currentStats = result.newStats;
+      currentClass = result.newClass;
+      currentTally = { str: 0, agi: 0, int: 0, spi: 0, cha: 0 };
+      lastLevelUp = { level: newLevel, oldClass, newClass: result.newClass, distribution: result.distribution };
+    }
+
+    if (lastLevelUp) {
+      setPlayerLevel(currentLevel);
+      setPlayerStats(currentStats);
+      setPlayerClass(currentClass);
       setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
-      setLevelUpData({
-        level: newLevel, oldClass, newClass: result.newClass, distribution: result.distribution,
-      });
+      setLevelUpData(lastLevelUp);
+
+      // Persist level, stats, and class to Supabase
+      if (userId) {
+        saveProfile({
+          level: currentLevel, class: currentClass, xp: newXP,
+          stat_str: currentStats.str, stat_agi: currentStats.agi,
+          stat_int: currentStats.int, stat_spi: currentStats.spi,
+          stat_cha: currentStats.cha,
+          tally_str: 0, tally_agi: 0, tally_int: 0, tally_spi: 0, tally_cha: 0,
+        });
+      }
     }
     setPlayerXP(newXP);
   };
@@ -1919,10 +2020,14 @@ export default function GuildUpMockup() {
           user_id: userId, ritual_date: today, [ritualColumn]: true,
         }, { onConflict: "user_id,ritual_date" });
       }
-      // Save XP/gold/tally to profile
-      const profile = { xp: playerXP + 10, gold: playerGold + 2 };
-      profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
-      saveProfile(profile);
+      // Save XP/gold/tally to profile (use computed values to avoid stale closures)
+      const newXP = playerXP + 10;
+      const newGold = playerGold + 2;
+      const newTally = { ...activityTally, [stat]: (activityTally[stat] || 0) + 1 };
+      saveProfile({
+        xp: newXP, gold: newGold,
+        [`tally_${stat}`]: newTally[stat],
+      });
     }
   };
 
@@ -1941,10 +2046,13 @@ export default function GuildUpMockup() {
 
     if (userId) {
       const today = new Date().toISOString().split("T")[0];
-      await supabase.from("quest_progress").insert({
+      await supabase.from("quest_progress").upsert({
         user_id: userId, quest_id: questId, quest_date: today,
-      });
-      const profile = { xp: playerXP + xpReward, gold: playerGold + goldReward };
+      }, { onConflict: "user_id,quest_id,quest_date" });
+      // Save XP/gold/tally using computed values
+      const newXP = playerXP + xpReward;
+      const newGold = playerGold + goldReward;
+      const profile = { xp: newXP, gold: newGold };
       stats.forEach(stat => {
         if (stat) profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
       });
@@ -1984,7 +2092,8 @@ export default function GuildUpMockup() {
   };
 
   const xpNeeded = xpForLevel(playerLevel);
-  const xpInLevel = playerXP - totalXpForLevel(playerLevel);
+  const rawXpInLevel = playerXP - totalXpForLevel(playerLevel);
+  const xpInLevel = Math.max(0, Math.min(rawXpInLevel, xpNeeded));
 
   return (
     <>
@@ -2076,6 +2185,7 @@ export default function GuildUpMockup() {
                     playerClass={playerClass} playerLevel={playerLevel}
                     playerStats={playerStats} playerGold={playerGold}
                     playerName={playerName} onSignOut={handleSignOut}
+                    avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
