@@ -1078,7 +1078,7 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
             color: "#fff", fontSize: 15, fontWeight: 700, width: "100%",
           }}>Create a Guild</button>
           <button onClick={() => setShowJoin(true)} style={{
-            padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            padding: "14px 24px", borderRadius: 12, cursor: "pointer",
             background: C.surfaceLight, border: `1px solid ${C.border}`,
             color: C.text, fontSize: 15, fontWeight: 500, width: "100%",
           }}>Join with Invite Code</button>
@@ -1676,7 +1676,7 @@ function LevelUpModal({ level, oldClass, newClass, distribution, onClose }) {
 // ============================================
 // MAIN APP
 // ============================================
-export default function GuildUpMockup() {
+export default function App() {
   const [screen, setScreen] = useState("loading");
   const [tab, setTab] = useState("quests");
   const [showRitualDetail, setShowRitualDetail] = useState(null);
