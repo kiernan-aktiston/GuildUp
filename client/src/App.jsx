@@ -748,6 +748,7 @@ function RitualDetailScreen({ ritual, onBack }) {
               width: 180, height: 180, objectFit: "contain",
               imageRendering: "pixelated",
               filter: `drop-shadow(0 0 20px ${C.gold}33)`,
+              mixBlendMode: "lighten",
             }}
           />
         </div>
