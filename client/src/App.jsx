@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 // ============================================
@@ -1184,8 +1184,8 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
 // ============================================
 // AUTH SCREEN
 // ============================================
-function AuthScreen({ onAuth, serverError }) {
-  const [mode, setMode] = useState("signin");
+function AuthScreen({ onAuth, serverError, initialMode = "signin" }) {
+  const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -1262,12 +1262,68 @@ function AuthScreen({ onAuth, serverError }) {
 }
 
 // ============================================
+// LANDING SCREEN
+// ============================================
+function LandingScreen({ onSignUp, onSignIn }) {
+  return (
+    <div style={{
+      minHeight: "100vh", display: "flex", flexDirection: "column",
+      justifyContent: "center", alignItems: "center", padding: 32,
+      background: `radial-gradient(ellipse at 50% 30%, ${C.gold}08 0%, transparent 60%), ${C.bg}`,
+    }}>
+      {/* Top branding */}
+      <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease" }}>
+        <div style={{ fontSize: 56, marginBottom: 12, filter: `drop-shadow(0 0 20px ${C.gold}44)` }}>⚔️</div>
+        <h1 style={{
+          fontFamily: "'Cinzel', serif", fontSize: 36, color: C.gold,
+          letterSpacing: 3, marginBottom: 6,
+        }}>GUILDUP</h1>
+        <p style={{
+          color: C.textMuted, fontSize: 15, letterSpacing: 0.5, marginBottom: 48,
+        }}>Forge yourself. Find your guild.</p>
+      </div>
+
+      {/* Welcome message */}
+      <div style={{ textAlign: "center", marginBottom: 48, animation: "fadeIn 0.8s ease" }}>
+        <h2 style={{
+          fontFamily: "'Cinzel', serif", fontSize: 22, color: C.text,
+          letterSpacing: 1, marginBottom: 8,
+        }}>Welcome, Adventurer</h2>
+        <p style={{ color: C.textDim, fontSize: 14, lineHeight: 1.6, maxWidth: 280 }}>
+          Your journey starts here. Complete quests. Level up. Become legendary.
+        </p>
+      </div>
+
+      {/* Buttons */}
+      <div style={{
+        display: "flex", flexDirection: "column", gap: 12,
+        width: "100%", maxWidth: 300, animation: "fadeIn 1s ease",
+      }}>
+        <button onClick={onSignUp} style={{
+          width: "100%", padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
+          background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: "#000", fontSize: 16, fontWeight: 700, letterSpacing: 0.5,
+        }}>
+          Sign Up
+        </button>
+        <button onClick={onSignIn} style={{
+          width: "100%", padding: "16px", borderRadius: 12, cursor: "pointer",
+          background: C.surfaceLight, border: `1px solid ${C.border}`,
+          color: C.text, fontSize: 16, fontWeight: 500,
+        }}>
+          Sign In
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // WELCOME SLIDES
 // ============================================
 function WelcomeSlides({ onComplete }) {
   const [slide, setSlide] = useState(0);
   const slides = [
-    { emoji: "⚔️", title: "Welcome, Adventurer", text: "GuildUp transforms your daily habits into an RPG journey. Complete quests. Level up. Become legendary." },
     { emoji: "🏋️", title: "The Five", text: "Five daily rituals form your foundation. Each one builds a different part of your character — strength, agility, intellect, spirit, and charisma." },
     { emoji: "🔄", title: "Your Class Will Evolve", text: "Your starting class is based on who you are today. But the quests you choose will shape who you become. Your class can shift as your habits change." },
     { emoji: "💪", title: "Every Quest Makes You Stronger", text: "Completing daily quests powers up your avatar. The more you do, the stronger you'll be when you battle your friends." },
@@ -1710,6 +1766,12 @@ export default function App() {
   // Avatar photo
   const [avatarUrl, setAvatarUrl] = useState(null);
 
+  // Auth mode for directing to signup vs signin
+  const [authMode, setAuthMode] = useState("signin");
+
+  // Prevent double-tap on quest/ritual completion
+  const processingRef = useRef(new Set());
+
   // Load profile from Supabase into local state
   const loadProfile = async (uid) => {
     try {
@@ -1812,14 +1874,14 @@ export default function App() {
           setScreen("interviewIntro");
         }
       } else {
-        setScreen("welcome");
+        setScreen("landing");
       }
     };
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        setScreen("welcome");
+        setScreen("landing");
         setUserId(null);
       }
     });
@@ -1866,7 +1928,7 @@ export default function App() {
   // Sign out — real Supabase
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setScreen("welcome");
+    setScreen("landing");
     setUserId(null);
     setPlayerName("Adventurer");
     setPlayerClass("warrior");
@@ -2000,6 +2062,8 @@ export default function App() {
 
   const handleRitualComplete = async (ritualName) => {
     if (completedRituals[ritualName]) return;
+    if (processingRef.current.has(`ritual:${ritualName}`)) return;
+    processingRef.current.add(`ritual:${ritualName}`);
     setCompletedRituals(prev => ({ ...prev, [ritualName]: true }));
     const stat = ACTIVITY_STAT_MAP[ritualName] || "str";
     awardXP(10, stat);
@@ -2034,6 +2098,8 @@ export default function App() {
   // Daily quest completion
   const handleQuestComplete = async (questId, xpReward, goldReward, statCategories) => {
     if (completedQuests.includes(questId)) return;
+    if (processingRef.current.has(`quest:${questId}`)) return;
+    processingRef.current.add(`quest:${questId}`);
     setCompletedQuests(prev => [...prev, questId]);
 
     // Tally all stats for dual-stat quests
@@ -2126,8 +2192,14 @@ export default function App() {
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 2 }}>GUILDUP</div>
           </div>
         )}
+        {screen === "landing" && (
+          <LandingScreen
+            onSignUp={() => { setAuthMode("signup"); setScreen("welcome"); }}
+            onSignIn={() => { setAuthMode("signin"); setScreen("auth"); }}
+          />
+        )}
         {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
-        {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} />}
+        {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} initialMode={authMode} />}
         {screen === "interviewIntro" && (
           <div style={{
             minHeight: "100vh", display: "flex", flexDirection: "column",
