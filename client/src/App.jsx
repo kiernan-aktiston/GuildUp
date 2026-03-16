@@ -544,8 +544,10 @@ const RITUAL_INSTRUCTIONS = {
   "Bodyweight Workout": {
     label: "FORGE THE BODY",
     ritualLabel: "Forge the Body",
+    activityName: "Bodyweight Workout",
     time: "20 minutes",
     duration_seconds: 1200,
+    image: "/Socrates.png",
     why: "Your body is the vessel that carries everything else — your mind, your spirit, your ambition. Training it isn't vanity. It's preparation. Every rep builds the discipline that bleeds into every other area of your life.",
     featuredQuote: { text: "It is a shame for a man to grow old without seeing the beauty and strength of which his body is capable.", author: "Socrates" },
     instructions: [
@@ -561,8 +563,10 @@ const RITUAL_INSTRUCTIONS = {
   "Walk/Jog 20min": {
     label: "EXPLORE THE LAND",
     ritualLabel: "Explore the Land",
+    activityName: "Walk or Jog",
     time: "20 minutes",
     duration_seconds: 1200,
+    image: "/Nietzsche.png",
     why: "Movement clears the fog. When you walk, your mind untangles problems your desk never could. The greatest thinkers in history did their best work on their feet.",
     featuredQuote: { text: "All truly great thoughts are conceived while walking.", author: "Friedrich Nietzsche" },
     instructions: [
@@ -576,8 +580,10 @@ const RITUAL_INSTRUCTIONS = {
   "Read 20min": {
     label: "SHARPEN THE MIND",
     ritualLabel: "Sharpen the Mind",
+    activityName: "Read for 20 Minutes",
     time: "20 minutes",
     duration_seconds: 1200,
+    image: "/Descartes.png",
     why: "Every book is a conversation with someone who spent years distilling what they know into pages you can absorb in hours. Reading is the fastest way to acquire wisdom you didn't earn the hard way.",
     featuredQuote: { text: "The reading of all good books is like a conversation with the finest minds of past centuries.", author: "René Descartes" },
     instructions: [
@@ -591,8 +597,10 @@ const RITUAL_INSTRUCTIONS = {
   "Pray/Meditate 10min": {
     label: "STILL THE SPIRIT",
     ritualLabel: "Still the Spirit",
+    activityName: "Pray or Meditate",
     time: "10 minutes",
     duration_seconds: 600,
+    image: "/John.png",
     why: "The world is loud. Stillness is where you hear what actually matters. Whether you pray or meditate, this is the ritual that connects you to something beyond the noise.",
     featuredQuote: { text: "Prayer is the raising of one's mind and heart to God.", author: "John of Damascus" },
     instructions: [
@@ -606,8 +614,10 @@ const RITUAL_INSTRUCTIONS = {
   "Reach Out": {
     label: "RALLY YOUR ALLIES",
     ritualLabel: "Rally Your Allies",
+    activityName: "Reach Out to Someone",
     time: "20 minutes",
     duration_seconds: 1200,
+    image: "/Marcus.png",
     why: "No one builds anything great alone. The people around you are your strength multiplier. One real conversation — not a like, not a meme — can change someone's day and deepen a bond that lasts.",
     featuredQuote: { text: "We are born for cooperation.", author: "Marcus Aurelius" },
     instructions: [
@@ -632,6 +642,7 @@ function RitualDetailScreen({ ritual, onBack }) {
   const name = ritual?.name || "Bodyweight Workout";
   const info = RITUAL_INSTRUCTIONS[name] || RITUAL_INSTRUCTIONS["Bodyweight Workout"];
   const [phase, setPhase] = useState("prep"); // "prep" → "timer"
+  const [showWhy, setShowWhy] = useState(false);
   const [quote] = useState(() => getRandomQuote(name));
   const [timeLeft, setTimeLeft] = useState(info.duration_seconds);
   const [running, setRunning] = useState(false);
@@ -658,6 +669,37 @@ function RitualDetailScreen({ ritual, onBack }) {
   const display = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   const pct = ((info.duration_seconds - timeLeft) / info.duration_seconds) * 100;
 
+  // ===== WHY THIS MATTERS POPUP =====
+  const WhyPopup = () => (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200,
+      background: "rgba(0,0,0,0.85)", display: "flex",
+      alignItems: "center", justifyContent: "center",
+      animation: "fadeIn 0.3s ease", padding: 24,
+    }} onClick={() => setShowWhy(false)}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 360, padding: 28, borderRadius: 20,
+        background: C.surface, border: `1px solid ${C.border}`,
+        boxShadow: `0 0 60px ${C.gold}11`,
+      }}>
+        <div style={{
+          fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2,
+          textTransform: "uppercase", marginBottom: 16, textAlign: "center",
+        }}>Why This Matters</div>
+        <p style={{
+          fontSize: 15, color: C.text, lineHeight: 1.8, marginBottom: 24,
+        }}>{info.why}</p>
+        <button onClick={() => setShowWhy(false)} style={{
+          width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+          background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: "#000", fontSize: 15, fontWeight: 700,
+        }}>
+          Got It
+        </button>
+      </div>
+    </div>
+  );
+
   // ===== PREP SCREEN =====
   if (phase === "prep") {
     return (
@@ -670,8 +712,10 @@ function RitualDetailScreen({ ritual, onBack }) {
         display: "flex", flexDirection: "column",
         padding: "32px 24px 40px", animation: "fadeIn 0.4s ease",
       }}>
-        {/* TOP: Title + Why */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
+        {showWhy && <WhyPopup />}
+
+        {/* TOP: Ritual label + activity name */}
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
             fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
             textTransform: "uppercase", marginBottom: 8,
@@ -679,13 +723,13 @@ function RitualDetailScreen({ ritual, onBack }) {
           <h2 style={{
             fontFamily: "'Cinzel', serif", fontSize: 24, color: C.text,
             marginBottom: 4, lineHeight: 1.3,
-          }}>{info.ritualLabel}</h2>
+          }}>{info.activityName}</h2>
           <div style={{ fontSize: 13, color: C.textMuted }}>{info.time}</div>
         </div>
 
-        {/* Featured quote */}
+        {/* Quote */}
         <div style={{
-          padding: "16px 20px", borderRadius: 12, marginBottom: 24,
+          padding: "14px 18px", borderRadius: 12, marginBottom: 20,
           background: `${C.surface}88`, border: `1px solid ${C.border}`,
           textAlign: "center",
         }}>
@@ -695,20 +739,22 @@ function RitualDetailScreen({ ritual, onBack }) {
           <div style={{ fontSize: 12, color: C.textDim }}>— {info.featuredQuote.author}</div>
         </div>
 
-        {/* Why section */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{
-            fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
-            textTransform: "uppercase", marginBottom: 10,
-          }}>WHY THIS MATTERS</div>
-          <p style={{
-            fontSize: 14, color: C.textMuted, lineHeight: 1.7,
-          }}>{info.why}</p>
+        {/* Pixel art image */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <img
+            src={info.image}
+            alt={info.featuredQuote.author}
+            style={{
+              width: 180, height: 180, objectFit: "contain",
+              imageRendering: "pixelated",
+              filter: `drop-shadow(0 0 20px ${C.gold}33)`,
+            }}
+          />
         </div>
 
-        {/* MIDDLE: Instructions */}
+        {/* What to Do */}
         <div style={{
-          padding: "18px 20px", borderRadius: 14, marginBottom: 24, flex: 1,
+          padding: "18px 20px", borderRadius: 14, marginBottom: 24,
           background: `${C.surface}cc`, border: `1px solid ${C.border}`,
         }}>
           <div style={{
@@ -736,7 +782,7 @@ function RitualDetailScreen({ ritual, onBack }) {
           )}
         </div>
 
-        {/* BOTTOM: Two buttons */}
+        {/* Three buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
           <button onClick={() => setPhase("timer")} style={{
             padding: "16px 24px", borderRadius: 12, border: "none", cursor: "pointer",
@@ -746,10 +792,17 @@ function RitualDetailScreen({ ritual, onBack }) {
           }}>
             I Am Ready to Begin
           </button>
-          <button onClick={() => onBack(false)} style={{
+          <button onClick={() => setShowWhy(true)} style={{
             padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
             background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
             color: "#000", fontSize: 15, fontWeight: 600,
+          }}>
+            Why This Matters
+          </button>
+          <button onClick={() => onBack(false)} style={{
+            padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, #9f1239, #881337)`,
+            color: "#fda4af", fontSize: 15, fontWeight: 600,
           }}>
             Maybe Later
           </button>
