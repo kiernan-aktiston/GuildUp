@@ -710,59 +710,57 @@ function RitualDetailScreen({ ritual, onBack }) {
           linear-gradient(180deg, #0a0e17 0%, #1a1028 50%, #0a0e17 100%)
         `,
         display: "flex", flexDirection: "column",
-        padding: "32px 24px 40px", animation: "fadeIn 0.4s ease",
+        padding: "48px 24px 120px", animation: "fadeIn 0.4s ease",
       }}>
         {showWhy && <WhyPopup />}
 
         {/* TOP: Ritual label + activity name */}
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ textAlign: "center", marginBottom: 12 }}>
           <div style={{
             fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
-            textTransform: "uppercase", marginBottom: 8,
+            textTransform: "uppercase", marginBottom: 6,
           }}>{info.label}</div>
           <h2 style={{
-            fontFamily: "'Cinzel', serif", fontSize: 24, color: C.text,
-            marginBottom: 4, lineHeight: 1.3,
+            fontFamily: "'Cinzel', serif", fontSize: 22, color: C.text,
+            marginBottom: 2, lineHeight: 1.3,
           }}>{info.activityName}</h2>
           <div style={{ fontSize: 13, color: C.textMuted }}>{info.time}</div>
         </div>
 
-        {/* Quote */}
-        <div style={{
-          padding: "14px 18px", borderRadius: 12, marginBottom: 20,
-          background: `${C.surface}88`, border: `1px solid ${C.border}`,
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.7, marginBottom: 6 }}>
-            "{info.featuredQuote.text}"
-          </div>
-          <div style={{ fontSize: 12, color: C.textDim }}>— {info.featuredQuote.author}</div>
-        </div>
-
-        {/* Pixel art image */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+        {/* Sprite + Quote as one unit */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
           <img
             src={info.image}
             alt={info.featuredQuote.author}
             style={{
-              width: 180, height: 180, objectFit: "contain",
+              width: 260, height: 260, objectFit: "contain",
               imageRendering: "pixelated",
-              filter: `drop-shadow(0 0 20px ${C.gold}33)`,
               mixBlendMode: "lighten",
+              marginBottom: -8,
             }}
           />
+          <div style={{
+            padding: "12px 18px", borderRadius: 12, width: "100%",
+            background: `${C.surface}88`, border: `1px solid ${C.border}`,
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 4 }}>
+              "{info.featuredQuote.text}"
+            </div>
+            <div style={{ fontSize: 12, color: C.gold }}>— {info.featuredQuote.author}</div>
+          </div>
         </div>
 
         {/* What to Do */}
         <div style={{
-          padding: "18px 20px", borderRadius: 14, marginBottom: 24,
+          padding: "14px 18px", borderRadius: 14, marginBottom: 20,
           background: `${C.surface}cc`, border: `1px solid ${C.border}`,
         }}>
           <div style={{
             fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
-            textTransform: "uppercase", marginBottom: 12,
+            textTransform: "uppercase", marginBottom: 10,
           }}>WHAT TO DO</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {info.instructions.map((step, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{
@@ -775,7 +773,7 @@ function RitualDetailScreen({ ritual, onBack }) {
           </div>
           {info.note && (
             <div style={{
-              marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.border}`,
+              marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`,
               fontSize: 13, color: C.textMuted, fontStyle: "italic",
             }}>
               {info.note}
