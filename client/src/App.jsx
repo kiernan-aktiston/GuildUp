@@ -1283,17 +1283,6 @@ function LandingScreen({ onSignUp, onSignIn }) {
         }}>Forge yourself. Find your guild.</p>
       </div>
 
-      {/* Welcome message */}
-      <div style={{ textAlign: "center", marginBottom: 48, animation: "fadeIn 0.8s ease" }}>
-        <h2 style={{
-          fontFamily: "'Cinzel', serif", fontSize: 22, color: C.text,
-          letterSpacing: 1, marginBottom: 8,
-        }}>Welcome, Adventurer</h2>
-        <p style={{ color: C.textDim, fontSize: 14, lineHeight: 1.6, maxWidth: 280 }}>
-          Your journey starts here. Complete quests. Level up. Become legendary.
-        </p>
-      </div>
-
       {/* Buttons */}
       <div style={{
         display: "flex", flexDirection: "column", gap: 12,
@@ -1324,6 +1313,7 @@ function LandingScreen({ onSignUp, onSignIn }) {
 function WelcomeSlides({ onComplete }) {
   const [slide, setSlide] = useState(0);
   const slides = [
+    { emoji: "⚔️", title: "Welcome, Adventurer", text: "GuildUp transforms your daily habits into an RPG journey. Complete quests. Level up. Become legendary." },
     { emoji: "🏋️", title: "The Five", text: "Five daily rituals form your foundation. Each one builds a different part of your character — strength, agility, intellect, spirit, and charisma." },
     { emoji: "🔄", title: "Your Class Will Evolve", text: "Your starting class is based on who you are today. But the quests you choose will shape who you become. Your class can shift as your habits change." },
     { emoji: "💪", title: "Every Quest Makes You Stronger", text: "Completing daily quests powers up your avatar. The more you do, the stronger you'll be when you battle your friends." },
