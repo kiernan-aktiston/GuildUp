@@ -542,9 +542,12 @@ const RITUAL_QUOTES = {
 
 const RITUAL_INSTRUCTIONS = {
   "Bodyweight Workout": {
-    label: "STRENGTH RITUAL",
+    label: "FORGE THE BODY",
+    ritualLabel: "Forge the Body",
     time: "20 minutes",
     duration_seconds: 1200,
+    why: "Your body is the vessel that carries everything else — your mind, your spirit, your ambition. Training it isn't vanity. It's preparation. Every rep builds the discipline that bleeds into every other area of your life.",
+    featuredQuote: { text: "It is a shame for a man to grow old without seeing the beauty and strength of which his body is capable.", author: "Socrates" },
     instructions: [
       "4 rounds — 45 seconds on, 15 seconds rest",
       "1. Pushups",
@@ -556,9 +559,12 @@ const RITUAL_INSTRUCTIONS = {
     note: "Scale reps to your fitness level. Form over speed.",
   },
   "Walk/Jog 20min": {
-    label: "AGILITY RITUAL",
+    label: "EXPLORE THE LAND",
+    ritualLabel: "Explore the Land",
     time: "20 minutes",
     duration_seconds: 1200,
+    why: "Movement clears the fog. When you walk, your mind untangles problems your desk never could. The greatest thinkers in history did their best work on their feet.",
+    featuredQuote: { text: "All truly great thoughts are conceived while walking.", author: "Friedrich Nietzsche" },
     instructions: [
       "Get outside. Walk or jog — your pace.",
       "No phone scrolling. Eyes up.",
@@ -568,9 +574,12 @@ const RITUAL_INSTRUCTIONS = {
     note: "Rain or shine. No excuses.",
   },
   "Read 20min": {
-    label: "INTELLECT RITUAL",
+    label: "SHARPEN THE MIND",
+    ritualLabel: "Sharpen the Mind",
     time: "20 minutes",
     duration_seconds: 1200,
+    why: "Every book is a conversation with someone who spent years distilling what they know into pages you can absorb in hours. Reading is the fastest way to acquire wisdom you didn't earn the hard way.",
+    featuredQuote: { text: "The reading of all good books is like a conversation with the finest minds of past centuries.", author: "René Descartes" },
     instructions: [
       "Pick up your current book.",
       "No screens — physical or e-reader only.",
@@ -580,9 +589,12 @@ const RITUAL_INSTRUCTIONS = {
     note: "Fiction, non-fiction, philosophy — all count.",
   },
   "Pray/Meditate 10min": {
-    label: "SPIRIT RITUAL",
+    label: "STILL THE SPIRIT",
+    ritualLabel: "Still the Spirit",
     time: "10 minutes",
     duration_seconds: 600,
+    why: "The world is loud. Stillness is where you hear what actually matters. Whether you pray or meditate, this is the ritual that connects you to something beyond the noise.",
+    featuredQuote: { text: "Prayer is the raising of one's mind and heart to God.", author: "John of Damascus" },
     instructions: [
       "Find a quiet space. Sit upright.",
       "Close your eyes. Breathe deeply.",
@@ -592,9 +604,12 @@ const RITUAL_INSTRUCTIONS = {
     note: "Stillness is strength.",
   },
   "Reach Out": {
-    label: "CHARISMA RITUAL",
+    label: "RALLY YOUR ALLIES",
+    ritualLabel: "Rally Your Allies",
     time: "20 minutes",
     duration_seconds: 1200,
+    why: "No one builds anything great alone. The people around you are your strength multiplier. One real conversation — not a like, not a meme — can change someone's day and deepen a bond that lasts.",
+    featuredQuote: { text: "We are born for cooperation.", author: "Marcus Aurelius" },
     instructions: [
       "Text, call, or visit someone.",
       "Not a meme. Not a forward.",
@@ -616,6 +631,7 @@ function getRandomQuote(ritualName) {
 function RitualDetailScreen({ ritual, onBack }) {
   const name = ritual?.name || "Bodyweight Workout";
   const info = RITUAL_INSTRUCTIONS[name] || RITUAL_INSTRUCTIONS["Bodyweight Workout"];
+  const [phase, setPhase] = useState("prep"); // "prep" → "timer"
   const [quote] = useState(() => getRandomQuote(name));
   const [timeLeft, setTimeLeft] = useState(info.duration_seconds);
   const [running, setRunning] = useState(false);
@@ -642,6 +658,107 @@ function RitualDetailScreen({ ritual, onBack }) {
   const display = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   const pct = ((info.duration_seconds - timeLeft) / info.duration_seconds) * 100;
 
+  // ===== PREP SCREEN =====
+  if (phase === "prep") {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: `
+          radial-gradient(ellipse at 50% 30%, ${C.gold}08 0%, transparent 50%),
+          linear-gradient(180deg, #0a0e17 0%, #1a1028 50%, #0a0e17 100%)
+        `,
+        display: "flex", flexDirection: "column",
+        padding: "32px 24px 40px", animation: "fadeIn 0.4s ease",
+      }}>
+        {/* TOP: Title + Why */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{
+            fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase", marginBottom: 8,
+          }}>{info.label}</div>
+          <h2 style={{
+            fontFamily: "'Cinzel', serif", fontSize: 24, color: C.text,
+            marginBottom: 4, lineHeight: 1.3,
+          }}>{info.ritualLabel}</h2>
+          <div style={{ fontSize: 13, color: C.textMuted }}>{info.time}</div>
+        </div>
+
+        {/* Featured quote */}
+        <div style={{
+          padding: "16px 20px", borderRadius: 12, marginBottom: 24,
+          background: `${C.surface}88`, border: `1px solid ${C.border}`,
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.7, marginBottom: 6 }}>
+            "{info.featuredQuote.text}"
+          </div>
+          <div style={{ fontSize: 12, color: C.textDim }}>— {info.featuredQuote.author}</div>
+        </div>
+
+        {/* Why section */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{
+            fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
+            textTransform: "uppercase", marginBottom: 10,
+          }}>WHY THIS MATTERS</div>
+          <p style={{
+            fontSize: 14, color: C.textMuted, lineHeight: 1.7,
+          }}>{info.why}</p>
+        </div>
+
+        {/* MIDDLE: Instructions */}
+        <div style={{
+          padding: "18px 20px", borderRadius: 14, marginBottom: 24, flex: 1,
+          background: `${C.surface}cc`, border: `1px solid ${C.border}`,
+        }}>
+          <div style={{
+            fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
+            textTransform: "uppercase", marginBottom: 12,
+          }}>WHAT TO DO</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {info.instructions.map((step, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: 3, marginTop: 7, flexShrink: 0,
+                  background: C.ritualDone,
+                }} />
+                <span style={{ fontSize: 14, color: C.text, lineHeight: 1.5 }}>{step}</span>
+              </div>
+            ))}
+          </div>
+          {info.note && (
+            <div style={{
+              marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.border}`,
+              fontSize: 13, color: C.textMuted, fontStyle: "italic",
+            }}>
+              {info.note}
+            </div>
+          )}
+        </div>
+
+        {/* BOTTOM: Two buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
+          <button onClick={() => setPhase("timer")} style={{
+            padding: "16px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
+            color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 0.5,
+            boxShadow: `0 4px 20px ${C.ritualDone}44`,
+          }}>
+            I Am Ready to Begin
+          </button>
+          <button onClick={() => onBack(false)} style={{
+            padding: "14px 24px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            color: "#000", fontSize: 15, fontWeight: 600,
+          }}>
+            Maybe Later
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== TIMER SCREEN =====
   return (
     <div style={{
       minHeight: "100vh",
@@ -661,7 +778,7 @@ function RitualDetailScreen({ ritual, onBack }) {
         transition: "background 0.5s",
       }} />
 
-      {/* ===== TOP: Title + Instructions ===== */}
+      {/* Title */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <div style={{
           fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
@@ -670,41 +787,11 @@ function RitualDetailScreen({ ritual, onBack }) {
         <h2 style={{
           fontFamily: "'Cinzel', serif", fontSize: 24, color: C.text,
           marginBottom: 4, lineHeight: 1.3,
-        }}>{name}</h2>
+        }}>{info.ritualLabel}</h2>
         <div style={{ fontSize: 13, color: C.textMuted }}>{info.time}</div>
       </div>
 
-      {/* Instructions card */}
-      <div style={{
-        padding: "18px 20px", borderRadius: 14, marginBottom: 20,
-        background: `${C.surface}cc`, border: `1px solid ${C.border}`,
-      }}>
-        <div style={{
-          fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
-          textTransform: "uppercase", marginBottom: 12,
-        }}>WHAT TO DO</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {info.instructions.map((step, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <div style={{
-                width: 6, height: 6, borderRadius: 3, marginTop: 7, flexShrink: 0,
-                background: C.ritualDone,
-              }} />
-              <span style={{ fontSize: 14, color: C.text, lineHeight: 1.5 }}>{step}</span>
-            </div>
-          ))}
-        </div>
-        {info.note && (
-          <div style={{
-            marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.border}`,
-            fontSize: 13, color: C.textMuted, fontStyle: "italic",
-          }}>
-            {info.note}
-          </div>
-        )}
-      </div>
-
-      {/* ===== MIDDLE: Countdown Timer ===== */}
+      {/* Countdown Timer */}
       <div style={{ textAlign: "center", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <div style={{
           fontSize: 60, fontWeight: 700, fontFamily: "monospace",
@@ -720,7 +807,6 @@ function RitualDetailScreen({ ritual, onBack }) {
             Ritual Complete!
           </div>
         )}
-        {/* Progress bar under timer */}
         {!finished && (
           <div style={{
             width: 200, height: 4, background: C.surfaceLight, borderRadius: 2,
@@ -735,9 +821,8 @@ function RitualDetailScreen({ ritual, onBack }) {
         )}
       </div>
 
-      {/* ===== BOTTOM: Quote + Buttons ===== */}
+      {/* Bottom: Quote + Buttons */}
       <div style={{ marginTop: "auto" }}>
-        {/* Motivational Quote */}
         <div style={{
           padding: "16px 20px", borderRadius: 12, marginBottom: 16,
           background: `${C.surface}88`, border: `1px solid ${C.border}`,
@@ -749,7 +834,6 @@ function RitualDetailScreen({ ritual, onBack }) {
           <div style={{ fontSize: 12, color: C.textDim }}>— {quote.author}</div>
         </div>
 
-        {/* Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {finished ? (
             <button onClick={() => onBack(true)} style={{
