@@ -28,7 +28,7 @@ const C = {
 };
 
 const TABS = [
-  { key: "store", label: "Store", icon: "/tab-store.png", color: C.tabStore },
+  { key: "store", label: "Store", icon: "/gold-coins.png", color: C.tabStore },
   { key: "quests", label: "Quests", icon: "/tab-quests.png", color: C.tabQuests },
   { key: "battle", label: "Arena", icon: "/tab-battle.png", color: C.tabBattle },
   { key: "avatar", label: "Avatar", icon: "/tab-avatar.png", color: C.tabAvatar },
@@ -1168,18 +1168,19 @@ function BattleScreen() {
           padding: "14px 28px", borderRadius: 4, marginBottom: 32,
           background: `repeating-linear-gradient(
             -45deg,
-            #f59e0b, #f59e0b 10px,
-            #000000 10px, #000000 20px
+            rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.25) 10px,
+            rgba(0, 0, 0, 0.25) 10px, rgba(0, 0, 0, 0.25) 20px
           )`,
           position: "relative", overflow: "hidden",
+          width: "100%", maxWidth: 340,
         }}>
           <div style={{
-            background: "#f59e0b", padding: "10px 20px", borderRadius: 2,
+            background: "rgba(245, 158, 11, 0.85)", padding: "10px 20px", borderRadius: 2,
             fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
             textTransform: "uppercase", textAlign: "center",
             border: "3px solid #000",
           }}>
-            🚧 Currently in Development 🚧
+            Currently in Development
           </div>
         </div>
 
@@ -1273,32 +1274,21 @@ function StoreScreen({ playerGold = 247 }) {
           padding: "14px 28px", borderRadius: 4, marginBottom: 32,
           background: `repeating-linear-gradient(
             -45deg,
-            #f59e0b, #f59e0b 10px,
-            #000000 10px, #000000 20px
+            rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.25) 10px,
+            rgba(0, 0, 0, 0.25) 10px, rgba(0, 0, 0, 0.25) 20px
           )`,
           position: "relative", overflow: "hidden",
+          width: "100%", maxWidth: 340,
         }}>
           <div style={{
-            background: "#f59e0b", padding: "10px 20px", borderRadius: 2,
+            background: "rgba(245, 158, 11, 0.85)", padding: "10px 20px", borderRadius: 2,
             fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
             textTransform: "uppercase", textAlign: "center",
             border: "3px solid #000",
           }}>
-            🚧 Currently in Development 🚧
+            Currently in Development
           </div>
         </div>
-
-        {/* Merchant icon */}
-        <img
-          src="/store-merchant.png"
-          alt="Merchant"
-          style={{
-            width: 210, height: 210, objectFit: "contain",
-            imageRendering: "pixelated",
-            mixBlendMode: "screen",
-            marginBottom: 20,
-          }}
-        />
 
         <div style={{
           fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
@@ -1324,7 +1314,10 @@ function StoreScreen({ playerGold = 247 }) {
           display: "flex", alignItems: "center", gap: 8,
           backdropFilter: "blur(8px)",
         }}>
-          <span style={{ fontSize: 18 }}>🪙</span>
+          <img src="/gold-coins.png" alt="gold" style={{
+            width: 24, height: 24, objectFit: "contain",
+            imageRendering: "pixelated", mixBlendMode: "screen",
+          }} />
           <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
           <span style={{ color: "#d4a026", fontSize: 13 }}>gold saved</span>
         </div>
