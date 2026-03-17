@@ -210,7 +210,7 @@ function TabBar({ active, onSwitch }) {
         return (
           <button key={t.key} onClick={() => onSwitch(t.key)} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            background: isActive ? `${t.color}80` : "#1a1a2e",
+            background: isActive ? `${t.color}4D` : "#1a1a2e",
             border: "none", cursor: "pointer",
             padding: "8px 0 env(safe-area-inset-bottom, 8px)",
             transition: "all 0.25s ease",
@@ -1232,48 +1232,68 @@ function StoreScreen({ playerGold = 247 }) {
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
-      background: `radial-gradient(ellipse at 50% 40%, ${C.tabStore}08 0%, transparent 50%)`,
-      animation: "fadeIn 0.3s ease",
+      position: "relative", animation: "fadeIn 0.3s ease",
     }}>
-      {/* Dev banner at top */}
+      {/* Store background */}
       <div style={{
-        padding: "12px 24px", borderRadius: 10, marginBottom: 32,
-        background: `${C.tabStore}22`, border: `1px solid ${C.tabStore}44`,
-        fontSize: 13, color: "#93c5fd", fontWeight: 700, letterSpacing: 1,
-        textTransform: "uppercase",
-      }}>
-        Currently in Development
-      </div>
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430, height: "100vh",
+        backgroundImage: "url(/store-bg.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.22, pointerEvents: "none", zIndex: 0,
+      }} />
 
-      {/* Store icon */}
-      <div style={{ fontSize: 64, marginBottom: 16 }}>🔮</div>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* Dev banner at top */}
+        <div style={{
+          padding: "12px 24px", borderRadius: 10, marginBottom: 32,
+          background: `${C.tabStore}22`, border: `1px solid ${C.tabStore}44`,
+          fontSize: 13, color: "#93c5fd", fontWeight: 700, letterSpacing: 1,
+          textTransform: "uppercase",
+        }}>
+          Currently in Development
+        </div>
 
-      <div style={{
-        fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
-        textTransform: "uppercase", marginBottom: 8,
-      }}>MARKETPLACE</div>
+        {/* Merchant icon */}
+        <img
+          src="/store-merchant.png"
+          alt="Merchant"
+          style={{
+            width: 140, height: 140, objectFit: "contain",
+            imageRendering: "pixelated",
+            mixBlendMode: "lighten",
+            marginBottom: 20,
+          }}
+        />
 
-      <h2 style={{
-        fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
-        textAlign: "center", marginBottom: 12,
-      }}>Coming Soon</h2>
+        <div style={{
+          fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
+          textTransform: "uppercase", marginBottom: 8,
+        }}>MARKETPLACE</div>
 
-      <p style={{
-        color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
-        maxWidth: 300,
-      }}>
-        Spend your hard-earned gold on spells, gear, cosmetics, and special items to power up your character and stand out in battle.
-      </p>
+        <h2 style={{
+          fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
+          textAlign: "center", marginBottom: 12,
+        }}>Coming Soon</h2>
 
-      {/* Gold balance preview */}
-      <div style={{
-        marginTop: 32, padding: "14px 28px", borderRadius: 12,
-        background: C.surface, border: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", gap: 8,
-      }}>
-        <span style={{ fontSize: 18 }}>🪙</span>
-        <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
-        <span style={{ color: C.textMuted, fontSize: 13 }}>gold saved</span>
+        <p style={{
+          color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
+          maxWidth: 300,
+        }}>
+          Spend your hard-earned gold on spells, gear, cosmetics, and special items to power up your character and stand out in battle.
+        </p>
+
+        {/* Gold balance preview */}
+        <div style={{
+          marginTop: 32, padding: "14px 28px", borderRadius: 12,
+          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          display: "flex", alignItems: "center", gap: 8,
+          backdropFilter: "blur(8px)",
+        }}>
+          <span style={{ fontSize: 18 }}>🪙</span>
+          <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
+          <span style={{ color: C.textMuted, fontSize: 13 }}>gold saved</span>
+        </div>
       </div>
     </div>
   );
