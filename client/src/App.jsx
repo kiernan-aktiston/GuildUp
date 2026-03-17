@@ -15,16 +15,19 @@ const C = {
   text: "#e5e7eb",
   textMuted: "#6b7280",
   textDim: "#4b5563",
-  // Tab colors from wireframe
-  tabStore: "#3366ff",
-  tabQuests: "#e8d44d",
-  tabBattle: "#8b1a1a",
-  tabAvatar: "#7c3aed",
-  tabGuild: "#22c55e",
+  // Tab colors — muted tones that fit the dark RPG aesthetic
+  tabStore: "#b8860b",
+  tabQuests: "#8b7d3c",
+  tabBattle: "#8b3a3a",
+  tabAvatar: "#6a4fb5",
+  tabGuild: "#2d7a4f",
   // Ritual states
   ritualDone: "#22c55e",
   ritualPending: "#2a1a1a",
   ritualPendingBorder: "#4a2a2a",
+  // Standard card
+  card: "rgba(17, 24, 39, 0.6)",
+  cardBorder: "rgba(42, 53, 72, 0.6)",
 };
 
 const TABS = [
@@ -203,29 +206,32 @@ function TabBar({ active, onSwitch }) {
     <div style={{
       position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
       width: "100%", maxWidth: 430, display: "flex", zIndex: 100,
-      borderTop: `1px solid ${C.border}`, background: "#1a1a2e",
+      borderTop: `1px solid ${C.cardBorder}`, background: "rgba(10, 14, 23, 0.95)",
+      backdropFilter: "blur(12px)",
     }}>
       {TABS.map(t => {
         const isActive = active === t.key;
         return (
           <button key={t.key} onClick={() => onSwitch(t.key)} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            background: isActive ? `${t.color}4D` : "#1a1a2e",
-            border: "none", cursor: "pointer",
+            background: isActive ? "rgba(240, 178, 50, 0.1)" : "transparent",
+            borderBottom: isActive ? `2px solid ${C.gold}` : "2px solid transparent",
+            border: "none", borderBottomStyle: "solid", borderBottomWidth: 2,
+            borderBottomColor: isActive ? C.gold : "transparent",
+            cursor: "pointer",
             padding: "8px 0 env(safe-area-inset-bottom, 8px)",
             transition: "all 0.25s ease",
           }}>
             <img src={t.icon} alt={t.label} style={{
               width: 26, height: 26, objectFit: "contain",
               imageRendering: "pixelated",
-              mixBlendMode: "lighten",
-              opacity: isActive ? 1 : 0.5,
-              filter: isActive ? "none" : "grayscale(50%)",
+              opacity: isActive ? 1 : 0.4,
+              filter: isActive ? "brightness(1.2)" : "grayscale(70%) brightness(0.7)",
               transition: "all 0.25s ease",
             }} />
             <span style={{
               fontSize: 10, fontWeight: isActive ? 700 : 500, letterSpacing: 0.5,
-              color: isActive ? "#fff" : "#ffffff88",
+              color: isActive ? C.gold : "#ffffff55",
               textTransform: "uppercase",
             }}>{t.label}</span>
           </button>
@@ -301,10 +307,10 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
     { name: "Rally Your Allies", desc: "Rally Your Allies 5x this week", xp: 50, gold: 10, progress: reachOutsDone, target: 5 },
   ];
 
-  // Theme colors
-  const green = { accent: "#22c55e", border: "#22c55e55", bg: "rgba(34, 197, 94, 0.18)", headerColor: "#4ade80" };
-  const blue = { accent: "#3b82f6", border: "#3b82f644", bg: "rgba(59, 130, 246, 0.08)", headerColor: "#60a5fa" };
-  const purple = { accent: "#7c5cfc", border: "#7c5cfc44", bg: "rgba(124, 92, 252, 0.08)", headerColor: "#a78bfa" };
+  // Theme colors — 25% opacity
+  const green = { accent: "#22c55e", border: "rgba(34, 197, 94, 0.35)", bg: "rgba(34, 197, 94, 0.25)", headerColor: "#4ade80" };
+  const blue = { accent: "#3b82f6", border: "rgba(59, 130, 246, 0.35)", bg: "rgba(59, 130, 246, 0.25)", headerColor: "#60a5fa" };
+  const purple = { accent: "#7c5cfc", border: "rgba(124, 92, 252, 0.35)", bg: "rgba(124, 92, 252, 0.25)", headerColor: "#a78bfa" };
 
   return (
     <div style={{
@@ -325,7 +331,8 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12,
           padding: "10px 14px", borderRadius: 12,
-          background: "rgba(40, 40, 50, 0.35)", backdropFilter: "blur(4px)",
+          background: C.card, backdropFilter: "blur(8px)",
+          border: `1px solid ${C.cardBorder}`,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 28 }}>{cls.emoji}</span>
@@ -340,7 +347,8 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "8px 12px", borderRadius: 10, marginBottom: 16,
-          background: "rgba(180, 180, 195, 0.15)", backdropFilter: "blur(4px)",
+          background: C.card, backdropFilter: "blur(8px)",
+          border: `1px solid ${C.cardBorder}`,
         }}>
           <span style={{
             fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 1,
@@ -811,8 +819,8 @@ function RitualDetailScreen({ ritual, onBack }) {
           />
           <div style={{
             padding: "12px 18px", borderRadius: 12, width: "100%",
-            background: `${C.surface}88`, border: `1px solid ${C.border}`,
-            textAlign: "center",
+            background: C.card, border: `1px solid ${C.cardBorder}`,
+            backdropFilter: "blur(8px)", textAlign: "center",
           }}>
             <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 4 }}>
               "{info.featuredQuote.text}"
@@ -824,7 +832,8 @@ function RitualDetailScreen({ ritual, onBack }) {
         {/* What to Do */}
         <div style={{
           padding: "14px 18px", borderRadius: 14, marginBottom: 20,
-          background: `${C.surface}cc`, border: `1px solid ${C.border}`,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
+          backdropFilter: "blur(8px)",
         }}>
           <div style={{
             fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
@@ -947,8 +956,8 @@ function RitualDetailScreen({ ritual, onBack }) {
       <div style={{ marginTop: "auto" }}>
         <div style={{
           padding: "16px 20px", borderRadius: 12, marginBottom: 16,
-          background: `${C.surface}88`, border: `1px solid ${C.border}`,
-          textAlign: "center",
+          background: C.card, border: `1px solid ${C.cardBorder}`,
+          backdropFilter: "blur(8px)", textAlign: "center",
         }}>
           <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 6 }}>
             "{quote.text}"
@@ -1089,7 +1098,7 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
         {/* Character Traits */}
         <div style={{
           padding: "16px", borderRadius: 12, marginBottom: 12,
-          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
           backdropFilter: "blur(8px)",
         }}>
           <div style={{
@@ -1116,7 +1125,7 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
         {/* Stat Points Info */}
         <div style={{
           padding: "12px 16px", borderRadius: 10, marginBottom: 24, textAlign: "center",
-          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
           backdropFilter: "blur(8px)",
         }}>
           <span style={{ fontSize: 12, color: C.textMuted }}>Next level up: </span>
@@ -1230,7 +1239,7 @@ function BattleScreen() {
         }}>
           <div style={{
             width: 280, height: 160, borderRadius: 16,
-            background: `${C.surface}99`, border: `1px solid ${C.border}`,
+            background: C.card, border: `1px solid ${C.cardBorder}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             position: "relative", overflow: "hidden",
             backdropFilter: "blur(8px)",
@@ -1346,11 +1355,7 @@ function StoreScreen({ playerGold = 247 }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           gap: 10, marginTop: 24,
         }}>
-          <img src="/gold-coins.png" alt="gold" style={{
-            width: 32, height: 32, objectFit: "contain",
-            imageRendering: "pixelated",
-            mixBlendMode: "lighten",
-          }} />
+          <span style={{ fontSize: 32 }}>🪙</span>
           <span style={{
             color: C.gold, fontWeight: 800, fontSize: 36, fontFamily: "'Cinzel', serif",
             textShadow: `0 0 20px ${C.gold}33`,
@@ -1465,7 +1470,8 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
     <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease" }}>
       <div style={{
         padding: 20, borderRadius: 16, textAlign: "center", marginBottom: 20,
-        background: C.surface, border: `1px solid ${C.border}`,
+        background: C.card, border: `1px solid ${C.cardBorder}`,
+        backdropFilter: "blur(8px)",
       }}>
         <div style={{ fontSize: 48, marginBottom: 8 }}>🏰</div>
         <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.tabGuild }}>{guild.name || "Guild"}</h3>
@@ -1488,7 +1494,7 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
           return (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 12, padding: 14,
-              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+              background: C.card, border: `1px solid ${C.cardBorder}`, borderRadius: 12,
             }}>
               <span style={{ fontSize: 24 }}>{memberClass.emoji}</span>
               <div style={{ flex: 1 }}>
@@ -1937,7 +1943,7 @@ function ClassRevealScreen({ className, startingLevel, onContinue }) {
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 12,
           padding: "12px 24px", borderRadius: 12,
-          background: `${C.surface}cc`, border: `1px solid ${C.border}`,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
           animation: "fadeIn 1.4s ease",
         }}>
           <div>
