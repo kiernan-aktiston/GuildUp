@@ -30,7 +30,7 @@ const C = {
 const TABS = [
   { key: "store", label: "Store", icon: "/tab-store.png", color: C.tabStore },
   { key: "quests", label: "Quests", icon: "/tab-quests.png", color: C.tabQuests },
-  { key: "battle", label: "Battle", icon: "/tab-battle.png", color: C.tabBattle },
+  { key: "battle", label: "Arena", icon: "/tab-battle.png", color: C.tabBattle },
   { key: "avatar", label: "Avatar", icon: "/tab-avatar.png", color: C.tabAvatar },
   { key: "guild", label: "Guild", icon: "/tab-guild.png", color: C.tabGuild },
 ];
@@ -309,7 +309,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         width: "100%", maxWidth: 430, height: "100vh",
         backgroundImage: "url(/quest-map.png)",
         backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.12, pointerEvents: "none", zIndex: 0,
+        opacity: 0.22, pointerEvents: "none", zIndex: 0,
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -1100,78 +1100,89 @@ function BattleScreen() {
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
-      background: `radial-gradient(ellipse at 50% 40%, ${C.tabBattle}12 0%, transparent 50%)`,
-      animation: "fadeIn 0.3s ease",
+      position: "relative", animation: "fadeIn 0.3s ease",
     }}>
-      {/* Dev banner at top */}
+      {/* Arena background */}
       <div style={{
-        padding: "12px 24px", borderRadius: 10, marginBottom: 32,
-        background: `${C.tabBattle}22`, border: `1px solid ${C.tabBattle}44`,
-        fontSize: 13, color: "#fca5a5", fontWeight: 700, letterSpacing: 1,
-        textTransform: "uppercase",
-      }}>
-        Currently in Development
-      </div>
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430, height: "100vh",
+        backgroundImage: "url(/arena-bg.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.25, pointerEvents: "none", zIndex: 0,
+      }} />
 
-      {/* Pixel art style battle preview */}
-      <div style={{
-        width: 280, height: 200, borderRadius: 16, marginBottom: 32,
-        background: C.surface, border: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        position: "relative", overflow: "hidden",
-      }}>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* Dev banner at top */}
         <div style={{
-          position: "absolute", bottom: 0, width: "100%", height: "40%",
-          background: `linear-gradient(180deg, transparent, ${C.ritualDone}08)`,
-        }} />
+          padding: "12px 24px", borderRadius: 10, marginBottom: 32,
+          background: `${C.tabBattle}22`, border: `1px solid ${C.tabBattle}44`,
+          fontSize: 13, color: "#fca5a5", fontWeight: 700, letterSpacing: 1,
+          textTransform: "uppercase",
+        }}>
+          Currently in Development
+        </div>
+
+        {/* Pixel art style battle preview */}
         <div style={{
-          position: "absolute", left: 40, bottom: 50,
-          display: "flex", flexDirection: "column", alignItems: "center",
+          width: 280, height: 200, borderRadius: 16, marginBottom: 32,
+          background: `${C.surface}cc`, border: `1px solid ${C.border}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          position: "relative", overflow: "hidden",
+          backdropFilter: "blur(8px)",
         }}>
           <div style={{
-            fontSize: 48, filter: "drop-shadow(0 0 8px #ef444444)",
-            animation: "float 2s ease-in-out infinite",
-          }}>⚔️</div>
+            position: "absolute", bottom: 0, width: "100%", height: "40%",
+            background: `linear-gradient(180deg, transparent, ${C.ritualDone}08)`,
+          }} />
           <div style={{
-            fontSize: 9, color: C.text, background: `${C.tabBattle}aa`, padding: "2px 6px",
-            borderRadius: 4, marginTop: 4, fontWeight: 600,
-          }}>LV.8 WARRIOR</div>
+            position: "absolute", left: 40, bottom: 50,
+            display: "flex", flexDirection: "column", alignItems: "center",
+          }}>
+            <div style={{
+              fontSize: 48, filter: "drop-shadow(0 0 8px #ef444444)",
+              animation: "float 2s ease-in-out infinite",
+            }}>⚔️</div>
+            <div style={{
+              fontSize: 9, color: C.text, background: `${C.tabBattle}aa`, padding: "2px 6px",
+              borderRadius: 4, marginTop: 4, fontWeight: 600,
+            }}>LV.8 WARRIOR</div>
+          </div>
+          <div style={{
+            fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Cinzel', serif",
+            textShadow: `0 0 20px ${C.gold}44`, letterSpacing: 2,
+          }}>VS</div>
+          <div style={{
+            position: "absolute", right: 40, bottom: 50,
+            display: "flex", flexDirection: "column", alignItems: "center",
+          }}>
+            <div style={{
+              fontSize: 48, filter: "drop-shadow(0 0 8px #3b82f644)",
+              animation: "float 2s ease-in-out infinite 0.5s",
+            }}>📖</div>
+            <div style={{
+              fontSize: 9, color: C.text, background: `${C.tabStore}aa`, padding: "2px 6px",
+              borderRadius: 4, marginTop: 4, fontWeight: 600,
+            }}>LV.9 SAGE</div>
+          </div>
         </div>
+
         <div style={{
-          fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Cinzel', serif",
-          textShadow: `0 0 20px ${C.gold}44`, letterSpacing: 2,
-        }}>VS</div>
-        <div style={{
-          position: "absolute", right: 40, bottom: 50,
-          display: "flex", flexDirection: "column", alignItems: "center",
+          fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
+          textTransform: "uppercase", marginBottom: 8,
+        }}>ARENA</div>
+
+        <h2 style={{
+          fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
+          textAlign: "center", marginBottom: 12,
+        }}>Coming Soon</h2>
+
+        <p style={{
+          color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
+          maxWidth: 300,
         }}>
-          <div style={{
-            fontSize: 48, filter: "drop-shadow(0 0 8px #3b82f644)",
-            animation: "float 2s ease-in-out infinite 0.5s",
-          }}>📖</div>
-          <div style={{
-            fontSize: 9, color: C.text, background: `${C.tabStore}aa`, padding: "2px 6px",
-            borderRadius: 4, marginTop: 4, fontWeight: 600,
-          }}>LV.9 SAGE</div>
-        </div>
+          Challenge your friends to battle. Your real-world effort is your power — every quest makes you stronger. Gear up. Cast spells. Strike hard. Victory favors the devoted.
+        </p>
       </div>
-
-      <div style={{
-        fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
-        textTransform: "uppercase", marginBottom: 8,
-      }}>ARENA</div>
-
-      <h2 style={{
-        fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
-        textAlign: "center", marginBottom: 12,
-      }}>Coming Soon</h2>
-
-      <p style={{
-        color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
-        maxWidth: 300,
-      }}>
-        Challenge your friends to battle. Your real-world effort is your power — every quest makes you stronger. Gear up. Cast spells. Strike hard. Victory favors the devoted.
-      </p>
     </div>
   );
 }
