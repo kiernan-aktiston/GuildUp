@@ -210,7 +210,7 @@ function TabBar({ active, onSwitch }) {
         return (
           <button key={t.key} onClick={() => onSwitch(t.key)} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            background: isActive ? t.color : "#1a1a2e",
+            background: isActive ? `${t.color}80` : "#1a1a2e",
             border: "none", cursor: "pointer",
             padding: "8px 0 env(safe-area-inset-bottom, 8px)",
             transition: "all 0.25s ease",
@@ -264,7 +264,7 @@ function XPBar({ xp = 340, maxXp = 500, level = 4 }) {
 // ============================================
 // QUESTS SCREEN
 // ============================================
-function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [], onCompleteQuest, playerClass = "warrior", playerLevel = 1 }) {
+function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [], onCompleteQuest, playerClass = "warrior", playerLevel = 1, ritualStreaks = {} }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
@@ -274,6 +274,14 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
     { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️" },
     { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️" },
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
+
+  const streakIcons = [
+    { emoji: "⚔️", name: "Bodyweight Workout" },
+    { emoji: "🏹", name: "Walk/Jog 20min" },
+    { emoji: "📖", name: "Read 20min" },
+    { emoji: "🕯️", name: "Pray/Meditate 10min" },
+    { emoji: "🗡️", name: "Reach Out" },
+  ];
 
   const quests = [
     { id: "q1", name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2, stats: ["str", "spi"] },
@@ -314,11 +322,40 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
 
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <span style={{ fontSize: 28 }}>{cls.emoji}</span>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: "'Cinzel', serif" }}>Level {playerLevel} {cls.title}</div>
-            <div style={{ fontSize: 12, color: C.gold, fontWeight: 600, letterSpacing: 1 }}>RANK: {rank.toUpperCase()}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 28 }}>{cls.emoji}</span>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: "'Cinzel', serif" }}>Level {playerLevel} {cls.title}</div>
+              <div style={{ fontSize: 12, color: C.gold, fontWeight: 600, letterSpacing: 1 }}>RANK: {rank.toUpperCase()}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ritual Streaks */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "8px 12px", borderRadius: 10, marginBottom: 16,
+          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          backdropFilter: "blur(8px)",
+        }}>
+          <span style={{
+            fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>Streaks</span>
+          <div style={{ display: "flex", gap: 12 }}>
+            {streakIcons.map((s, i) => {
+              const count = ritualStreaks[s.name] || 0;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <span style={{ fontSize: 14 }}>{s.emoji}</span>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, fontFamily: "monospace",
+                    color: count > 0 ? "#f59e0b" : C.textDim,
+                  }}>{count}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -1946,6 +1983,12 @@ export default function App() {
   const [completedRituals, setCompletedRituals] = useState({});
   const [completedQuests, setCompletedQuests] = useState([]);
 
+  // Ritual streaks (consecutive days per ritual — loaded from Supabase, defaults to 0)
+  const [ritualStreaks, setRitualStreaks] = useState({
+    "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
+    "Pray/Meditate 10min": 0, "Reach Out": 0,
+  });
+
   // Level up modal
   const [levelUpData, setLevelUpData] = useState(null);
 
@@ -2132,6 +2175,7 @@ export default function App() {
     setUserGuild(null);
     setGuildMembers([]);
     setAvatarUrl(null);
+    setRitualStreaks({ "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0, "Pray/Meditate 10min": 0, "Reach Out": 0 });
     setTab("quests");
   };
 
@@ -2440,6 +2484,7 @@ export default function App() {
                     onCompleteQuest={handleQuestComplete}
                     playerClass={playerClass}
                     playerLevel={playerLevel}
+                    ritualStreaks={ritualStreaks}
                   />
                 )}
                 {tab === "avatar" && (
