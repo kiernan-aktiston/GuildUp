@@ -1073,6 +1073,16 @@ function BattleScreen() {
       background: `radial-gradient(ellipse at 50% 40%, ${C.tabBattle}12 0%, transparent 50%)`,
       animation: "fadeIn 0.3s ease",
     }}>
+      {/* Dev banner at top */}
+      <div style={{
+        padding: "12px 24px", borderRadius: 10, marginBottom: 32,
+        background: `${C.tabBattle}22`, border: `1px solid ${C.tabBattle}44`,
+        fontSize: 13, color: "#fca5a5", fontWeight: 700, letterSpacing: 1,
+        textTransform: "uppercase",
+      }}>
+        Currently in Development
+      </div>
+
       {/* Pixel art style battle preview */}
       <div style={{
         width: 280, height: 200, borderRadius: 16, marginBottom: 32,
@@ -1080,19 +1090,16 @@ function BattleScreen() {
         display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", overflow: "hidden",
       }}>
-        {/* Battle scene */}
         <div style={{
           position: "absolute", bottom: 0, width: "100%", height: "40%",
           background: `linear-gradient(180deg, transparent, ${C.ritualDone}08)`,
         }} />
-        {/* Left fighter */}
         <div style={{
           position: "absolute", left: 40, bottom: 50,
           display: "flex", flexDirection: "column", alignItems: "center",
         }}>
           <div style={{
-            fontSize: 48,
-            filter: "drop-shadow(0 0 8px #ef444444)",
+            fontSize: 48, filter: "drop-shadow(0 0 8px #ef444444)",
             animation: "float 2s ease-in-out infinite",
           }}>⚔️</div>
           <div style={{
@@ -1100,19 +1107,16 @@ function BattleScreen() {
             borderRadius: 4, marginTop: 4, fontWeight: 600,
           }}>LV.8 WARRIOR</div>
         </div>
-        {/* VS */}
         <div style={{
           fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Cinzel', serif",
           textShadow: `0 0 20px ${C.gold}44`, letterSpacing: 2,
         }}>VS</div>
-        {/* Right fighter */}
         <div style={{
           position: "absolute", right: 40, bottom: 50,
           display: "flex", flexDirection: "column", alignItems: "center",
         }}>
           <div style={{
-            fontSize: 48,
-            filter: "drop-shadow(0 0 8px #3b82f644)",
+            fontSize: 48, filter: "drop-shadow(0 0 8px #3b82f644)",
             animation: "float 2s ease-in-out infinite 0.5s",
           }}>📖</div>
           <div style={{
@@ -1134,18 +1138,10 @@ function BattleScreen() {
 
       <p style={{
         color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
-        maxWidth: 280,
+        maxWidth: 300,
       }}>
-        Challenge your friends to async 1v1 battles. Complete daily quests to strengthen your avatar and gain the edge.
+        Challenge your friends to battle. Your real-world effort is your power — every quest makes you stronger. Gear up. Cast spells. Strike hard. Victory favors the devoted.
       </p>
-
-      <div style={{
-        marginTop: 32, padding: "12px 24px", borderRadius: 10,
-        background: `${C.tabBattle}22`, border: `1px solid ${C.tabBattle}44`,
-        fontSize: 13, color: "#fca5a5",
-      }}>
-        Currently in Development
-      </div>
     </div>
   );
 }
@@ -1154,38 +1150,52 @@ function BattleScreen() {
 // STORE SCREEN (placeholder)
 // ============================================
 function StoreScreen({ playerGold = 247 }) {
-  const items = [
-    { name: "XP Boost Potion", icon: "🧪", cost: 250, desc: "2x XP for 24hrs" },
-    { name: "Gold Magnet", icon: "🧲", cost: 200, desc: "1.5x gold for 24hrs" },
-    { name: "Phoenix Feather", icon: "🔥", cost: 375, desc: "Reset a broken streak" },
-    { name: "Warrior's Crest", icon: "⚔️", cost: 500, desc: "Cosmetic badge" },
-    { name: "Scholar's Tome", icon: "📖", cost: 500, desc: "Cosmetic badge" },
-    { name: "Guild Banner", icon: "🏴", cost: 1000, desc: "Custom guild colors" },
-  ];
   return (
-    <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: "'Cinzel', serif" }}>Shop</div>
-        <span style={{ color: C.gold, fontWeight: 600, fontSize: 15 }}>🪙 {playerGold}</span>
+    <div style={{
+      minHeight: "100vh", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
+      background: `radial-gradient(ellipse at 50% 40%, ${C.tabStore}08 0%, transparent 50%)`,
+      animation: "fadeIn 0.3s ease",
+    }}>
+      {/* Dev banner at top */}
+      <div style={{
+        padding: "12px 24px", borderRadius: 10, marginBottom: 32,
+        background: `${C.tabStore}22`, border: `1px solid ${C.tabStore}44`,
+        fontSize: 13, color: "#93c5fd", fontWeight: 700, letterSpacing: 1,
+        textTransform: "uppercase",
+      }}>
+        Currently in Development
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{
-            padding: 16, borderRadius: 12, textAlign: "center",
-            background: C.surface, border: `1px solid ${C.border}`,
-          }}>
-            <div style={{ fontSize: 36, marginBottom: 8 }}>{item.icon}</div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: C.text, marginBottom: 2 }}>{item.name}</div>
-            <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 12 }}>{item.desc}</div>
-            <button style={{
-              width: "100%", padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
-              color: "#000", fontSize: 13, fontWeight: 700,
-            }}>
-              🪙 {item.cost}
-            </button>
-          </div>
-        ))}
+
+      {/* Store icon */}
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🔮</div>
+
+      <div style={{
+        fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
+        textTransform: "uppercase", marginBottom: 8,
+      }}>MARKETPLACE</div>
+
+      <h2 style={{
+        fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
+        textAlign: "center", marginBottom: 12,
+      }}>Coming Soon</h2>
+
+      <p style={{
+        color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
+        maxWidth: 300,
+      }}>
+        Spend your hard-earned gold on spells, gear, cosmetics, and special items to power up your character and stand out in battle.
+      </p>
+
+      {/* Gold balance preview */}
+      <div style={{
+        marginTop: 32, padding: "14px 28px", borderRadius: 12,
+        background: C.surface, border: `1px solid ${C.border}`,
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <span style={{ fontSize: 18 }}>🪙</span>
+        <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
+        <span style={{ color: C.textMuted, fontSize: 13 }}>gold saved</span>
       </div>
     </div>
   );
