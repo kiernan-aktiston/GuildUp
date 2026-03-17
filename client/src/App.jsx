@@ -206,8 +206,7 @@ function TabBar({ active, onSwitch }) {
     <div style={{
       position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
       width: "100%", maxWidth: 430, display: "flex", zIndex: 100,
-      borderTop: `1px solid ${C.cardBorder}`, background: "rgba(10, 14, 23, 0.95)",
-      backdropFilter: "blur(12px)",
+      borderTop: `1px solid ${C.cardBorder}`, background: "#000",
     }}>
       {TABS.map(t => {
         const isActive = active === t.key;
@@ -250,7 +249,7 @@ function XPBar({ xp = 340, maxXp = 500, level = 4 }) {
     <div style={{
       position: "fixed", bottom: 58, left: "50%", transform: "translateX(-50%)",
       width: "100%", maxWidth: 430, padding: "0 16px 8px",
-      background: `linear-gradient(transparent, ${C.bg})`,
+      background: "transparent",
       zIndex: 99,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -274,11 +273,11 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
-    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️" },
-    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹" },
-    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖" },
-    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️" },
-    { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️" },
+    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "20 min bodyweight workout" },
+    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "20 min walk or jog outside" },
+    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "20 min of focused reading" },
+    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "10 min of prayer or meditation" },
+    { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️", desc: "Reach out to someone meaningfully" },
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
 
   const streakIcons = [
@@ -403,11 +402,14 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
                   {r.done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
                 </div>
                 <span style={{ fontSize: 18 }}>{r.emoji}</span>
-                <span style={{
-                  flex: 1, fontSize: 14, fontWeight: 500,
-                  color: r.done ? C.textMuted : C.text,
-                  textDecoration: r.done ? "line-through" : "none",
-                }}>{r.label}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 14, fontWeight: 500,
+                    color: r.done ? C.textMuted : C.text,
+                    textDecoration: r.done ? "line-through" : "none",
+                  }}>{r.label}</div>
+                  <div style={{ fontSize: 11, color: "#8b7355", marginTop: 1 }}>{r.desc}</div>
+                </div>
                 {!r.done ? (
                   <button onClick={() => onOpenRitual(r)} style={{
                     padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
@@ -466,7 +468,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
                       color: done ? C.textMuted : C.text,
                       textDecoration: done ? "line-through" : "none",
                     }}>{q.name}</div>
-                    <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{q.desc}</div>
+                    <div style={{ fontSize: 12, color: "#8b7355", marginTop: 2 }}>{q.desc}</div>
                   </div>
                   {!done ? (
                     <button onClick={() => onCompleteQuest && onCompleteQuest(q.id, q.xp, q.gold, q.stats)} style={{
@@ -525,7 +527,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
                           letterSpacing: 0.3,
                         }}>{statusLabel}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: C.textMuted }}>{q.desc}</div>
+                      <div style={{ fontSize: 12, color: "#8b7355" }}>{q.desc}</div>
                     </div>
                     <div style={{ textAlign: "right", minWidth: 60 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: purple.accent }}>+{q.xp} XP</div>
@@ -1392,8 +1394,16 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
       <div style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
-        animation: "fadeIn 0.3s ease",
+        animation: "fadeIn 0.3s ease", position: "relative",
       }}>
+        <div style={{
+          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "100%", maxWidth: 430, height: "100vh",
+          backgroundImage: "url(/guild-bg.png)",
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: 0.25, pointerEvents: "none", zIndex: 0,
+        }} />
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>🏰</div>
         <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.tabGuild, marginBottom: 8 }}>No Guild Yet</h3>
         <p style={{ color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6, marginBottom: 32 }}>
@@ -1410,6 +1420,7 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
             background: C.surfaceLight, border: `1px solid ${C.border}`,
             color: C.text, fontSize: 15, fontWeight: 500, width: "100%",
           }}>Join with Invite Code</button>
+        </div>
         </div>
       </div>
     );
@@ -1467,7 +1478,15 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
   // Show guild info
   const guild = userGuild?.guilds || {};
   return (
-    <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease" }}>
+    <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease", position: "relative", minHeight: "100vh" }}>
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430, height: "100vh",
+        backgroundImage: "url(/guild-bg.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.25, pointerEvents: "none", zIndex: 0,
+      }} />
+      <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{
         padding: 20, borderRadius: 16, textAlign: "center", marginBottom: 20,
         background: C.card, border: `1px solid ${C.cardBorder}`,
@@ -1505,6 +1524,7 @@ function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJo
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
