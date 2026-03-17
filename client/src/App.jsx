@@ -1150,8 +1150,8 @@ function BattleScreen() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
       position: "relative", animation: "fadeIn 0.3s ease",
+      padding: "0 0 120px",
     }}>
       {/* Arena background */}
       <div style={{
@@ -1159,91 +1159,99 @@ function BattleScreen() {
         width: "100%", maxWidth: 430, height: "100vh",
         backgroundImage: "url(/arena-bg.png)",
         backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.25, pointerEvents: "none", zIndex: 0,
+        opacity: 0.3, pointerEvents: "none", zIndex: 0,
       }} />
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* Construction banner */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+
+        {/* Top third: Arena info */}
         <div style={{
-          padding: "10px 20px", borderRadius: 12, marginBottom: 32,
-          background: `repeating-linear-gradient(
-            -45deg,
-            rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.9) 10px,
-            rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.9) 20px
-          )`,
-          position: "relative", overflow: "hidden",
-          width: "100%", maxWidth: 340,
+          flex: "0 0 38vh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", padding: "0 32px",
         }}>
           <div style={{
-            background: "rgba(245, 158, 11, 0.95)", padding: "10px 20px", borderRadius: 8,
-            fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
-            textTransform: "uppercase", textAlign: "center",
-            border: "3px solid #000",
+            fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase", marginBottom: 8,
+          }}>ARENA</div>
+
+          <h2 style={{
+            fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
+            textAlign: "center", marginBottom: 12,
+          }}>Coming Soon</h2>
+
+          <p style={{
+            color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
+            maxWidth: 300,
           }}>
-            Currently in Development
+            Challenge your friends to battle. Your real-world effort is your power — every quest makes you stronger. Gear up. Cast spells. Strike hard. Victory favors the devoted.
+          </p>
+        </div>
+
+        {/* Middle: VS preview */}
+        <div style={{
+          flex: "0 0 20vh", display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            width: 280, height: 160, borderRadius: 16,
+            background: `${C.surface}99`, border: `1px solid ${C.border}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "relative", overflow: "hidden",
+            backdropFilter: "blur(8px)",
+          }}>
+            <div style={{
+              position: "absolute", left: 40, bottom: 40,
+              display: "flex", flexDirection: "column", alignItems: "center",
+            }}>
+              <div style={{
+                fontSize: 48, filter: "drop-shadow(0 0 8px #ef444444)",
+                animation: "float 2s ease-in-out infinite",
+              }}>⚔️</div>
+              <div style={{
+                fontSize: 9, color: C.text, background: `${C.tabBattle}aa`, padding: "2px 6px",
+                borderRadius: 4, marginTop: 4, fontWeight: 600,
+              }}>LV.8 WARRIOR</div>
+            </div>
+            <div style={{
+              fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Cinzel', serif",
+              textShadow: `0 0 20px ${C.gold}44`, letterSpacing: 2,
+            }}>VS</div>
+            <div style={{
+              position: "absolute", right: 40, bottom: 40,
+              display: "flex", flexDirection: "column", alignItems: "center",
+            }}>
+              <div style={{
+                fontSize: 48, filter: "drop-shadow(0 0 8px #3b82f644)",
+                animation: "float 2s ease-in-out infinite 0.5s",
+              }}>📖</div>
+              <div style={{
+                fontSize: 9, color: C.text, background: `${C.tabStore}aa`, padding: "2px 6px",
+                borderRadius: 4, marginTop: 4, fontWeight: 600,
+              }}>LV.9 SAGE</div>
+            </div>
           </div>
         </div>
 
-        {/* Pixel art style battle preview */}
-        <div style={{
-          width: 280, height: 200, borderRadius: 16, marginBottom: 32,
-          background: `${C.surface}cc`, border: `1px solid ${C.border}`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          position: "relative", overflow: "hidden",
-          backdropFilter: "blur(8px)",
-        }}>
+        {/* Bottom: Construction banner - full width */}
+        <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
           <div style={{
-            position: "absolute", bottom: 0, width: "100%", height: "40%",
-            background: `linear-gradient(180deg, transparent, ${C.ritualDone}08)`,
-          }} />
-          <div style={{
-            position: "absolute", left: 40, bottom: 50,
-            display: "flex", flexDirection: "column", alignItems: "center",
+            padding: "8px", borderRadius: 14,
+            background: `repeating-linear-gradient(
+              -45deg,
+              #f59e0b, #f59e0b 10px,
+              #000 10px, #000 20px
+            )`,
+            width: "100%", maxWidth: 430,
           }}>
             <div style={{
-              fontSize: 48, filter: "drop-shadow(0 0 8px #ef444444)",
-              animation: "float 2s ease-in-out infinite",
-            }}>⚔️</div>
-            <div style={{
-              fontSize: 9, color: C.text, background: `${C.tabBattle}aa`, padding: "2px 6px",
-              borderRadius: 4, marginTop: 4, fontWeight: 600,
-            }}>LV.8 WARRIOR</div>
-          </div>
-          <div style={{
-            fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Cinzel', serif",
-            textShadow: `0 0 20px ${C.gold}44`, letterSpacing: 2,
-          }}>VS</div>
-          <div style={{
-            position: "absolute", right: 40, bottom: 50,
-            display: "flex", flexDirection: "column", alignItems: "center",
-          }}>
-            <div style={{
-              fontSize: 48, filter: "drop-shadow(0 0 8px #3b82f644)",
-              animation: "float 2s ease-in-out infinite 0.5s",
-            }}>📖</div>
-            <div style={{
-              fontSize: 9, color: C.text, background: `${C.tabStore}aa`, padding: "2px 6px",
-              borderRadius: 4, marginTop: 4, fontWeight: 600,
-            }}>LV.9 SAGE</div>
+              background: "#f59e0b", padding: "14px 24px", borderRadius: 8,
+              fontSize: 15, color: "#000", fontWeight: 900, letterSpacing: 2,
+              textTransform: "uppercase", textAlign: "center",
+              border: "3px solid #000",
+            }}>
+              Currently in Development
+            </div>
           </div>
         </div>
-
-        <div style={{
-          fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
-          textTransform: "uppercase", marginBottom: 8,
-        }}>ARENA</div>
-
-        <h2 style={{
-          fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
-          textAlign: "center", marginBottom: 12,
-        }}>Coming Soon</h2>
-
-        <p style={{
-          color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
-          maxWidth: 300,
-        }}>
-          Challenge your friends to battle. Your real-world effort is your power — every quest makes you stronger. Gear up. Cast spells. Strike hard. Victory favors the devoted.
-        </p>
       </div>
     </div>
   );
@@ -1256,70 +1264,82 @@ function StoreScreen({ playerGold = 247 }) {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
       position: "relative", animation: "fadeIn 0.3s ease",
+      padding: "0 0 120px",
     }}>
-      {/* Store background */}
+      {/* Store background - brighter */}
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "100%", maxWidth: 430, height: "100vh",
         backgroundImage: "url(/store-bg.png)",
         backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.22, pointerEvents: "none", zIndex: 0,
+        opacity: 0.3, pointerEvents: "none", zIndex: 0,
       }} />
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* Construction banner */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+
+        {/* Top third: Marketplace + Coming Soon */}
         <div style={{
-          padding: "10px 20px", borderRadius: 12, marginBottom: 32,
-          background: `repeating-linear-gradient(
-            -45deg,
-            rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.9) 10px,
-            rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.9) 20px
-          )`,
-          position: "relative", overflow: "hidden",
-          width: "100%", maxWidth: 340,
+          flex: "0 0 33vh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", padding: "0 32px",
         }}>
           <div style={{
-            background: "rgba(245, 158, 11, 0.95)", padding: "10px 20px", borderRadius: 8,
-            fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
-            textTransform: "uppercase", textAlign: "center",
-            border: "3px solid #000",
+            fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase", marginBottom: 8,
+          }}>MARKETPLACE</div>
+
+          <h2 style={{
+            fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
+            textAlign: "center", marginBottom: 12,
+          }}>Coming Soon</h2>
+
+          <p style={{
+            color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
+            maxWidth: 300,
           }}>
-            Currently in Development
+            Spend your hard-earned gold on spells, gear, cosmetics, and special items to power up your character and stand out in battle.
+          </p>
+        </div>
+
+        {/* Middle: Gold display */}
+        <div style={{
+          flex: "0 0 20vh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+          }}>
+            <span style={{
+              color: C.gold, fontWeight: 800, fontSize: 48, fontFamily: "'Cinzel', serif",
+              textShadow: `0 0 30px ${C.gold}44`,
+            }}>{playerGold}</span>
+            <span style={{
+              color: C.gold, fontSize: 12, fontWeight: 600, letterSpacing: 2,
+              textTransform: "uppercase",
+            }}>Gold Saved</span>
           </div>
         </div>
 
-        <div style={{
-          fontSize: 13, color: C.gold, fontWeight: 700, letterSpacing: 3,
-          textTransform: "uppercase", marginBottom: 8,
-        }}>MARKETPLACE</div>
-
-        <h2 style={{
-          fontFamily: "'Cinzel', serif", fontSize: 28, color: C.text,
-          textAlign: "center", marginBottom: 12,
-        }}>Coming Soon</h2>
-
-        <p style={{
-          color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6,
-          maxWidth: 300,
-        }}>
-          Spend your hard-earned gold on spells, gear, cosmetics, and special items to power up your character and stand out in battle.
-        </p>
-
-        {/* Gold balance preview */}
-        <div style={{
-          marginTop: 32, padding: "14px 28px", borderRadius: 12,
-          background: "rgba(101, 67, 33, 0.6)", border: `1px solid rgba(160, 120, 60, 0.4)`,
-          display: "flex", alignItems: "center", gap: 8,
-          backdropFilter: "blur(8px)",
-        }}>
-          <img src="/gold-coins.png" alt="gold" style={{
-            width: 24, height: 24, objectFit: "contain",
-            imageRendering: "pixelated", mixBlendMode: "lighten",
-          }} />
-          <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
-          <span style={{ color: "#d4a026", fontSize: 13 }}>gold saved</span>
+        {/* Bottom 2/3: Construction banner - full width */}
+        <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
+          <div style={{
+            padding: "8px", borderRadius: 14,
+            background: `repeating-linear-gradient(
+              -45deg,
+              #f59e0b, #f59e0b 10px,
+              #000 10px, #000 20px
+            )`,
+            width: "100%", maxWidth: 430,
+          }}>
+            <div style={{
+              background: "#f59e0b", padding: "14px 24px", borderRadius: 8,
+              fontSize: 15, color: "#000", fontWeight: 900, letterSpacing: 2,
+              textTransform: "uppercase", textAlign: "center",
+              border: "3px solid #000",
+            }}>
+              Currently in Development
+            </div>
+          </div>
         </div>
       </div>
     </div>
