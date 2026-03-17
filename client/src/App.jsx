@@ -28,11 +28,11 @@ const C = {
 };
 
 const TABS = [
-  { key: "store", label: "Store", icon: "🔮", color: C.tabStore },
-  { key: "quests", label: "Quests", icon: "⁉️", color: C.tabQuests },
-  { key: "battle", label: "Battle", icon: "⚔️", color: C.tabBattle },
-  { key: "avatar", label: "Avatar", icon: "👤", color: C.tabAvatar },
-  { key: "guild", label: "Guild", icon: "🛡️", color: C.tabGuild },
+  { key: "store", label: "Store", icon: "/tab-store.png", color: C.tabStore },
+  { key: "quests", label: "Quests", icon: "/tab-quests.png", color: C.tabQuests },
+  { key: "battle", label: "Battle", icon: "/tab-battle.png", color: C.tabBattle },
+  { key: "avatar", label: "Avatar", icon: "/tab-avatar.png", color: C.tabAvatar },
+  { key: "guild", label: "Guild", icon: "/tab-guild.png", color: C.tabGuild },
 ];
 
 const CLASSES = {
@@ -212,10 +212,16 @@ function TabBar({ active, onSwitch }) {
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
             background: isActive ? t.color : "#1a1a2e",
             border: "none", cursor: "pointer",
-            padding: "10px 0 env(safe-area-inset-bottom, 10px)",
+            padding: "8px 0 env(safe-area-inset-bottom, 8px)",
             transition: "all 0.25s ease",
           }}>
-            <span style={{ fontSize: 18, filter: isActive ? "none" : "grayscale(50%)" }}>{t.icon}</span>
+            <img src={t.icon} alt={t.label} style={{
+              width: 26, height: 26, objectFit: "contain",
+              imageRendering: "pixelated",
+              opacity: isActive ? 1 : 0.5,
+              filter: isActive ? "none" : "grayscale(50%)",
+              transition: "all 0.25s ease",
+            }} />
             <span style={{
               fontSize: 10, fontWeight: isActive ? 700 : 500, letterSpacing: 0.5,
               color: isActive ? "#fff" : "#ffffff88",
