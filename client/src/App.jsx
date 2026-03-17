@@ -317,7 +317,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         width: "100%", maxWidth: 430, height: "100vh",
         backgroundImage: "url(/quest-map.png)",
         backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.22, pointerEvents: "none", zIndex: 0,
+        opacity: 0.35, pointerEvents: "none", zIndex: 0,
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -336,7 +336,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "8px 12px", borderRadius: 10, marginBottom: 16,
-          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
           backdropFilter: "blur(8px)",
         }}>
           <span style={{
@@ -1009,122 +1009,136 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
   return (
     <div style={{
       padding: "24px 16px 120px",
-      background: `radial-gradient(ellipse at 50% 15%, ${cls.color}10 0%, transparent 50%)`,
       minHeight: "100vh", animation: "fadeIn 0.3s ease",
+      position: "relative",
     }}>
-      {/* Profile Photo */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
-        <div style={{
-          width: 130, height: 130, borderRadius: 20, overflow: "hidden",
-          border: `3px solid ${cls.color}88`,
-          background: `linear-gradient(135deg, ${C.surfaceLight}, ${C.surface})`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: `0 8px 32px ${cls.color}22`,
-          marginBottom: 12, position: "relative",
-          cursor: "pointer",
-        }}
-        onClick={() => document.getElementById("avatar-upload")?.click()}
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <div style={{
-              width: 100, height: 100, borderRadius: 50,
-              border: `2px dashed ${C.border}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <span style={{ fontSize: 13, color: C.textDim, textAlign: "center", lineHeight: 1.3 }}>Tap to<br/>Upload</span>
-            </div>
-          )}
-          {/* Class icon overlay */}
+      {/* Background image */}
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430, height: "100vh",
+        backgroundImage: "url(/avatar-bg.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.2, pointerEvents: "none", zIndex: 0,
+      }} />
+
+      <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Profile Photo */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
           <div style={{
-            position: "absolute", bottom: -4, right: -4,
-            width: 36, height: 36, borderRadius: 10,
-            background: cls.color, display: "flex", alignItems: "center", justifyContent: "center",
-            border: `2px solid ${C.bg}`,
-            boxShadow: `0 2px 8px #00000044`,
-          }}>
-            <span style={{ fontSize: 18 }}>{cls.emoji}</span>
-          </div>
-        </div>
-
-        {/* Hidden file input */}
-        <input
-          id="avatar-upload" type="file" accept="image/*"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file && onAvatarUpload) onAvatarUpload(file);
-            e.target.value = "";
+            width: 162, height: 162, borderRadius: 24, overflow: "hidden",
+            border: `3px solid ${cls.color}88`,
+            background: `linear-gradient(135deg, ${C.surfaceLight}, ${C.surface})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 8px 32px ${cls.color}22`,
+            marginBottom: 12, position: "relative",
+            cursor: "pointer",
           }}
-        />
-
-        {/* Upload button */}
-        <button onClick={() => document.getElementById("avatar-upload")?.click()} style={{
-          padding: "6px 16px", borderRadius: 8, border: `1px solid ${C.border}`,
-          background: C.surfaceLight, color: C.textMuted, fontSize: 12,
-          cursor: "pointer", marginBottom: 12,
-        }}>
-          📷 {avatarUrl ? "Change Photo" : "Upload Photo"}
-        </button>
-
-        {/* Name & Class */}
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-          {playerName}
-        </div>
-        <div style={{ fontSize: 14, color: cls.color, fontWeight: 600, marginBottom: 2 }}>
-          {cls.title}
-        </div>
-        <div style={{ fontSize: 12, color: C.gold, fontWeight: 600, letterSpacing: 1 }}>
-          {rank.toUpperCase()} — LEVEL {playerLevel}
-        </div>
-      </div>
-
-      {/* Stat Points Info */}
-      <div style={{
-        padding: "12px 16px", borderRadius: 10, marginBottom: 20, textAlign: "center",
-        background: `${C.surface}`, border: `1px solid ${C.border}`,
-      }}>
-        <span style={{ fontSize: 12, color: C.textMuted }}>Next level up: </span>
-        <span style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>+{statPointsForLevel(playerLevel + 1)} stat points</span>
-      </div>
-
-      {/* Character Traits (with numeric values) */}
-      <div style={{
-        padding: "16px", borderRadius: 12,
-        background: C.surface, border: `1px solid ${C.border}`,
-      }}>
-        <div style={{
-          fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
-          textTransform: "uppercase", marginBottom: 14, fontFamily: "'Cinzel', serif",
-        }}>Character Traits</div>
-        {stats.map((s, i) => (
-          <div key={i} style={{ marginBottom: i < 4 ? 10 : 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: C.textMuted }}>{s.label}</span>
-              <span style={{ fontSize: 12, color: s.color, fontWeight: 600 }}>{s.value}</span>
-            </div>
-            <div style={{ height: 6, background: C.surfaceLight, borderRadius: 3, overflow: "hidden" }}>
+          onClick={() => document.getElementById("avatar-upload")?.click()}
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
               <div style={{
-                width: `${s.pct}%`, height: "100%", borderRadius: 3,
-                background: `linear-gradient(90deg, ${s.color}, ${s.color}88)`,
-                transition: "width 1s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              }} />
+                width: 120, height: 120, borderRadius: 60,
+                border: `2px dashed ${C.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <span style={{ fontSize: 14, color: C.textDim, textAlign: "center", lineHeight: 1.3 }}>Tap to<br/>Upload</span>
+              </div>
+            )}
+            {/* Class icon overlay */}
+            <div style={{
+              position: "absolute", bottom: -4, right: -4,
+              width: 36, height: 36, borderRadius: 10,
+              background: cls.color, display: "flex", alignItems: "center", justifyContent: "center",
+              border: `2px solid ${C.bg}`,
+              boxShadow: `0 2px 8px #00000044`,
+            }}>
+              <span style={{ fontSize: 18 }}>{cls.emoji}</span>
+            </div>
+            {/* Camera icon overlay */}
+            <div style={{
+              position: "absolute", bottom: -4, left: -4,
+              width: 32, height: 32, borderRadius: 10,
+              background: C.surfaceLight, display: "flex", alignItems: "center", justifyContent: "center",
+              border: `2px solid ${C.bg}`,
+              boxShadow: `0 2px 8px #00000044`,
+            }}>
+              <span style={{ fontSize: 14 }}>📷</span>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Sign Out */}
-      {onSignOut && (
-        <button onClick={onSignOut} style={{
-          width: "100%", marginTop: 24, padding: "14px", borderRadius: 12,
-          background: "transparent", border: `1px solid #7f1d1d`,
-          color: "#fca5a5", fontSize: 14, fontWeight: 500, cursor: "pointer",
+          {/* Hidden file input */}
+          <input
+            id="avatar-upload" type="file" accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && onAvatarUpload) onAvatarUpload(file);
+              e.target.value = "";
+            }}
+          />
+
+          {/* Name & Class */}
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+            {playerName}
+          </div>
+          <div style={{ fontSize: 14, color: cls.color, fontWeight: 600, marginBottom: 2 }}>
+            {cls.title}
+          </div>
+          <div style={{ fontSize: 12, color: C.gold, fontWeight: 600, letterSpacing: 1 }}>
+            {rank.toUpperCase()} — LEVEL {playerLevel}
+          </div>
+        </div>
+
+        {/* Character Traits */}
+        <div style={{
+          padding: "16px", borderRadius: 12, marginBottom: 12,
+          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          backdropFilter: "blur(8px)",
         }}>
-          Sign Out
-        </button>
-      )}
+          <div style={{
+            fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
+            textTransform: "uppercase", marginBottom: 14, fontFamily: "'Cinzel', serif",
+          }}>Character Traits</div>
+          {stats.map((s, i) => (
+            <div key={i} style={{ marginBottom: i < 4 ? 10 : 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, color: C.textMuted }}>{s.label}</span>
+                <span style={{ fontSize: 12, color: s.color, fontWeight: 600 }}>{s.value}</span>
+              </div>
+              <div style={{ height: 6, background: C.surfaceLight, borderRadius: 3, overflow: "hidden" }}>
+                <div style={{
+                  width: `${s.pct}%`, height: "100%", borderRadius: 3,
+                  background: `linear-gradient(90deg, ${s.color}, ${s.color}88)`,
+                  transition: "width 1s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Stat Points Info — below traits */}
+        <div style={{
+          padding: "12px 16px", borderRadius: 10, marginBottom: 20, textAlign: "center",
+          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          backdropFilter: "blur(8px)",
+        }}>
+          <span style={{ fontSize: 12, color: C.textMuted }}>Next level up: </span>
+          <span style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>+{statPointsForLevel(playerLevel + 1)} stat points</span>
+        </div>
+
+        {/* Sign Out */}
+        {onSignOut && (
+          <button onClick={onSignOut} style={{
+            width: "100%", padding: "14px", borderRadius: 12,
+            background: "transparent", border: `1px solid #7f1d1d`,
+            color: "#fca5a5", fontSize: 14, fontWeight: 500, cursor: "pointer",
+          }}>
+            Sign Out
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -1259,7 +1273,7 @@ function StoreScreen({ playerGold = 247 }) {
           src="/store-merchant.png"
           alt="Merchant"
           style={{
-            width: 140, height: 140, objectFit: "contain",
+            width: 210, height: 210, objectFit: "contain",
             imageRendering: "pixelated",
             mixBlendMode: "lighten",
             marginBottom: 20,
