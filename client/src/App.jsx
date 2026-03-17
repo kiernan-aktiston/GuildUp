@@ -302,7 +302,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
   ];
 
   // Theme colors
-  const yellow = { accent: "#f0b232", border: "#f0b23244", bg: "rgba(240, 178, 50, 0.08)", headerColor: "#f0b232" };
+  const green = { accent: "#22c55e", border: "#22c55e55", bg: "rgba(34, 197, 94, 0.18)", headerColor: "#4ade80" };
   const blue = { accent: "#3b82f6", border: "#3b82f644", bg: "rgba(59, 130, 246, 0.08)", headerColor: "#60a5fa" };
   const purple = { accent: "#7c5cfc", border: "#7c5cfc44", bg: "rgba(124, 92, 252, 0.08)", headerColor: "#a78bfa" };
 
@@ -317,12 +317,16 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         width: "100%", maxWidth: 430, height: "100vh",
         backgroundImage: "url(/quest-map.png)",
         backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.35, pointerEvents: "none", zIndex: 0,
+        opacity: 0.5, pointerEvents: "none", zIndex: 0,
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12,
+          padding: "10px 14px", borderRadius: 12,
+          background: "rgba(40, 40, 50, 0.35)", backdropFilter: "blur(4px)",
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 28 }}>{cls.emoji}</span>
             <div>
@@ -336,8 +340,7 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "8px 12px", borderRadius: 10, marginBottom: 16,
-          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
-          backdropFilter: "blur(8px)",
+          background: "rgba(180, 180, 195, 0.15)", backdropFilter: "blur(4px)",
         }}>
           <span style={{
             fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 1,
@@ -359,14 +362,14 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
           </div>
         </div>
 
-        {/* ═══ THE FIVE — YELLOW THEMED ═══ */}
+        {/* ═══ THE FIVE — GREEN THEMED ═══ */}
         <div style={{
           marginBottom: 20, padding: "16px 14px", borderRadius: 14,
-          background: yellow.bg, border: `1px solid ${yellow.border}`,
+          background: green.bg, border: `1px solid ${green.border}`,
           backdropFilter: "blur(8px)",
         }}>
           <div style={{
-            fontSize: 13, fontWeight: 700, color: yellow.headerColor, letterSpacing: 1.5,
+            fontSize: 13, fontWeight: 700, color: green.headerColor, letterSpacing: 1.5,
             textTransform: "uppercase", marginBottom: 12, fontFamily: "'Cinzel', serif",
           }}>
             The Five — Daily Rituals
@@ -378,14 +381,14 @@ function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [
                 padding: "12px 14px", borderRadius: 10,
                 background: r.done
                   ? `rgba(34, 197, 94, 0.12)`
-                  : `rgba(240, 178, 50, 0.06)`,
-                border: `1px solid ${r.done ? "rgba(34, 197, 94, 0.25)" : "rgba(240, 178, 50, 0.15)"}`,
+                  : `rgba(34, 197, 94, 0.06)`,
+                border: `1px solid ${r.done ? "rgba(34, 197, 94, 0.25)" : "rgba(34, 197, 94, 0.15)"}`,
                 transition: "all 0.3s ease",
               }}>
                 <div style={{
                   width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                  border: `2px solid ${r.done ? C.ritualDone : yellow.accent}`,
-                  background: r.done ? C.ritualDone : `${yellow.accent}22`,
+                  border: `2px solid ${r.done ? C.ritualDone : green.accent}`,
+                  background: r.done ? C.ritualDone : `${green.accent}22`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.3s",
                 }}>
@@ -1172,9 +1175,9 @@ function BattleScreen() {
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
 
-        {/* Top third: Arena info */}
+        {/* Top: Arena info — takes up to midpoint */}
         <div style={{
-          flex: "0 0 38vh", display: "flex", flexDirection: "column",
+          flex: "0 0 42vh", display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", padding: "0 32px",
         }}>
           <div style={{
@@ -1195,9 +1198,35 @@ function BattleScreen() {
           </p>
         </div>
 
-        {/* Middle: VS preview */}
+        {/* Middle: Construction banner at ~50% */}
         <div style={{
-          flex: "0 0 20vh", display: "flex", alignItems: "center", justifyContent: "center",
+          flex: "0 0 auto", display: "flex", justifyContent: "center",
+          padding: "0",
+        }}>
+          <div style={{
+            padding: "8px", borderRadius: 14,
+            background: `repeating-linear-gradient(
+              -45deg,
+              #f59e0b, #f59e0b 10px,
+              #000 10px, #000 20px
+            )`,
+            width: "100%", maxWidth: 430,
+          }}>
+            <div style={{
+              background: "#f59e0b", padding: "14px 24px", borderRadius: 8,
+              fontSize: 15, color: "#000", fontWeight: 900, letterSpacing: 2,
+              textTransform: "uppercase", textAlign: "center",
+              border: "3px solid #000",
+            }}>
+              Currently in Development
+            </div>
+          </div>
+        </div>
+
+        {/* VS preview below banner */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          marginTop: 24,
         }}>
           <div style={{
             width: 280, height: 160, borderRadius: 16,
@@ -1238,28 +1267,6 @@ function BattleScreen() {
             </div>
           </div>
         </div>
-
-        {/* Bottom: Construction banner - full width */}
-        <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
-          <div style={{
-            padding: "8px", borderRadius: 14,
-            background: `repeating-linear-gradient(
-              -45deg,
-              #f59e0b, #f59e0b 10px,
-              #000 10px, #000 20px
-            )`,
-            width: "100%", maxWidth: 430,
-          }}>
-            <div style={{
-              background: "#f59e0b", padding: "14px 24px", borderRadius: 8,
-              fontSize: 15, color: "#000", fontWeight: 900, letterSpacing: 2,
-              textTransform: "uppercase", textAlign: "center",
-              border: "3px solid #000",
-            }}>
-              Currently in Development
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -1275,7 +1282,7 @@ function StoreScreen({ playerGold = 247 }) {
       position: "relative", animation: "fadeIn 0.3s ease",
       padding: "0 0 120px",
     }}>
-      {/* Store background - brighter */}
+      {/* Store background */}
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "100%", maxWidth: 430, height: "100vh",
@@ -1286,9 +1293,9 @@ function StoreScreen({ playerGold = 247 }) {
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
 
-        {/* Top third: Marketplace + Coming Soon */}
+        {/* Top: Marketplace info — takes up to midpoint */}
         <div style={{
-          flex: "0 0 33vh", display: "flex", flexDirection: "column",
+          flex: "0 0 42vh", display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", padding: "0 32px",
         }}>
           <div style={{
@@ -1309,27 +1316,11 @@ function StoreScreen({ playerGold = 247 }) {
           </p>
         </div>
 
-        {/* Middle: Gold display */}
+        {/* Middle: Construction banner at ~50% */}
         <div style={{
-          flex: "0 0 20vh", display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
+          flex: "0 0 auto", display: "flex", justifyContent: "center",
+          padding: "0",
         }}>
-          <div style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-          }}>
-            <span style={{
-              color: C.gold, fontWeight: 800, fontSize: 48, fontFamily: "'Cinzel', serif",
-              textShadow: `0 0 30px ${C.gold}44`,
-            }}>{playerGold}</span>
-            <span style={{
-              color: C.gold, fontSize: 12, fontWeight: 600, letterSpacing: 2,
-              textTransform: "uppercase",
-            }}>Gold Saved</span>
-          </div>
-        </div>
-
-        {/* Bottom 2/3: Construction banner - full width */}
-        <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
           <div style={{
             padding: "8px", borderRadius: 14,
             background: `repeating-linear-gradient(
@@ -1348,6 +1339,26 @@ function StoreScreen({ playerGold = 247 }) {
               Currently in Development
             </div>
           </div>
+        </div>
+
+        {/* Gold saved below banner */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 10, marginTop: 24,
+        }}>
+          <img src="/gold-coins.png" alt="gold" style={{
+            width: 32, height: 32, objectFit: "contain",
+            imageRendering: "pixelated",
+            mixBlendMode: "lighten",
+          }} />
+          <span style={{
+            color: C.gold, fontWeight: 800, fontSize: 36, fontFamily: "'Cinzel', serif",
+            textShadow: `0 0 20px ${C.gold}33`,
+          }}>{playerGold}</span>
+          <span style={{
+            color: C.gold, fontSize: 13, fontWeight: 600, letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>Gold Saved</span>
         </div>
       </div>
     </div>
