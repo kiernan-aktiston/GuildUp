@@ -1021,20 +1021,28 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
         opacity: 0.2, pointerEvents: "none", zIndex: 0,
       }} />
 
+      {/* Hidden file input */}
+      <input
+        id="avatar-upload" type="file" accept="image/*"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && onAvatarUpload) onAvatarUpload(file);
+          e.target.value = "";
+        }}
+      />
+
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Profile Photo */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+        {/* Profile Photo — black border */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
           <div style={{
             width: 162, height: 162, borderRadius: 24, overflow: "hidden",
-            border: `3px solid ${cls.color}88`,
+            border: `4px solid #000`,
             background: `linear-gradient(135deg, ${C.surfaceLight}, ${C.surface})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: `0 8px 32px ${cls.color}22`,
-            marginBottom: 12, position: "relative",
-            cursor: "pointer",
-          }}
-          onClick={() => document.getElementById("avatar-upload")?.click()}
-          >
+            boxShadow: `0 8px 32px #00000066`,
+            marginBottom: 16,
+          }}>
             {avatarUrl ? (
               <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
@@ -1046,55 +1054,39 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
                 <span style={{ fontSize: 14, color: C.textDim, textAlign: "center", lineHeight: 1.3 }}>Tap to<br/>Upload</span>
               </div>
             )}
-            {/* Class icon overlay */}
-            <div style={{
-              position: "absolute", bottom: -4, right: -4,
-              width: 36, height: 36, borderRadius: 10,
-              background: cls.color, display: "flex", alignItems: "center", justifyContent: "center",
-              border: `2px solid ${C.bg}`,
-              boxShadow: `0 2px 8px #00000044`,
-            }}>
-              <span style={{ fontSize: 18 }}>{cls.emoji}</span>
-            </div>
-            {/* Camera icon overlay */}
-            <div style={{
-              position: "absolute", bottom: -4, left: -4,
-              width: 32, height: 32, borderRadius: 10,
-              background: C.surfaceLight, display: "flex", alignItems: "center", justifyContent: "center",
-              border: `2px solid ${C.bg}`,
-              boxShadow: `0 2px 8px #00000044`,
-            }}>
-              <span style={{ fontSize: 14 }}>📷</span>
-            </div>
           </div>
 
-          {/* Hidden file input */}
-          <input
-            id="avatar-upload" type="file" accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file && onAvatarUpload) onAvatarUpload(file);
-              e.target.value = "";
-            }}
-          />
-
-          {/* Name & Class */}
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+          {/* Username */}
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 4 }}>
             {playerName}
           </div>
-          <div style={{ fontSize: 14, color: cls.color, fontWeight: 600, marginBottom: 2 }}>
+
+          {/* Rank and Level */}
+          <div style={{ fontSize: 13, color: C.gold, fontWeight: 600, letterSpacing: 1.5, marginBottom: 12 }}>
+            {rank.toUpperCase()} — LEVEL {playerLevel}
+          </div>
+
+          {/* Class icon */}
+          <div style={{
+            fontSize: 48, marginBottom: 6,
+            filter: `drop-shadow(0 0 12px ${cls.color}44)`,
+          }}>
+            {cls.emoji}
+          </div>
+
+          {/* Class name */}
+          <div style={{ fontSize: 16, color: cls.color, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>
             {cls.title}
           </div>
-          <div style={{ fontSize: 12, color: C.gold, fontWeight: 600, letterSpacing: 1 }}>
-            {rank.toUpperCase()} — LEVEL {playerLevel}
+          <div style={{ fontSize: 12, color: C.textMuted, fontStyle: "italic" }}>
+            {cls.desc}
           </div>
         </div>
 
         {/* Character Traits */}
         <div style={{
           padding: "16px", borderRadius: 12, marginBottom: 12,
-          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
           backdropFilter: "blur(8px)",
         }}>
           <div style={{
@@ -1118,26 +1110,42 @@ function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = 
           ))}
         </div>
 
-        {/* Stat Points Info — below traits */}
+        {/* Stat Points Info */}
         <div style={{
-          padding: "12px 16px", borderRadius: 10, marginBottom: 20, textAlign: "center",
-          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          padding: "12px 16px", borderRadius: 10, marginBottom: 24, textAlign: "center",
+          background: "rgba(17, 24, 39, 0.4)", border: `1px solid ${C.border}44`,
           backdropFilter: "blur(8px)",
         }}>
           <span style={{ fontSize: 12, color: C.textMuted }}>Next level up: </span>
           <span style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>+{statPointsForLevel(playerLevel + 1)} stat points</span>
         </div>
 
-        {/* Sign Out */}
-        {onSignOut && (
-          <button onClick={onSignOut} style={{
-            width: "100%", padding: "14px", borderRadius: 12,
-            background: "transparent", border: `1px solid #7f1d1d`,
-            color: "#fca5a5", fontSize: 14, fontWeight: 500, cursor: "pointer",
+        {/* Three action buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={() => document.getElementById("avatar-upload")?.click()} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: "rgba(59, 130, 246, 0.85)",
+            color: "#fff", fontSize: 15, fontWeight: 700,
           }}>
-            Sign Out
+            Edit Avatar
           </button>
-        )}
+          <button style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "default",
+            background: "rgba(245, 158, 11, 0.85)",
+            color: "#000", fontSize: 15, fontWeight: 700,
+          }}>
+            Inventory (Coming Soon)
+          </button>
+          {onSignOut && (
+            <button onClick={onSignOut} style={{
+              width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: "rgba(159, 18, 57, 0.85)",
+              color: "#fda4af", fontSize: 15, fontWeight: 700,
+            }}>
+              Sign Out
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
