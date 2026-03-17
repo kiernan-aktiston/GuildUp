@@ -1163,14 +1163,24 @@ function BattleScreen() {
       }} />
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* Dev banner at top */}
+        {/* Construction banner */}
         <div style={{
-          padding: "12px 24px", borderRadius: 10, marginBottom: 32,
-          background: `${C.tabBattle}22`, border: `1px solid ${C.tabBattle}44`,
-          fontSize: 13, color: "#fca5a5", fontWeight: 700, letterSpacing: 1,
-          textTransform: "uppercase",
+          padding: "14px 28px", borderRadius: 4, marginBottom: 32,
+          background: `repeating-linear-gradient(
+            -45deg,
+            #f59e0b, #f59e0b 10px,
+            #000000 10px, #000000 20px
+          )`,
+          position: "relative", overflow: "hidden",
         }}>
-          Currently in Development
+          <div style={{
+            background: "#f59e0b", padding: "10px 20px", borderRadius: 2,
+            fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
+            textTransform: "uppercase", textAlign: "center",
+            border: "3px solid #000",
+          }}>
+            🚧 Currently in Development 🚧
+          </div>
         </div>
 
         {/* Pixel art style battle preview */}
@@ -1258,14 +1268,24 @@ function StoreScreen({ playerGold = 247 }) {
       }} />
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* Dev banner at top */}
+        {/* Construction banner */}
         <div style={{
-          padding: "12px 24px", borderRadius: 10, marginBottom: 32,
-          background: `${C.tabStore}22`, border: `1px solid ${C.tabStore}44`,
-          fontSize: 13, color: "#93c5fd", fontWeight: 700, letterSpacing: 1,
-          textTransform: "uppercase",
+          padding: "14px 28px", borderRadius: 4, marginBottom: 32,
+          background: `repeating-linear-gradient(
+            -45deg,
+            #f59e0b, #f59e0b 10px,
+            #000000 10px, #000000 20px
+          )`,
+          position: "relative", overflow: "hidden",
         }}>
-          Currently in Development
+          <div style={{
+            background: "#f59e0b", padding: "10px 20px", borderRadius: 2,
+            fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
+            textTransform: "uppercase", textAlign: "center",
+            border: "3px solid #000",
+          }}>
+            🚧 Currently in Development 🚧
+          </div>
         </div>
 
         {/* Merchant icon */}
@@ -1275,7 +1295,7 @@ function StoreScreen({ playerGold = 247 }) {
           style={{
             width: 210, height: 210, objectFit: "contain",
             imageRendering: "pixelated",
-            mixBlendMode: "lighten",
+            mixBlendMode: "screen",
             marginBottom: 20,
           }}
         />
@@ -1300,13 +1320,13 @@ function StoreScreen({ playerGold = 247 }) {
         {/* Gold balance preview */}
         <div style={{
           marginTop: 32, padding: "14px 28px", borderRadius: 12,
-          background: "rgba(17, 24, 39, 0.7)", border: `1px solid ${C.border}`,
+          background: "rgba(240, 178, 50, 0.12)", border: `1px solid rgba(240, 178, 50, 0.3)`,
           display: "flex", alignItems: "center", gap: 8,
           backdropFilter: "blur(8px)",
         }}>
           <span style={{ fontSize: 18 }}>🪙</span>
           <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
-          <span style={{ color: C.textMuted, fontSize: 13 }}>gold saved</span>
+          <span style={{ color: "#d4a026", fontSize: 13 }}>gold saved</span>
         </div>
       </div>
     </div>
