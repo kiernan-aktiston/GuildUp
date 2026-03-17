@@ -1165,17 +1165,17 @@ function BattleScreen() {
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* Construction banner */}
         <div style={{
-          padding: "14px 28px", borderRadius: 4, marginBottom: 32,
+          padding: "10px 20px", borderRadius: 12, marginBottom: 32,
           background: `repeating-linear-gradient(
             -45deg,
-            rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.25) 10px,
-            rgba(0, 0, 0, 0.25) 10px, rgba(0, 0, 0, 0.25) 20px
+            rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.9) 10px,
+            rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.9) 20px
           )`,
           position: "relative", overflow: "hidden",
           width: "100%", maxWidth: 340,
         }}>
           <div style={{
-            background: "rgba(245, 158, 11, 0.85)", padding: "10px 20px", borderRadius: 2,
+            background: "rgba(245, 158, 11, 0.95)", padding: "10px 20px", borderRadius: 8,
             fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
             textTransform: "uppercase", textAlign: "center",
             border: "3px solid #000",
@@ -1271,17 +1271,17 @@ function StoreScreen({ playerGold = 247 }) {
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* Construction banner */}
         <div style={{
-          padding: "14px 28px", borderRadius: 4, marginBottom: 32,
+          padding: "10px 20px", borderRadius: 12, marginBottom: 32,
           background: `repeating-linear-gradient(
             -45deg,
-            rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.25) 10px,
-            rgba(0, 0, 0, 0.25) 10px, rgba(0, 0, 0, 0.25) 20px
+            rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.9) 10px,
+            rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.9) 20px
           )`,
           position: "relative", overflow: "hidden",
           width: "100%", maxWidth: 340,
         }}>
           <div style={{
-            background: "rgba(245, 158, 11, 0.85)", padding: "10px 20px", borderRadius: 2,
+            background: "rgba(245, 158, 11, 0.95)", padding: "10px 20px", borderRadius: 8,
             fontSize: 14, color: "#000", fontWeight: 900, letterSpacing: 2,
             textTransform: "uppercase", textAlign: "center",
             border: "3px solid #000",
@@ -1310,13 +1310,13 @@ function StoreScreen({ playerGold = 247 }) {
         {/* Gold balance preview */}
         <div style={{
           marginTop: 32, padding: "14px 28px", borderRadius: 12,
-          background: "rgba(240, 178, 50, 0.12)", border: `1px solid rgba(240, 178, 50, 0.3)`,
+          background: "rgba(101, 67, 33, 0.6)", border: `1px solid rgba(160, 120, 60, 0.4)`,
           display: "flex", alignItems: "center", gap: 8,
           backdropFilter: "blur(8px)",
         }}>
           <img src="/gold-coins.png" alt="gold" style={{
             width: 24, height: 24, objectFit: "contain",
-            imageRendering: "pixelated", mixBlendMode: "screen",
+            imageRendering: "pixelated", mixBlendMode: "lighten",
           }} />
           <span style={{ color: C.gold, fontWeight: 700, fontSize: 18, fontFamily: "monospace" }}>{playerGold}</span>
           <span style={{ color: "#d4a026", fontSize: 13 }}>gold saved</span>
