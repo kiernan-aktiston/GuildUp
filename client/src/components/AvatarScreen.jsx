@@ -145,3 +145,16 @@ export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1,
             Inventory (Coming Soon)
           </button>
           {onSignOut && (
+            <button onClick={onSignOut} style={{
+              width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: "rgba(239, 68, 68, 0.85)",
+              color: "#fff", fontSize: 15, fontWeight: 700,
+            }}>
+              Sign Out
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
