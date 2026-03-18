@@ -1,6 +1,6 @@
 import { C, CLASSES, getRank } from '../constants';
 
-export default function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [], onCompleteQuest, playerClass = "warrior", playerLevel = 1, ritualStreaks = {} }) {
+export default function QuestsScreen({ onOpenRitual, completedRituals = {}, completedQuests = [], onCompleteQuest, playerClass = "warrior", playerLevel = 1, ritualStreaks = {}, dailyQuests = [], weeklyRitualCounts = {} }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
@@ -19,21 +19,14 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, comp
     { emoji: "🗡️", name: "Reach Out" },
   ];
 
-  const quests = [
-    { id: "q1", name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2, stats: ["str", "spi"] },
-    { id: "q2", name: "Journal Entry", desc: "Write half a page in your journal", xp: 15, gold: 2, stats: ["int", "spi"] },
-    { id: "q3", name: "Expand your Network", desc: "Send a personalized message to someone you want in your network", xp: 15, gold: 2, stats: ["cha", "agi"] },
-    { id: "q4", name: "Connect with a Mentor", desc: "Have a meaningful conversation with a potential mentor", xp: 15, gold: 2, stats: ["cha", "int"] },
-  ];
+  // Use dailyQuests from props (randomized per day) — fallback to empty
+  const quests = dailyQuests;
 
-  const workoutsDone = completedRituals["Bodyweight Workout"] ? 1 : 0;
-  const readsDone = completedRituals["Read 20min"] ? 1 : 0;
-  const reachOutsDone = completedRituals["Reach Out"] ? 1 : 0;
-
+  // Weekly quests use real counts from Supabase
   const weeklyQuests = [
-    { name: "Forge the Body", desc: "Forge the Body 4x this week", xp: 50, gold: 10, progress: workoutsDone, target: 4 },
-    { name: "Sharpen the Mind", desc: "Sharpen the Mind 5x this week", xp: 50, gold: 10, progress: readsDone, target: 5 },
-    { name: "Rally Your Allies", desc: "Rally Your Allies 5x this week", xp: 50, gold: 10, progress: reachOutsDone, target: 5 },
+    { name: "Forge the Body", desc: "Forge the Body 4x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4 },
+    { name: "Sharpen the Mind", desc: "Sharpen the Mind 5x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Read 20min"] || 0, target: 5 },
+    { name: "Rally Your Allies", desc: "Rally Your Allies 5x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Reach Out"] || 0, target: 5 },
   ];
 
   // Parchment ink theme

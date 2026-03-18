@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
-import { C, CLASSES, ACTIVITY_STAT_MAP } from "./constants";
+import { C, CLASSES, ACTIVITY_STAT_MAP, getLocalDate, getWeekStart, getDailyQuests } from "./constants";
 import { xpForLevel, totalXpForLevel, statPointsForLevel, distributeStatPoints, evaluateClass, processLevelUp } from "./gameLogic";
 import TabBar from "./components/TabBar";
 import XPBar from "./components/XPBar";
@@ -40,6 +40,15 @@ export default function App() {
   // Completion tracking
   const [completedRituals, setCompletedRituals] = useState({});
   const [completedQuests, setCompletedQuests] = useState([]);
+
+  // Today's randomized daily quests (generated from pool)
+  const [dailyQuests, setDailyQuests] = useState([]);
+
+  // Weekly ritual counts (summed from Supabase for Mon-Sun)
+  const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
+    "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
+    "Pray/Meditate 10min": 0, "Reach Out": 0,
+  });
 
   // Ritual streaks (consecutive days per ritual — loaded from Supabase, defaults to 0)
   const [ritualStreaks, setRitualStreaks] = useState({
@@ -107,7 +116,7 @@ export default function App() {
   // Load today's completed rituals from Supabase
   const loadTodayRituals = async (uid) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalDate();
       const { data } = await supabase
         .from("daily_rituals").select("*").eq("user_id", uid).eq("ritual_date", today).maybeSingle();
       if (data) {
@@ -125,13 +134,40 @@ export default function App() {
   // Load today's completed quests from Supabase
   const loadTodayQuests = async (uid) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalDate();
       const { data } = await supabase
         .from("quest_progress").select("quest_id").eq("user_id", uid).eq("quest_date", today);
       if (data && data.length > 0) {
         setCompletedQuests(data.map(d => d.quest_id));
       }
     } catch (e) { console.error("Failed to load quests:", e); }
+  };
+
+  // Load weekly ritual counts from Supabase (Mon-Sun)
+  const loadWeeklyRituals = async (uid) => {
+    try {
+      const weekStart = getWeekStart();
+      const today = getLocalDate();
+      const { data } = await supabase
+        .from("daily_rituals").select("*")
+        .eq("user_id", uid)
+        .gte("ritual_date", weekStart)
+        .lte("ritual_date", today);
+      if (data && data.length > 0) {
+        const counts = {
+          "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
+          "Pray/Meditate 10min": 0, "Reach Out": 0,
+        };
+        data.forEach(row => {
+          if (row.bodyweight_workout) counts["Bodyweight Workout"]++;
+          if (row.walk_jog) counts["Walk/Jog 20min"]++;
+          if (row.read_20) counts["Read 20min"]++;
+          if (row.pray_meditate) counts["Pray/Meditate 10min"]++;
+          if (row.reach_out) counts["Reach Out"]++;
+        });
+        setWeeklyRitualCounts(counts);
+      }
+    } catch (e) { console.error("Failed to load weekly rituals:", e); }
   };
 
   // Load guild
@@ -159,7 +195,9 @@ export default function App() {
         if (onboarded) {
           await loadTodayRituals(session.user.id);
           await loadTodayQuests(session.user.id);
+          await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
+          setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
           setScreen("dashboard");
         } else {
           setScreen("interviewIntro");
@@ -203,7 +241,9 @@ export default function App() {
           if (onboarded) {
             await loadTodayRituals(data.user.id);
             await loadTodayQuests(data.user.id);
+            await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
+            setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
             setScreen("dashboard");
           } else {
             setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
@@ -230,6 +270,8 @@ export default function App() {
     setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
     setCompletedRituals({});
     setCompletedQuests([]);
+    setDailyQuests([]);
+    setWeeklyRitualCounts({ "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0, "Pray/Meditate 10min": 0, "Reach Out": 0 });
     setUserGuild(null);
     setGuildMembers([]);
     setAvatarUrl(null);
@@ -357,13 +399,15 @@ export default function App() {
     if (processingRef.current.has(`ritual:${ritualName}`)) return;
     processingRef.current.add(`ritual:${ritualName}`);
     setCompletedRituals(prev => ({ ...prev, [ritualName]: true }));
+    // Increment weekly count for this ritual
+    setWeeklyRitualCounts(prev => ({ ...prev, [ritualName]: (prev[ritualName] || 0) + 1 }));
     const stat = ACTIVITY_STAT_MAP[ritualName] || "str";
     awardXP(10, stat);
     setPlayerGold(prev => prev + 2);
 
     // Save ritual to Supabase
     if (userId) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalDate();
       const ritualColumn = {
         "Bodyweight Workout": "bodyweight_workout",
         "Walk/Jog 20min": "walk_jog",
@@ -403,7 +447,7 @@ export default function App() {
     setPlayerGold(prev => prev + goldReward);
 
     if (userId) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalDate();
       await supabase.from("quest_progress").upsert({
         user_id: userId, quest_id: questId, quest_date: today,
       }, { onConflict: "user_id,quest_id,quest_date" });
@@ -543,6 +587,8 @@ export default function App() {
                     playerClass={playerClass}
                     playerLevel={playerLevel}
                     ritualStreaks={ritualStreaks}
+                    dailyQuests={dailyQuests}
+                    weeklyRitualCounts={weeklyRitualCounts}
                   />
                 )}
                 {tab === "avatar" && (
