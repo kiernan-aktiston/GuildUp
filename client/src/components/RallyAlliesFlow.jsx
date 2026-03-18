@@ -1,0 +1,468 @@
+import { useState } from "react";
+import { C, RITUAL_INSTRUCTIONS, getRandomQuote, getLocalDate } from "../constants";
+import { supabase } from "../supabase";
+
+const CATEGORIES = [
+  { key: "network", emoji: "🤝", label: "Network", desc: "Professional connections & mentors" },
+  { key: "friends", emoji: "🍻", label: "Friends", desc: "Your inner circle" },
+  { key: "family", emoji: "🏠", label: "Family", desc: "Blood runs deep" },
+  { key: "romance", emoji: "💜", label: "Romance", desc: "Someone special" },
+];
+
+const METHODS = [
+  { key: "text", emoji: "💬", label: "Text" },
+  { key: "call", emoji: "📞", label: "Call" },
+  { key: "in_person", emoji: "🫱🏼‍🫲🏽", label: "In Person" },
+  { key: "email", emoji: "📧", label: "Email" },
+  { key: "dm", emoji: "📱", label: "DM" },
+];
+
+const INTENTS = [
+  "Check in on them",
+  "Ask for advice",
+  "Reconnect after a while",
+  "Encourage or support them",
+  "Set up plans to meet",
+  "Thank them for something",
+  "Share something meaningful",
+];
+
+export default function RallyAlliesFlow({ onBack, userId }) {
+  const [step, setStep] = useState("prep"); // prep, category, method, recipient, intent, compose, confirm, done
+  const [category, setCategory] = useState(null);
+  const [method, setMethod] = useState(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [intent, setIntent] = useState("");
+  const [customIntent, setCustomIntent] = useState("");
+  const [messageDraft, setMessageDraft] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [showWhy, setShowWhy] = useState(false);
+
+  const info = RITUAL_INSTRUCTIONS["Reach Out"];
+  const quote = getRandomQuote("Reach Out");
+
+  const isTextBased = method === "text" || method === "email" || method === "dm";
+  const finalIntent = intent === "__custom" ? customIntent : intent;
+
+  const saveLog = async (completed) => {
+    if (!userId) return;
+    try {
+      await supabase.from("reach_out_log").upsert({
+        user_id: userId,
+        log_date: getLocalDate(),
+        category,
+        method,
+        recipient_name: recipientName,
+        intent: finalIntent,
+        message_draft: messageDraft || null,
+        completed,
+      }, { onConflict: "user_id,log_date" });
+    } catch (e) {
+      console.error("Failed to save reach out log:", e);
+    }
+  };
+
+  const handleComplete = async () => {
+    await saveLog(true);
+    onBack(true);
+  };
+
+  const handleNotYet = async () => {
+    await saveLog(false);
+    onBack(false);
+  };
+
+  // Shared styles
+  const cardStyle = {
+    background: C.card, border: `1px solid ${C.cardBorder}`,
+    borderRadius: 14, padding: "14px 16px", cursor: "pointer",
+    transition: "all 0.2s ease",
+  };
+  const selectedCard = {
+    ...cardStyle,
+    border: `2px solid ${C.gold}`,
+    background: `rgba(240, 178, 50, 0.1)`,
+  };
+  const btnPrimary = {
+    width: "100%", padding: "16px", borderRadius: 12, border: "none",
+    cursor: "pointer", fontSize: 15, fontWeight: 700,
+    background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+    color: "#000",
+  };
+  const btnSecondary = {
+    width: "100%", padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`,
+    cursor: "pointer", fontSize: 14, fontWeight: 500,
+    background: "transparent", color: C.textMuted,
+  };
+  const stepLabel = {
+    fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 2,
+    textTransform: "uppercase", marginBottom: 8,
+  };
+  const stepTitle = {
+    fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700,
+    color: C.text, marginBottom: 20,
+  };
+
+  // ── PREP SCREEN ──
+  if (step === "prep") {
+    return (
+      <div style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.3s ease" }}>
+        <button onClick={() => onBack(false)} style={{
+          background: "none", border: "none", color: C.textMuted, fontSize: 14,
+          cursor: "pointer", marginBottom: 16, padding: 0,
+        }}>← Back</button>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginBottom: 24 }}>
+          <img src={info.image} alt="Marcus Aurelius" style={{
+            width: 120, height: 120, objectFit: "contain", imageRendering: "pixelated",
+            filter: "brightness(1.1)",
+          }} />
+          <div style={{
+            fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase",
+          }}>{info.label}</div>
+
+          <div style={{
+            padding: "12px 18px", borderRadius: 12, width: "100%",
+            background: C.card, border: `1px solid ${C.cardBorder}`,
+            backdropFilter: "blur(8px)", textAlign: "center",
+          }}>
+            <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 4 }}>
+              "{info.featuredQuote.text}"
+            </div>
+            <div style={{ fontSize: 12, color: C.gold }}>— {info.featuredQuote.author}</div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={() => setStep("category")} style={btnPrimary}>
+            Begin
+          </button>
+          <button onClick={() => setShowWhy(true)} style={btnSecondary}>
+            Why This Matters
+          </button>
+          <button onClick={() => onBack(false)} style={{ ...btnSecondary, color: "#fca5a5", borderColor: "#7f1d1d" }}>
+            Not Now
+          </button>
+        </div>
+
+        {showWhy && (
+          <div onClick={() => setShowWhy(false)} style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.85)", display: "flex",
+            alignItems: "center", justifyContent: "center",
+            animation: "fadeIn 0.3s ease", padding: 24,
+          }}>
+            <div onClick={e => e.stopPropagation()} style={{
+              width: "100%", maxWidth: 360, padding: 28, borderRadius: 20,
+              background: C.surface, border: `1px solid ${C.border}`,
+            }}>
+              <div style={{
+                fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2,
+                textTransform: "uppercase", marginBottom: 16, textAlign: "center",
+              }}>Why This Matters</div>
+              <p style={{ fontSize: 15, color: C.text, lineHeight: 1.8, marginBottom: 24 }}>{info.why}</p>
+              <button onClick={() => setShowWhy(false)} style={btnPrimary}>Got It</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── STEP WRAPPER ──
+  const StepWrapper = ({ stepNum, total, label, title, children, canContinue, onContinue }) => (
+    <div style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease" }}>
+      <button onClick={() => {
+        const steps = ["prep", "category", "method", "recipient", "intent", "compose", "confirm"];
+        const idx = steps.indexOf(step);
+        setStep(steps[Math.max(0, idx - 1)]);
+      }} style={{
+        background: "none", border: "none", color: C.textMuted, fontSize: 14,
+        cursor: "pointer", marginBottom: 24, padding: 0,
+      }}>← Back</button>
+
+      {/* Progress bar */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+        {Array.from({ length: total }).map((_, i) => (
+          <div key={i} style={{
+            flex: 1, height: 3, borderRadius: 2,
+            background: i < stepNum ? C.gold : C.surfaceLight,
+            transition: "background 0.3s ease",
+          }} />
+        ))}
+      </div>
+
+      <div style={stepLabel}>{label}</div>
+      <div style={stepTitle}>{title}</div>
+
+      {children}
+
+      {onContinue && (
+        <div style={{ marginTop: 24 }}>
+          <button onClick={onContinue} disabled={!canContinue} style={{
+            ...btnPrimary,
+            opacity: canContinue ? 1 : 0.4,
+            cursor: canContinue ? "pointer" : "default",
+          }}>
+            Continue
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── CATEGORY ──
+  if (step === "category") {
+    return (
+      <StepWrapper stepNum={1} total={6} label="Step 1" title="Who needs to hear from you?"
+        canContinue={!!category} onContinue={() => setStep("method")}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {CATEGORIES.map(c => (
+            <div key={c.key} onClick={() => setCategory(c.key)}
+              style={category === c.key ? selectedCard : cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <span style={{ fontSize: 28 }}>{c.emoji}</span>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: category === c.key ? C.gold : C.text }}>{c.label}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>{c.desc}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </StepWrapper>
+    );
+  }
+
+  // ── METHOD ──
+  if (step === "method") {
+    return (
+      <StepWrapper stepNum={2} total={6} label="Step 2" title="How will you reach out?"
+        canContinue={!!method} onContinue={() => setStep("recipient")}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {METHODS.map(m => (
+            <div key={m.key} onClick={() => setMethod(m.key)}
+              style={{
+                ...(method === m.key ? selectedCard : cardStyle),
+                flex: "1 1 45%", textAlign: "center", padding: "18px 12px",
+              }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>{m.emoji}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: method === m.key ? C.gold : C.text }}>{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </StepWrapper>
+    );
+  }
+
+  // ── RECIPIENT ──
+  if (step === "recipient") {
+    return (
+      <StepWrapper stepNum={3} total={6} label="Step 3" title="Who specifically?"
+        canContinue={recipientName.trim().length > 0} onContinue={() => setStep("intent")}>
+        <input
+          type="text"
+          placeholder="Their name..."
+          value={recipientName}
+          onChange={e => setRecipientName(e.target.value)}
+          autoFocus
+          style={{
+            width: "100%", padding: "16px 18px", borderRadius: 12, fontSize: 16,
+            background: C.surfaceLight, border: `1px solid ${C.border}`,
+            color: C.text, outline: "none", fontFamily: "'Outfit', sans-serif",
+          }}
+        />
+        <p style={{ fontSize: 13, color: C.textMuted, marginTop: 12, lineHeight: 1.5 }}>
+          Putting a name to it makes it real. This isn't a generic "reach out" — this is about {recipientName || "someone specific"}.
+        </p>
+      </StepWrapper>
+    );
+  }
+
+  // ── INTENT ──
+  if (step === "intent") {
+    return (
+      <StepWrapper stepNum={4} total={6} label="Step 4" title={`What's the goal with ${recipientName}?`}
+        canContinue={intent && (intent !== "__custom" || customIntent.trim().length > 0)}
+        onContinue={() => setStep("compose")}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {INTENTS.map(i => (
+            <div key={i} onClick={() => { setIntent(i); setCustomIntent(""); }}
+              style={intent === i ? selectedCard : cardStyle}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: intent === i ? C.gold : C.text }}>{i}</span>
+            </div>
+          ))}
+          <div onClick={() => setIntent("__custom")}
+            style={intent === "__custom" ? selectedCard : cardStyle}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: intent === "__custom" ? C.gold : C.text }}>Something else...</span>
+          </div>
+          {intent === "__custom" && (
+            <input
+              type="text"
+              placeholder="What's your goal?"
+              value={customIntent}
+              onChange={e => setCustomIntent(e.target.value)}
+              autoFocus
+              style={{
+                width: "100%", padding: "14px 16px", borderRadius: 10, fontSize: 14,
+                background: C.surfaceLight, border: `1px solid ${C.border}`,
+                color: C.text, outline: "none", marginTop: 4,
+              }}
+            />
+          )}
+        </div>
+      </StepWrapper>
+    );
+  }
+
+  // ── COMPOSE ──
+  if (step === "compose") {
+    const methodLabel = METHODS.find(m => m.key === method)?.label || method;
+    return (
+      <StepWrapper stepNum={5} total={6} label="Step 5"
+        title={isTextBased ? "Draft your message" : `Plan your ${methodLabel.toLowerCase()}`}
+        canContinue={true} onContinue={() => setStep("confirm")}>
+
+        {isTextBased ? (
+          <>
+            <div style={{
+              fontSize: 12, color: C.textMuted, marginBottom: 10,
+            }}>
+              To: <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span>
+              &nbsp;·&nbsp;Goal: <span style={{ color: C.text }}>{finalIntent}</span>
+            </div>
+            <textarea
+              placeholder={`Write your ${methodLabel.toLowerCase()} to ${recipientName}...`}
+              value={messageDraft}
+              onChange={e => setMessageDraft(e.target.value)}
+              autoFocus
+              rows={8}
+              style={{
+                width: "100%", padding: "16px", borderRadius: 12, fontSize: 15,
+                background: C.surfaceLight, border: `1px solid ${C.border}`,
+                color: C.text, outline: "none", resize: "vertical",
+                fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
+                minHeight: 180,
+              }}
+            />
+            {messageDraft.trim() && (
+              <button onClick={() => {
+                navigator.clipboard.writeText(messageDraft);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }} style={{
+                ...btnSecondary,
+                marginTop: 12,
+                color: copied ? C.gold : C.text,
+                borderColor: copied ? C.gold : C.border,
+              }}>
+                {copied ? "✓ Copied to Clipboard!" : "📋 Copy to Clipboard"}
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <div style={{
+              ...cardStyle, marginBottom: 16,
+            }}>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 8 }}>Your plan:</div>
+              <div style={{ fontSize: 15, color: C.text, lineHeight: 1.6 }}>
+                <strong style={{ color: C.gold }}>{methodLabel}</strong> {recipientName} to <strong>{finalIntent.toLowerCase()}</strong>
+              </div>
+            </div>
+            <textarea
+              placeholder="Any notes for yourself? (optional)"
+              value={messageDraft}
+              onChange={e => setMessageDraft(e.target.value)}
+              rows={4}
+              style={{
+                width: "100%", padding: "16px", borderRadius: 12, fontSize: 15,
+                background: C.surfaceLight, border: `1px solid ${C.border}`,
+                color: C.text, outline: "none", resize: "vertical",
+                fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
+                minHeight: 100,
+              }}
+            />
+          </>
+        )}
+      </StepWrapper>
+    );
+  }
+
+  // ── CONFIRM ──
+  if (step === "confirm") {
+    const methodLabel = METHODS.find(m => m.key === method)?.label || method;
+    return (
+      <div style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease" }}>
+        <button onClick={() => setStep("compose")} style={{
+          background: "none", border: "none", color: C.textMuted, fontSize: 14,
+          cursor: "pointer", marginBottom: 24, padding: 0,
+        }}>← Back</button>
+
+        {/* Progress bar — full */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: C.gold }} />
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🗡️</div>
+          <div style={stepLabel}>Final Step</div>
+          <div style={{ ...stepTitle, marginBottom: 12 }}>Did you reach out?</div>
+          <p style={{ color: C.textMuted, fontSize: 14, lineHeight: 1.6 }}>
+            {isTextBased
+              ? `Did you send your ${methodLabel.toLowerCase()} to ${recipientName}?`
+              : `Did you ${methodLabel === "Call" ? "call" : "meet"} ${recipientName}?`
+            }
+          </p>
+        </div>
+
+        {/* Summary card */}
+        <div style={{
+          ...cardStyle, marginBottom: 24,
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: C.textMuted }}>To</span>
+            <span style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{recipientName}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: C.textMuted }}>Via</span>
+            <span style={{ fontSize: 14, color: C.text }}>{methodLabel}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: C.textMuted }}>Category</span>
+            <span style={{ fontSize: 14, color: C.text }}>{CATEGORIES.find(c => c.key === category)?.label}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12, color: C.textMuted }}>Goal</span>
+            <span style={{ fontSize: 14, color: C.text }}>{finalIntent}</span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={handleComplete} style={btnPrimary}>
+            ✓ Yes — Quest Complete
+          </button>
+          <button onClick={handleNotYet} style={btnSecondary}>
+            Not Yet — Save My Draft
+          </button>
+        </div>
+
+        <div style={{
+          marginTop: 20, padding: "12px 16px", borderRadius: 10,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic", lineHeight: 1.5 }}>
+            "{quote.text}"
+          </div>
+          <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}

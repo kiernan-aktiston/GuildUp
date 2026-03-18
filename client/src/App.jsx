@@ -15,6 +15,7 @@ import AvatarScreen from "./components/AvatarScreen";
 import BattleScreen from "./components/BattleScreen";
 import StoreScreen from "./components/StoreScreen";
 import GuildScreen from "./components/GuildScreen";
+import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import LevelUpModal from "./components/LevelUpModal";
 
 export default function App() {
@@ -569,13 +570,23 @@ export default function App() {
         {screen === "dashboard" && (
           <>
             {showRitualDetail ? (
-              <RitualDetailScreen
-                ritual={showRitualDetail}
-                onBack={(didComplete) => {
-                  if (didComplete) handleRitualComplete(showRitualDetail.name);
-                  setShowRitualDetail(null);
-                }}
-              />
+              showRitualDetail.name === "Reach Out" ? (
+                <RallyAlliesFlow
+                  userId={userId}
+                  onBack={(didComplete) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                    setShowRitualDetail(null);
+                  }}
+                />
+              ) : (
+                <RitualDetailScreen
+                  ritual={showRitualDetail}
+                  onBack={(didComplete) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                    setShowRitualDetail(null);
+                  }}
+                />
+              )
             ) : (
               <>
                 {tab === "quests" && (

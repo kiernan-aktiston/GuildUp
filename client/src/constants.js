@@ -280,3 +280,10 @@ export function getDailyQuests(dateStr, usrId = "", count = 4) {
   }
   return pool.slice(0, count);
 }
+
+// Get a random quote for a given ritual name
+export function getRandomQuote(ritualName) {
+  const quotes = RITUAL_QUOTES[ritualName];
+  if (!quotes || quotes.length === 0) return { text: "Every day is a new quest.", author: "GuildUp" };
+  return quotes[Math.floor(Math.random() * quotes.length)];
+}
