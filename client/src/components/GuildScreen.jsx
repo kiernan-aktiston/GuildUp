@@ -1,4 +1,4 @@
-import { useState } from 'react';
+mport { useState } from 'react';
 import { C, CLASSES } from '../constants';
 
 export default function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJoinByCode }) {
