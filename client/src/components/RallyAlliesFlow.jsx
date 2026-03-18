@@ -112,36 +112,66 @@ export default function RallyAlliesFlow({ onBack, userId }) {
           cursor: "pointer", marginBottom: 16, padding: 0,
         }}>← Back</button>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginBottom: 24 }}>
-          <img src={info.image} alt="Marcus Aurelius" style={{
-            width: 120, height: 120, objectFit: "contain", imageRendering: "pixelated",
-            filter: "brightness(1.1)",
-          }} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🗡️</div>
           <div style={{
-            fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 3,
-            textTransform: "uppercase",
-          }}>{info.label}</div>
+            fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700,
+            color: C.gold, textAlign: "center", marginBottom: 4,
+          }}>Rally Your Allies</div>
+          <div style={{ fontSize: 12, color: C.textMuted, letterSpacing: 2, textTransform: "uppercase" }}>The Ritual</div>
+        </div>
 
-          <div style={{
-            padding: "12px 18px", borderRadius: 12, width: "100%",
-            background: C.card, border: `1px solid ${C.cardBorder}`,
-            backdropFilter: "blur(8px)", textAlign: "center",
-          }}>
-            <div style={{ fontSize: 14, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 4 }}>
-              "{info.featuredQuote.text}"
-            </div>
-            <div style={{ fontSize: 12, color: C.gold }}>— {info.featuredQuote.author}</div>
-          </div>
+        <div style={{
+          padding: "18px 20px", borderRadius: 14,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
+          backdropFilter: "blur(8px)", marginBottom: 24,
+        }}>
+          <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, marginBottom: 14 }}>
+            No one builds a strong life in isolation.
+          </p>
+          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.8, marginBottom: 14 }}>
+            Across history, those who endured, advanced, and led were never truly alone; they maintained ties, exchanged ideas, leaned on others in difficult seasons, and offered the same in return. There is a quiet strength in staying connected—one that sharpens judgment, steadies the mind, and carries you through moments when willpower alone is not enough.
+          </p>
+          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.8, marginBottom: 14 }}>
+            Modern research only confirms what experience has always shown: consistent, meaningful connection improves resilience, strengthens mental health, and opens doors that effort alone cannot. The one who reaches out moves further than the one who waits.
+          </p>
+          <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, fontWeight: 600, marginBottom: 14 }}>
+            This ritual is simple, but it is not always easy.
+          </p>
+          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.8, marginBottom: 14 }}>
+            Each day, choose one person—someone you respect, care about, or simply have not spoken to in a while—and reach out with intention. Say something real. Ask something real. Keep the line open.
+          </p>
+          <p style={{ fontSize: 14, color: C.gold, lineHeight: 1.8, fontStyle: "italic", marginBottom: 14 }}>
+            Clarity comes from action, not overthinking.
+          </p>
+          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.8, marginBottom: 14 }}>
+            Answer the prompts: Who do you need to contact? Why does it matter? What will you say? How will you reach them?
+          </p>
+          <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, fontWeight: 600 }}>
+            Then follow through.
+          </p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={() => setStep("category")} style={btnPrimary}>
+          <button onClick={() => setStep("category")} style={{
+            width: "100%", padding: "16px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 15, fontWeight: 700,
+            background: "#22c55e", color: "#000",
+          }}>
             Begin
           </button>
-          <button onClick={() => setShowWhy(true)} style={btnSecondary}>
-            Why This Matters
+          <button onClick={() => setShowWhy(true)} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 14, fontWeight: 700,
+            background: "#3b82f6", color: "#000",
+          }}>
+            Face the Resistance
           </button>
-          <button onClick={() => onBack(false)} style={{ ...btnSecondary, color: "#fca5a5", borderColor: "#7f1d1d" }}>
+          <button onClick={() => onBack(false)} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 14, fontWeight: 700,
+            background: "#ef4444", color: "#000",
+          }}>
             Not Now
           </button>
         </div>
@@ -152,17 +182,50 @@ export default function RallyAlliesFlow({ onBack, userId }) {
             background: "rgba(0,0,0,0.85)", display: "flex",
             alignItems: "center", justifyContent: "center",
             animation: "fadeIn 0.3s ease", padding: 24,
+            overflowY: "auto",
           }}>
             <div onClick={e => e.stopPropagation()} style={{
               width: "100%", maxWidth: 360, padding: 28, borderRadius: 20,
               background: C.surface, border: `1px solid ${C.border}`,
             }}>
-              <div style={{
-                fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2,
-                textTransform: "uppercase", marginBottom: 16, textAlign: "center",
-              }}>Why This Matters</div>
-              <p style={{ fontSize: 15, color: C.text, lineHeight: 1.8, marginBottom: 24 }}>{info.why}</p>
-              <button onClick={() => setShowWhy(false)} style={btnPrimary}>Got It</button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
+                <img src="/Marcus.png" alt="Marcus Aurelius" style={{
+                  width: 100, height: 100, objectFit: "contain", imageRendering: "pixelated",
+                  filter: "brightness(1.1)", marginBottom: 12,
+                }} />
+                <div style={{
+                  fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2,
+                  textTransform: "uppercase", marginBottom: 12, textAlign: "center",
+                }}>Face the Resistance</div>
+                <div style={{
+                  padding: "10px 16px", borderRadius: 10, width: "100%",
+                  background: C.card, border: `1px solid ${C.cardBorder}`,
+                  textAlign: "center", marginBottom: 12,
+                }}>
+                  <div style={{ fontSize: 13, color: C.text, fontStyle: "italic", lineHeight: 1.6, marginBottom: 4 }}>
+                    "{info.featuredQuote.text}"
+                  </div>
+                  <div style={{ fontSize: 11, color: C.gold }}>— {info.featuredQuote.author}</div>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, marginBottom: 14 }}>
+                There will be moments when it feels awkward, when you hesitate, when you overthink what to say or whether they will respond. That hesitation is not a stop sign; it is the point of the exercise. Acting despite it is how confidence is built.
+              </p>
+              <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, marginBottom: 14 }}>
+                Not every message will turn into a long conversation. Some will be brief. Some will go unanswered. None of that is failure. The act itself is the victory, because it is repeated action over time that builds trust, familiarity, and opportunity.
+              </p>
+              <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, marginBottom: 14 }}>
+                Done daily, this compounds quietly. Relationships deepen. New paths appear. When harder days come—and they will—you will not be standing alone.
+              </p>
+              <p style={{ fontSize: 15, color: C.gold, lineHeight: 1.8, fontWeight: 700, marginBottom: 20 }}>
+                Choose your person. Reach out.
+              </p>
+              <button onClick={() => setShowWhy(false)} style={{
+                width: "100%", padding: "16px", borderRadius: 12, border: "none",
+                cursor: "pointer", fontSize: 15, fontWeight: 700,
+                background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`, color: "#000",
+              }}>Got It</button>
             </div>
           </div>
         )}
