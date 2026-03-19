@@ -220,13 +220,6 @@ export default function RallyAlliesFlow({ onBack, userId }) {
           <button onClick={() => setShowWhy(true)} style={{
             width: "100%", padding: "14px", borderRadius: 12, border: "none",
             cursor: "pointer", fontSize: 14, fontWeight: 700,
-            background: "#3b82f6", color: "#000",
-          }}>
-            Face the Resistance
-          </button>
-          <button onClick={() => onBack(false)} style={{
-            width: "100%", padding: "14px", borderRadius: 12, border: "none",
-            cursor: "pointer", fontSize: 14, fontWeight: 700,
             background: "#ef4444", color: "#000",
           }}>
             Not Now
@@ -234,7 +227,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
         </div>
 
         {showWhy && (
-          <div onClick={() => setShowWhy(false)} style={{
+          <div style={{
             position: "fixed", inset: 0, zIndex: 200,
             background: "rgba(0,0,0,0.85)", display: "flex",
             alignItems: "center", justifyContent: "center",
@@ -244,6 +237,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
             <div onClick={e => e.stopPropagation()} style={{
               width: "100%", maxWidth: 360, padding: 28, borderRadius: 20,
               background: C.surface, border: `1px solid ${C.border}`,
+              maxHeight: "85vh", overflowY: "auto",
             }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
                 <div style={{
@@ -287,11 +281,19 @@ export default function RallyAlliesFlow({ onBack, userId }) {
               <p style={{ fontSize: 15, color: C.gold, lineHeight: 1.8, fontWeight: 700, marginBottom: 20 }}>
                 Choose your person. Reach out.
               </p>
-              <button onClick={() => setShowWhy(false)} style={{
-                width: "100%", padding: "16px", borderRadius: 12, border: "none",
-                cursor: "pointer", fontSize: 15, fontWeight: 700,
-                background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`, color: "#000",
-              }}>Got It</button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button onClick={() => { setShowWhy(false); setStep("category"); }} style={{
+                  width: "100%", padding: "16px", borderRadius: 12, border: "none",
+                  cursor: "pointer", fontSize: 15, fontWeight: 700,
+                  background: "#22c55e", color: "#000",
+                }}>You're Right — Let's Go</button>
+                <button onClick={() => { setShowWhy(false); onBack(false); }} style={{
+                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                  cursor: "pointer", fontSize: 14, fontWeight: 600,
+                  background: "transparent", color: C.textMuted,
+                  border: `1px solid ${C.border}`,
+                }}>Not Today</button>
+              </div>
             </div>
           </div>
         )}
