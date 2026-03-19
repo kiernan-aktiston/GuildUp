@@ -93,7 +93,7 @@ export default function ForgeTheBodyFlow({ onBack }) {
     {
       emoji: "⚔️",
       title: "Forge the Body",
-      body: "Your body is the vessel that carries everything else — your mind, your spirit, your ambition. Training it isn't vanity. It's preparation.",
+      body: "There are no shortcuts. No hacks, no workarounds, no secret formulas. The only way to get stronger is to start — one day at a time, one rep at a time, one decision at a time.",
       accent: null,
     },
     {
