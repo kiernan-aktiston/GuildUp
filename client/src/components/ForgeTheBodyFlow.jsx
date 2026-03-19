@@ -1,654 +1,339 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "../supabase";
-import { C, CLASSES, ACTIVITY_STAT_MAP, getLocalDate, getWeekStart, getDailyQuests } from "../constants";
-import { xpForLevel, totalXpForLevel, statPointsForLevel, distributeStatPoints, evaluateClass, processLevelUp } from "../gameLogic";
-import TabBar from "./TabBar";
-import XPBar from "./XPBar";
-import LandingScreen from "./LandingScreen";
-import WelcomeSlides from "./WelcomeSlides";
-import AuthScreen from "./AuthScreen";
-import InterviewScreen from "./InterviewScreen";
-import ClassRevealScreen from "./ClassRevealScreen";
-import QuestsScreen from "./QuestsScreen";
-import RitualDetailScreen from "./RitualDetailScreen";
-import AvatarScreen from "./AvatarScreen";
-import BattleScreen from "./BattleScreen";
-import StoreScreen from "./StoreScreen";
-import GuildScreen from "./GuildScreen";
-import RallyAlliesFlow from "./RallyAlliesFlow";
-import SharpenTheMindFlow from "./SharpenTheMindFlow";
-import StillTheSpiritFlow from "./StillTheSpiritFlow";
-import LevelUpModal from "./LevelUpModal";
+import { C, RITUAL_INSTRUCTIONS, getRandomQuote } from "../constants";
 
-export default function App() {
-  const [screen, setScreen] = useState("loading");
-  const [tab, setTab] = useState("quests");
-  const [showRitualDetail, setShowRitualDetail] = useState(null);
-  const [authError, setAuthError] = useState("");
+const WORKOUT_ROUNDS = [
+  { name: "Pushups", emoji: "💪" },
+  { name: "Squats", emoji: "🦵" },
+  { name: "Sit-ups", emoji: "🔥" },
+  { name: "Lunges", emoji: "⚔️" },
+  { name: "Plank", emoji: "🛡️" },
+];
 
-  // User ID from Supabase
-  const [userId, setUserId] = useState(null);
+const WORK_TIME = 45;
+const REST_TIME = 15;
+const ROUNDS = 4;
 
-  // Player state
-  const [playerName, setPlayerName] = useState("Adventurer");
-  const [playerClass, setPlayerClass] = useState("warrior");
-  const [playerLevel, setPlayerLevel] = useState(1);
-  const [playerXP, setPlayerXP] = useState(0);
-  const [playerStats, setPlayerStats] = useState({ str: 10, agi: 10, int: 10, spi: 10, cha: 10 });
-  const [playerGold, setPlayerGold] = useState(100);
+export default function ForgeTheBodyFlow({ onBack }) {
+  const [step, setStep] = useState("prep"); // prep, workout, done
+  const [prepSlide, setPrepSlide] = useState(0);
+  const [showWhy, setShowWhy] = useState(false);
 
-  // Hidden activity tally (resets on level up)
-  const [activityTally, setActivityTally] = useState({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
+  // Workout state
+  const [round, setRound] = useState(1);
+  const [exerciseIdx, setExerciseIdx] = useState(0);
+  const [phase, setPhase] = useState("work"); // "work" | "rest" | "round_rest"
+  const [timeLeft, setTimeLeft] = useState(WORK_TIME);
+  const [running, setRunning] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const intervalRef = useRef(null);
 
-  // Completion tracking
-  const [completedRituals, setCompletedRituals] = useState({});
-  const [completedQuests, setCompletedQuests] = useState([]);
+  const info = RITUAL_INSTRUCTIONS["Bodyweight Workout"];
+  const quote = getRandomQuote("Bodyweight Workout");
 
-  // Today's randomized daily quests (generated from pool)
-  const [dailyQuests, setDailyQuests] = useState([]);
+  const totalExercises = WORKOUT_ROUNDS.length;
+  const currentExercise = WORKOUT_ROUNDS[exerciseIdx];
 
-  // Weekly ritual counts (summed from Supabase for Mon-Sun)
-  const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
-    "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
-    "Pray/Meditate 10min": 0, "Reach Out": 0,
-  });
-
-  // Ritual streaks (consecutive days per ritual — loaded from Supabase, defaults to 0)
-  const [ritualStreaks, setRitualStreaks] = useState({
-    "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
-    "Pray/Meditate 10min": 0, "Reach Out": 0,
-  });
-
-  // Level up modal
-  const [levelUpData, setLevelUpData] = useState(null);
-
-  // Guild state
-  const [userGuild, setUserGuild] = useState(null);
-  const [guildMembers, setGuildMembers] = useState([]);
-
-  // Avatar photo
-  const [avatarUrl, setAvatarUrl] = useState(null);
-
-  // Auth mode for directing to signup vs signin
-  const [authMode, setAuthMode] = useState("signin");
-
-  // Prevent double-tap on quest/ritual completion
-  const processingRef = useRef(new Set());
-
-  // Load profile from Supabase into local state
-  const loadProfile = async (uid) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles").select("*").eq("id", uid).single();
-      if (error || !data) return false;
-      setPlayerName(data.display_name || "Adventurer");
-      setPlayerClass(data.class || "warrior");
-
-      // Recalculate correct level from total XP (fixes stale level data)
-      let correctLevel = data.level || 1;
-      const storedXP = data.xp || 0;
-      while (storedXP >= totalXpForLevel(correctLevel + 1)) {
-        correctLevel++;
-      }
-      if (correctLevel !== (data.level || 1)) {
-        // Level was out of sync — fix it in Supabase
-        console.log(`Level corrected: ${data.level} → ${correctLevel}`);
-        supabase.from("profiles").update({ level: correctLevel }).eq("id", uid);
-      }
-      setPlayerLevel(correctLevel);
-      setPlayerXP(storedXP);
-      setPlayerGold(data.gold || 100);
-      setPlayerStats({
-        str: data.stat_str || 10, agi: data.stat_agi || 10,
-        int: data.stat_int || 10, spi: data.stat_spi || 10,
-        cha: data.stat_cha || 10,
-      });
-      setActivityTally({
-        str: data.tally_str || 0, agi: data.tally_agi || 0,
-        int: data.tally_int || 0, spi: data.tally_spi || 0,
-        cha: data.tally_cha || 0,
-      });
-      if (data.avatar_url) setAvatarUrl(data.avatar_url);
-      return data.onboarding_complete;
-    } catch (e) {
-      console.error("Failed to load profile:", e);
-      return false;
-    }
-  };
-
-  // Load today's completed rituals from Supabase
-  const loadTodayRituals = async (uid) => {
-    try {
-      const today = getLocalDate();
-      const { data } = await supabase
-        .from("daily_rituals").select("*").eq("user_id", uid).eq("ritual_date", today).maybeSingle();
-      if (data) {
-        const completed = {};
-        if (data.bodyweight_workout) completed["Bodyweight Workout"] = true;
-        if (data.walk_jog) completed["Walk/Jog 20min"] = true;
-        if (data.read_20) completed["Read 20min"] = true;
-        if (data.pray_meditate) completed["Pray/Meditate 10min"] = true;
-        if (data.reach_out) completed["Reach Out"] = true;
-        setCompletedRituals(completed);
-      }
-    } catch (e) { console.error("Failed to load rituals:", e); }
-  };
-
-  // Load today's completed quests from Supabase
-  const loadTodayQuests = async (uid) => {
-    try {
-      const today = getLocalDate();
-      const { data } = await supabase
-        .from("quest_progress").select("quest_id").eq("user_id", uid).eq("quest_date", today);
-      if (data && data.length > 0) {
-        setCompletedQuests(data.map(d => d.quest_id));
-      }
-    } catch (e) { console.error("Failed to load quests:", e); }
-  };
-
-  // Load weekly ritual counts from Supabase (Mon-Sun)
-  const loadWeeklyRituals = async (uid) => {
-    try {
-      const weekStart = getWeekStart();
-      const today = getLocalDate();
-      const { data } = await supabase
-        .from("daily_rituals").select("*")
-        .eq("user_id", uid)
-        .gte("ritual_date", weekStart)
-        .lte("ritual_date", today);
-      if (data && data.length > 0) {
-        const counts = {
-          "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
-          "Pray/Meditate 10min": 0, "Reach Out": 0,
-        };
-        data.forEach(row => {
-          if (row.bodyweight_workout) counts["Bodyweight Workout"]++;
-          if (row.walk_jog) counts["Walk/Jog 20min"]++;
-          if (row.read_20) counts["Read 20min"]++;
-          if (row.pray_meditate) counts["Pray/Meditate 10min"]++;
-          if (row.reach_out) counts["Reach Out"]++;
-        });
-        setWeeklyRitualCounts(counts);
-      }
-    } catch (e) { console.error("Failed to load weekly rituals:", e); }
-  };
-
-  // Load guild
-  const loadGuild = async (uid) => {
-    try {
-      const { data } = await supabase
-        .from("guild_members").select("*, guilds(*)").eq("user_id", uid).maybeSingle();
-      if (data) {
-        setUserGuild(data);
-        const { data: members } = await supabase
-          .from("guild_members").select("*, profiles(display_name, class, level)")
-          .eq("guild_id", data.guild_id);
-        setGuildMembers(members || []);
-      }
-    } catch (e) { console.error("Failed to load guild:", e); }
-  };
-
-  // Check for existing session on load
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
-        const onboarded = await loadProfile(session.user.id);
-        if (onboarded) {
-          await loadTodayRituals(session.user.id);
-          await loadTodayQuests(session.user.id);
-          await loadWeeklyRituals(session.user.id);
-          await loadGuild(session.user.id);
-          setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
-          setScreen("dashboard");
+    if (!running || finished) return;
+    intervalRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev > 1) return prev - 1;
+        // Advance phase
+        clearInterval(intervalRef.current);
+        advancePhase();
+        return 0;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, phase, exerciseIdx, round]);
+
+  const advancePhase = () => {
+    if (phase === "work") {
+      if (exerciseIdx < totalExercises - 1) {
+        setPhase("rest");
+        setTimeLeft(REST_TIME);
+        setRunning(true);
+      } else {
+        // Finished last exercise of a round
+        if (round < ROUNDS) {
+          setPhase("round_rest");
+          setTimeLeft(60);
+          setRunning(true);
         } else {
-          setScreen("interviewIntro");
-        }
-      } else {
-        setScreen("landing");
-      }
-    };
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setScreen("landing");
-        setUserId(null);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Auth handler — real Supabase
-  const handleAuth = async ({ email, password, displayName, mode }) => {
-    setAuthError("");
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email, password,
-          options: { data: { display_name: displayName } }
-        });
-        if (error) throw error;
-        if (data.user) {
-          setUserId(data.user.id);
-          setPlayerName(displayName || email.split("@")[0]);
-          setScreen("interviewIntro");
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        if (data.user) {
-          setUserId(data.user.id);
-          const onboarded = await loadProfile(data.user.id);
-          if (onboarded) {
-            await loadTodayRituals(data.user.id);
-            await loadTodayQuests(data.user.id);
-            await loadWeeklyRituals(data.user.id);
-            await loadGuild(data.user.id);
-            setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
-            setScreen("dashboard");
-          } else {
-            setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
-            setScreen("interviewIntro");
-          }
+          setFinished(true);
+          setRunning(false);
         }
       }
-    } catch (e) {
-      setAuthError(e.message || "Authentication failed");
+    } else if (phase === "rest") {
+      setExerciseIdx(i => i + 1);
+      setPhase("work");
+      setTimeLeft(WORK_TIME);
+      setRunning(true);
+    } else if (phase === "round_rest") {
+      setRound(r => r + 1);
+      setExerciseIdx(0);
+      setPhase("work");
+      setTimeLeft(WORK_TIME);
+      setRunning(true);
     }
   };
 
-  // Sign out — real Supabase
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setScreen("landing");
-    setUserId(null);
-    setPlayerName("Adventurer");
-    setPlayerClass("warrior");
-    setPlayerLevel(1);
-    setPlayerXP(0);
-    setPlayerStats({ str: 10, agi: 10, int: 10, spi: 10, cha: 10 });
-    setPlayerGold(100);
-    setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
-    setCompletedRituals({});
-    setCompletedQuests([]);
-    setDailyQuests([]);
-    setWeeklyRitualCounts({ "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0, "Pray/Meditate 10min": 0, "Reach Out": 0 });
-    setUserGuild(null);
-    setGuildMembers([]);
-    setAvatarUrl(null);
-    setRitualStreaks({ "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0, "Pray/Meditate 10min": 0, "Reach Out": 0 });
-    setTab("quests");
-  };
+  const slides = [
+    {
+      emoji: "⚔️",
+      title: "Forge the Body",
+      body: "Your body is the vessel that carries everything else — your mind, your spirit, your ambition. Training it isn't vanity. It's preparation. Every rep builds the discipline that bleeds into every other area of your life.",
+      accent: null,
+    },
+    {
+      emoji: "🛡️",
+      title: "No Excuses Remain",
+      body: "Twenty minutes. Bodyweight only. No equipment, no gym, no conditions. This is the minimum viable dose of physical discipline. It can be done anywhere, anytime.",
+      accent: "The warrior who makes excuses has already lost.",
+    },
+    {
+      emoji: "🔥",
+      title: "Four Rounds of Five",
+      body: "Five exercises. Four rounds. 45 seconds on, 15 seconds rest. That's it. Push to your limit on each set. Form over speed — injury ends streaks.",
+      accent: "Begin when you are ready.",
+    },
+  ];
 
-  // Save profile to Supabase
-  const saveProfile = async (updates) => {
-    if (!userId) return;
-    try {
-      await supabase.from("profiles").update({
-        ...updates, updated_at: new Date().toISOString(),
-      }).eq("id", userId);
-    } catch (e) {
-      console.error("Failed to save profile:", e);
-    }
-  };
+  const isLastSlide = prepSlide === slides.length - 1;
 
-  const handleAvatarUpload = async (file) => {
-    if (!userId || !file) return;
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${userId}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars").upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
-      // Add cache buster
-      const urlWithBust = `${publicUrl}?t=${Date.now()}`;
-      setAvatarUrl(urlWithBust);
-      saveProfile({ avatar_url: urlWithBust });
-    } catch (e) {
-      console.error("Failed to upload avatar:", e);
-    }
-  };
+  // ── PREP SLIDES ──
+  if (step === "prep") {
+    const slide = slides[prepSlide];
+    return (
+      <div style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.3s ease", display: "flex", flexDirection: "column", position: "relative" }}>
+        <div style={{
+          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "100%", maxWidth: 430, height: "100vh",
+          backgroundImage: "url(/arena-bg.png)",
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: 0.2, pointerEvents: "none", zIndex: 0,
+        }} />
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", flex: 1 }}>
+          <button onClick={() => prepSlide > 0 ? setPrepSlide(prepSlide - 1) : onBack(false)} style={{
+            background: "none", border: "none", color: C.textMuted, fontSize: 14,
+            cursor: "pointer", marginBottom: 16, padding: 0, textAlign: "left",
+          }}>← Back</button>
 
-  const handleInterviewComplete = async (cls, level) => {
-    setPlayerClass(cls);
-    setPlayerLevel(level);
-    const baseStats = { str: 10, agi: 10, int: 10, spi: 10, cha: 10 };
-    const startBonus = (level - 1) * 2;
-    const classWeights = {
-      warrior: { str: 3, agi: 1, int: 0, spi: 1, cha: 0 },
-      ranger: { str: 1, agi: 3, int: 1, spi: 0, cha: 0 },
-      sage: { str: 0, agi: 0, int: 3, spi: 1, cha: 1 },
-      monk: { str: 0, agi: 1, int: 1, spi: 3, cha: 0 },
-      rogue: { str: 1, agi: 1, int: 0, spi: 0, cha: 3 },
-      paladin: { str: 2, agi: 0, int: 0, spi: 2, cha: 1 },
-      strategist: { str: 0, agi: 1, int: 1, spi: 0, cha: 3 },
-      druid: { str: 0, agi: 2, int: 1, spi: 2, cha: 0 },
-      spellblade: { str: 2, agi: 1, int: 2, spi: 0, cha: 0 },
-      alchemist: { str: 0, agi: 2, int: 0, spi: 2, cha: 1 },
-      warden: { str: 2, agi: 2, int: 0, spi: 1, cha: 0 },
-    };
-    const weights = classWeights[cls] || classWeights.warrior;
-    const dist = distributeStatPoints(weights, startBonus);
-    const newStats = {
-      str: baseStats.str + dist.str, agi: baseStats.agi + dist.agi,
-      int: baseStats.int + dist.int, spi: baseStats.spi + dist.spi,
-      cha: baseStats.cha + dist.cha,
-    };
-    setPlayerStats(newStats);
-    const startingXP = totalXpForLevel(level);
-    setPlayerXP(startingXP);
-    setScreen("reveal");
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
+            {slides.map((_, i) => (
+              <div key={i} onClick={() => setPrepSlide(i)} style={{
+                width: i === prepSlide ? 24 : 8, height: 8, borderRadius: 4,
+                background: i === prepSlide ? C.gold : C.surfaceLight,
+                transition: "all 0.3s ease", cursor: "pointer",
+              }} />
+            ))}
+          </div>
 
-    // Save to Supabase
-    saveProfile({
-      class: cls, level, xp: startingXP, gold: 100,
-      stat_str: newStats.str, stat_agi: newStats.agi,
-      stat_int: newStats.int, stat_spi: newStats.spi, stat_cha: newStats.cha,
-      onboarding_complete: true, display_name: playerName,
-    });
-  };
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", animation: "fadeIn 0.25s ease" }} key={prepSlide}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>{slide.emoji}</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.gold, marginBottom: 6 }}>{slide.title}</div>
+              {prepSlide === 0 && (
+                <div style={{ fontSize: 11, color: C.textMuted, letterSpacing: 2, textTransform: "uppercase" }}>Forge the Body</div>
+              )}
+            </div>
+            <div style={{ padding: "20px", borderRadius: 14, background: C.card, border: `1px solid ${C.cardBorder}`, backdropFilter: "blur(8px)" }}>
+              <p style={{ fontSize: 15, color: C.text, lineHeight: 1.8 }}>{slide.body}</p>
+              {slide.accent && (
+                <p style={{ fontSize: 15, color: C.gold, lineHeight: 1.8, fontStyle: "italic", fontWeight: 600, marginTop: 14 }}>{slide.accent}</p>
+              )}
+            </div>
+          </div>
 
-  const awardXP = (amount, statCategory) => {
-    if (statCategory) {
-      setActivityTally(prev => ({ ...prev, [statCategory]: prev[statCategory] + 1 }));
-    }
-    const newXP = playerXP + amount;
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24 }}>
+            {isLastSlide ? (
+              <button onClick={() => setStep("workout")} style={{
+                width: "100%", padding: "16px", borderRadius: 12, border: "none",
+                cursor: "pointer", fontSize: 15, fontWeight: 700,
+                background: "#22c55e", color: "#000",
+              }}>Begin Workout</button>
+            ) : (
+              <button onClick={() => setPrepSlide(prepSlide + 1)} style={{
+                width: "100%", padding: "16px", borderRadius: 12, border: "none",
+                cursor: "pointer", fontSize: 15, fontWeight: 700,
+                background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`, color: "#000",
+              }}>Next</button>
+            )}
+            <button onClick={() => onBack(false)} style={{
+              width: "100%", padding: "14px", borderRadius: 12, border: "none",
+              cursor: "pointer", fontSize: 14, fontWeight: 700,
+              background: "#ef4444", color: "#fff",
+            }}>Not Now</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    // Handle multiple level-ups in a loop
-    let currentLevel = playerLevel;
-    let currentStats = { ...playerStats };
-    let currentClass = playerClass;
-    let currentTally = { ...activityTally };
-    if (statCategory) currentTally[statCategory] = (currentTally[statCategory] || 0) + 1;
-    let lastLevelUp = null;
+  // ── DONE ──
+  if (finished || step === "done") {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.3s ease", position: "relative" }}>
+        <div style={{
+          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "100%", maxWidth: 430, height: "100vh",
+          backgroundImage: "url(/arena-bg.png)",
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: 0.2, pointerEvents: "none", zIndex: 0,
+        }} />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>⚔️</div>
+          <div style={{ fontSize: 48, color: C.ritualDone, fontWeight: 800, fontFamily: "'Cinzel', serif", marginBottom: 8 }}>✓</div>
+          <div style={{ fontSize: 22, color: C.ritualDone, fontWeight: 700, marginBottom: 8 }}>Ritual Complete!</div>
+          <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 24 }}>4 Rounds · 5 Exercises · 20 Minutes</div>
+          <div style={{
+            padding: "14px 20px", borderRadius: 10, display: "inline-block",
+            background: C.card, border: `1px solid ${C.cardBorder}`, marginBottom: 32,
+          }}>
+            <div style={{ fontSize: 13, color: C.text, fontStyle: "italic", lineHeight: 1.5 }}>"{quote.text}"</div>
+            <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
+          </div>
+          <div>
+            <button onClick={() => onBack(true)} style={{
+              padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
+              color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 1,
+              boxShadow: `0 4px 20px ${C.ritualDone}44`,
+            }}>Claim +10 XP</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    while (newXP >= totalXpForLevel(currentLevel + 1)) {
-      const newLevel = currentLevel + 1;
-      const oldClass = currentClass;
-      const result = processLevelUp(newLevel, currentStats, currentTally);
-      currentLevel = newLevel;
-      currentStats = result.newStats;
-      currentClass = result.newClass;
-      currentTally = { str: 0, agi: 0, int: 0, spi: 0, cha: 0 };
-      lastLevelUp = { level: newLevel, oldClass, newClass: result.newClass, distribution: result.distribution };
-    }
-
-    if (lastLevelUp) {
-      setPlayerLevel(currentLevel);
-      setPlayerStats(currentStats);
-      setPlayerClass(currentClass);
-      setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
-      setLevelUpData(lastLevelUp);
-
-      // Persist level, stats, and class to Supabase
-      if (userId) {
-        saveProfile({
-          level: currentLevel, class: currentClass, xp: newXP,
-          stat_str: currentStats.str, stat_agi: currentStats.agi,
-          stat_int: currentStats.int, stat_spi: currentStats.spi,
-          stat_cha: currentStats.cha,
-          tally_str: 0, tally_agi: 0, tally_int: 0, tally_spi: 0, tally_cha: 0,
-        });
-      }
-    }
-    setPlayerXP(newXP);
-  };
-
-  const handleRitualComplete = async (ritualName) => {
-    if (completedRituals[ritualName]) return;
-    if (processingRef.current.has(`ritual:${ritualName}`)) return;
-    processingRef.current.add(`ritual:${ritualName}`);
-    setCompletedRituals(prev => ({ ...prev, [ritualName]: true }));
-    // Increment weekly count for this ritual
-    setWeeklyRitualCounts(prev => ({ ...prev, [ritualName]: (prev[ritualName] || 0) + 1 }));
-    const stat = ACTIVITY_STAT_MAP[ritualName] || "str";
-    awardXP(10, stat);
-    setPlayerGold(prev => prev + 2);
-
-    // Save ritual to Supabase
-    if (userId) {
-      const today = getLocalDate();
-      const ritualColumn = {
-        "Bodyweight Workout": "bodyweight_workout",
-        "Walk/Jog 20min": "walk_jog",
-        "Read 20min": "read_20",
-        "Pray/Meditate 10min": "pray_meditate",
-        "Reach Out": "reach_out",
-      }[ritualName];
-      if (ritualColumn) {
-        await supabase.from("daily_rituals").upsert({
-          user_id: userId, ritual_date: today, [ritualColumn]: true,
-        }, { onConflict: "user_id,ritual_date" });
-      }
-      // Save XP/gold/tally to profile (use computed values to avoid stale closures)
-      const newXP = playerXP + 10;
-      const newGold = playerGold + 2;
-      const newTally = { ...activityTally, [stat]: (activityTally[stat] || 0) + 1 };
-      saveProfile({
-        xp: newXP, gold: newGold,
-        [`tally_${stat}`]: newTally[stat],
-      });
-    }
-  };
-
-  // Daily quest completion
-  const handleQuestComplete = async (questId, xpReward, goldReward, statCategories) => {
-    if (completedQuests.includes(questId)) return;
-    if (processingRef.current.has(`quest:${questId}`)) return;
-    processingRef.current.add(`quest:${questId}`);
-    setCompletedQuests(prev => [...prev, questId]);
-
-    // Tally all stats for dual-stat quests
-    const stats = Array.isArray(statCategories) ? statCategories : [statCategories];
-    stats.forEach(stat => {
-      if (stat) setActivityTally(prev => ({ ...prev, [stat]: prev[stat] + 1 }));
-    });
-    awardXP(xpReward, null); // XP awarded without double-tallying
-    setPlayerGold(prev => prev + goldReward);
-
-    if (userId) {
-      const today = getLocalDate();
-      await supabase.from("quest_progress").upsert({
-        user_id: userId, quest_id: questId, quest_date: today,
-      }, { onConflict: "user_id,quest_id,quest_date" });
-      // Save XP/gold/tally using computed values
-      const newXP = playerXP + xpReward;
-      const newGold = playerGold + goldReward;
-      const profile = { xp: newXP, gold: newGold };
-      stats.forEach(stat => {
-        if (stat) profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
-      });
-      saveProfile(profile);
-    }
-  };
-
-  // Guild handlers
-  const handleCreateGuild = async (name, description) => {
-    if (!userId) return;
-    try {
-      const { data: guild, error } = await supabase
-        .from("guilds").insert({ name, description, leader_id: userId }).select().single();
-      if (error) throw error;
-      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
-      setUserGuild({ guilds: guild, guild_id: guild.id });
-      setGuildMembers([{ user_id: userId, role: "leader", profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
-    } catch (e) {
-      console.error("Failed to create guild:", e);
-    }
-  };
-
-  const handleJoinByCode = async (code) => {
-    if (!userId) return;
-    try {
-      const { data: guild, error } = await supabase
-        .from("guilds").select("*").eq("invite_code", code).single();
-      if (error) throw new Error("Invalid invite code");
-      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
-      setUserGuild({ guilds: guild, guild_id: guild.id });
-      const { data: members } = await supabase
-        .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
-      setGuildMembers(members || []);
-    } catch (e) {
-      console.error("Failed to join guild:", e);
-    }
-  };
-
-  const xpNeeded = xpForLevel(playerLevel);
-  const rawXpInLevel = playerXP - totalXpForLevel(playerLevel);
-  const xpInLevel = Math.max(0, Math.min(rawXpInLevel, xpNeeded));
+  // ── WORKOUT SCREEN ──
+  const phaseColor = phase === "work" ? C.ritualDone : "#f59e0b";
+  const phaseLabel = phase === "work" ? "WORK" : phase === "rest" ? "REST" : "ROUND REST";
+  const progressPct = phase === "work"
+    ? ((WORK_TIME - timeLeft) / WORK_TIME) * 100
+    : phase === "rest"
+      ? ((REST_TIME - timeLeft) / REST_TIME) * 100
+      : ((60 - timeLeft) / 60) * 100;
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Outfit', sans-serif; background: ${C.bg}; color: ${C.text}; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
-      `}</style>
+    <div style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.3s ease", position: "relative" }}>
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430, height: "100vh",
+        backgroundImage: "url(/arena-bg.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.15, pointerEvents: "none", zIndex: 0,
+      }} />
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <button onClick={() => onBack(false)} style={{
+          background: "none", border: "none", color: C.textMuted, fontSize: 14,
+          cursor: "pointer", marginBottom: 16, padding: 0,
+        }}>← Quit</button>
 
-      <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: C.bg, position: "relative" }}>
-        {levelUpData && (
-          <LevelUpModal
-            level={levelUpData.level} oldClass={levelUpData.oldClass}
-            newClass={levelUpData.newClass} distribution={levelUpData.distribution}
-            onClose={() => setLevelUpData(null)}
-          />
-        )}
-
-        {screen === "loading" && (
-          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 2 }}>GUILDUP</div>
+        {/* Round indicator */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
+            Round {round} of {ROUNDS}
           </div>
-        )}
-        {screen === "landing" && (
-          <LandingScreen
-            onSignUp={() => { setAuthMode("signup"); setScreen("welcome"); }}
-            onSignIn={() => { setAuthMode("signin"); setScreen("auth"); }}
-          />
-        )}
-        {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
-        {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} initialMode={authMode} />}
-        {screen === "interviewIntro" && (
+          <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+            {Array.from({ length: ROUNDS }).map((_, i) => (
+              <div key={i} style={{
+                width: 28, height: 6, borderRadius: 3,
+                background: i < round - 1 ? C.ritualDone : i === round - 1 ? C.gold : C.surfaceLight,
+                transition: "background 0.3s",
+              }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Current exercise */}
+        {phase !== "round_rest" ? (
           <div style={{
-            minHeight: "100vh", display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", padding: 32,
-            animation: "fadeIn 0.4s ease",
+            padding: "24px", borderRadius: 16, marginBottom: 20, textAlign: "center",
+            background: C.card, border: `2px solid ${phaseColor}44`,
+            backdropFilter: "blur(8px)",
           }}>
-            <div style={{ fontSize: 64, marginBottom: 24 }}>🎭</div>
-            <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: C.gold, marginBottom: 12, textAlign: "center" }}>
-              Time to Discover Your Class
-            </h2>
-            <p style={{ color: C.textMuted, lineHeight: 1.7, fontSize: 15, textAlign: "center", marginBottom: 12 }}>
-              Answer 10 quick questions. The first 5 reveal your personality and determine your class.
-              The last 5 assess your current habits and set your starting level.
-            </p>
-            <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginBottom: 40 }}>
-              There are no wrong answers — just be honest.
-            </p>
-            <button onClick={() => setScreen("interview")} style={{
-              width: "100%", maxWidth: 300, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
-              color: "#000", fontSize: 16, fontWeight: 700,
-            }}>
-              Begin
-            </button>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>{currentExercise.emoji}</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 4 }}>
+              {currentExercise.name}
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: phaseColor, textTransform: "uppercase" }}>
+              {phaseLabel}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 10 }}>
+              {WORKOUT_ROUNDS.map((ex, i) => (
+                <div key={i} style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: i < exerciseIdx ? C.ritualDone : i === exerciseIdx ? C.gold : C.surfaceLight,
+                  transition: "background 0.3s",
+                }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            padding: "24px", borderRadius: 16, marginBottom: 20, textAlign: "center",
+            background: C.card, border: `2px solid ${C.gold}44`,
+            backdropFilter: "blur(8px)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: C.gold, marginBottom: 4 }}>
+              Round {round} Complete!
+            </div>
+            <div style={{ fontSize: 13, color: C.textMuted }}>Rest — next round in {timeLeft}s</div>
           </div>
         )}
-        {screen === "interview" && <InterviewScreen onComplete={handleInterviewComplete} />}
-        {screen === "reveal" && (
-          <ClassRevealScreen className={playerClass} startingLevel={playerLevel} onContinue={() => setScreen("dashboard")} />
-        )}
-        {screen === "dashboard" && (
-          <>
-            {showRitualDetail ? (
-              showRitualDetail.name === "Reach Out" ? (
-                <RallyAlliesFlow
-                  userId={userId}
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
-              ) : showRitualDetail.name === "Bodyweight Workout" ? (
-                <ForgeTheBodyFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
-              ) : showRitualDetail.name === "Read 20min" ? (
-                <SharpenTheMindFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
-              ) : showRitualDetail.name === "Pray/Meditate 10min" ? (
-                <StillTheSpiritFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
-              ) : (
-                <RitualDetailScreen
-                  ritual={showRitualDetail}
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
-              )
-            ) : (
-              <>
-                {tab === "quests" && (
-                  <QuestsScreen
-                    onOpenRitual={(r) => setShowRitualDetail(r)}
-                    completedRituals={completedRituals}
-                    completedQuests={completedQuests}
-                    onCompleteQuest={handleQuestComplete}
-                    playerClass={playerClass}
-                    playerLevel={playerLevel}
-                    ritualStreaks={ritualStreaks}
-                    dailyQuests={dailyQuests}
-                    weeklyRitualCounts={weeklyRitualCounts}
-                  />
-                )}
-                {tab === "avatar" && (
-                  <AvatarScreen
-                    playerClass={playerClass} playerLevel={playerLevel}
-                    playerStats={playerStats} playerGold={playerGold}
-                    playerName={playerName} onSignOut={handleSignOut}
-                    avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
-                  />
-                )}
-                {tab === "battle" && <BattleScreen />}
-                {tab === "store" && <StoreScreen playerGold={playerGold} />}
-                {tab === "guild" && <GuildScreen
-                  userId={userId}
-                  onCreateGuild={handleCreateGuild}
-                  onJoinByCode={handleJoinByCode}
-                  userGuild={userGuild}
-                  guildMembers={guildMembers}
-                />}
-              </>
-            )}
-            {!showRitualDetail && <XPBar xp={xpInLevel} maxXp={xpNeeded} level={playerLevel} />}
-            <TabBar active={tab} onSwitch={(t) => { setTab(t); setShowRitualDetail(null); }} />
-          </>
-        )}
+
+        {/* Big timer */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{
+            fontSize: 72, fontWeight: 700, fontFamily: "monospace",
+            color: timeLeft <= 5 && running ? "#ef4444" : phaseColor,
+            letterSpacing: 4, transition: "color 0.3s",
+            textShadow: running ? `0 0 40px ${phaseColor}33` : "none",
+          }}>
+            {String(Math.floor(timeLeft / 60)).padStart(2, "0")}:{String(timeLeft % 60).padStart(2, "0")}
+          </div>
+          <div style={{ height: 6, background: C.surfaceLight, borderRadius: 3, overflow: "hidden", marginTop: 12 }}>
+            <div style={{
+              width: `${progressPct}%`, height: "100%", borderRadius: 3,
+              background: `linear-gradient(90deg, ${phaseColor}, ${phaseColor}88)`,
+              transition: "width 1s linear",
+            }} />
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={() => setRunning(r => !r)} style={{
+            width: "100%", padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: running
+              ? `linear-gradient(135deg, #ca8a04, #a16207)`
+              : `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
+            color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 1,
+            transition: "all 0.3s",
+          }}>
+            {running ? "Pause" : "Start / Resume"}
+          </button>
+          <button onClick={() => setStep("done")} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            color: "#000", fontSize: 14, fontWeight: 700,
+          }}>
+            Mark Complete Early
+          </button>
+        </div>
+
+        {/* Quote */}
+        <div style={{
+          marginTop: 20, padding: "12px 16px", borderRadius: 10,
+          background: C.card, border: `1px solid ${C.cardBorder}`,
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 12, color: C.textMuted, fontStyle: "italic", lineHeight: 1.5 }}>"{quote.text}"</div>
+          <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
