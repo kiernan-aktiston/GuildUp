@@ -3,10 +3,10 @@ import { C, RITUAL_INSTRUCTIONS, getRandomQuote, getLocalDate } from "../constan
 import { supabase } from "../supabase";
 
 const CATEGORIES = [
-  { key: "network", emoji: "🤝", label: "Network", desc: "Professional connections & mentors" },
+  { key: "network", emoji: "🛡️", label: "Network", desc: "Professional connections & mentors" },
   { key: "friends", emoji: "🍻", label: "Friends", desc: "Your inner circle" },
-  { key: "family", emoji: "🏠", label: "Family", desc: "Blood runs deep" },
-  { key: "romance", emoji: "💜", label: "Romance", desc: "Someone special" },
+  { key: "family", emoji: "🩸", label: "Family", desc: "Blood runs deep" },
+  { key: "romance", emoji: "❤️‍🔥", label: "Romance", desc: "Someone special" },
 ];
 
 const METHODS = [
@@ -289,9 +289,8 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 }}>You're Right — Let's Go</button>
                 <button onClick={() => { setShowWhy(false); onBack(false); }} style={{
                   width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                  cursor: "pointer", fontSize: 14, fontWeight: 600,
-                  background: "transparent", color: C.textMuted,
-                  border: `1px solid ${C.border}`,
+                  cursor: "pointer", fontSize: 14, fontWeight: 700,
+                  background: "#ef4444", color: "#000",
                 }}>Not Today</button>
               </div>
             </div>
@@ -484,22 +483,34 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 background: C.surfaceLight, border: `1px solid ${C.border}`,
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
-                minHeight: 180,
+                minHeight: 180, direction: "ltr", textAlign: "left",
               }}
             />
             {messageDraft.trim() && (
-              <button onClick={() => {
-                navigator.clipboard.writeText(messageDraft);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }} style={{
-                ...btnSecondary,
-                marginTop: 12,
-                color: copied ? C.gold : C.text,
-                borderColor: copied ? C.gold : C.border,
-              }}>
-                {copied ? "✓ Copied to Clipboard!" : "📋 Copy to Clipboard"}
-              </button>
+              <>
+                <button onClick={() => {
+                  navigator.clipboard.writeText(messageDraft);
+                  setCopied(true);
+                }} style={{
+                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                  cursor: "pointer", fontSize: 14, fontWeight: 700,
+                  background: "#f59e0b", color: "#000",
+                  marginTop: 12,
+                }}>
+                  {copied ? "✓ Copied!" : "📋 Copy to Clipboard"}
+                </button>
+                {copied && (
+                  <div style={{
+                    marginTop: 12, padding: "12px 16px", borderRadius: 10,
+                    background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)",
+                    textAlign: "center",
+                  }}>
+                    <span style={{ fontSize: 14, color: "#22c55e", fontWeight: 600 }}>
+                      🗡️ Your allies await — go send it!
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </>
         ) : (
@@ -522,7 +533,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 background: C.surfaceLight, border: `1px solid ${C.border}`,
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
-                minHeight: 100,
+                minHeight: 100, direction: "ltr", textAlign: "left",
               }}
             />
           </>
@@ -591,11 +602,19 @@ export default function RallyAlliesFlow({ onBack, userId }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={handleComplete} style={btnPrimary}>
+          <button onClick={handleComplete} style={{
+            width: "100%", padding: "16px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 15, fontWeight: 700,
+            background: "#22c55e", color: "#000",
+          }}>
             ✓ Yes — Quest Complete
           </button>
-          <button onClick={handleNotYet} style={btnSecondary}>
-            Not Yet — Save My Draft
+          <button onClick={handleNotYet} style={{
+            width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 14, fontWeight: 700,
+            background: "#ef4444", color: "#000",
+          }}>
+            Not Today
           </button>
         </div>
 
