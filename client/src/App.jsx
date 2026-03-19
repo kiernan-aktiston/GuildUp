@@ -16,6 +16,7 @@ import BattleScreen from "./components/BattleScreen";
 import StoreScreen from "./components/StoreScreen";
 import GuildScreen from "./components/GuildScreen";
 import RallyAlliesFlow from "./components/RallyAlliesFlow";
+import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import LevelUpModal from "./components/LevelUpModal";
 
 export default function App() {
@@ -573,6 +574,13 @@ export default function App() {
               showRitualDetail.name === "Reach Out" ? (
                 <RallyAlliesFlow
                   userId={userId}
+                  onBack={(didComplete) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                    setShowRitualDetail(null);
+                  }}
+                />
+              ) : showRitualDetail.name === "Bodyweight Workout" ? (
+                <ForgeTheBodyFlow
                   onBack={(didComplete) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name);
                     setShowRitualDetail(null);
