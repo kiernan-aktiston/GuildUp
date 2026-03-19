@@ -402,6 +402,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
       <StepWrapper stepNum={3} total={6} label="Step 3" title="Who specifically?"
         canContinue={recipientName.trim().length > 0} onContinue={() => setStep("intent")}>
         <input
+          dir="ltr"
           type="text"
           placeholder="Their name..."
           value={recipientName}
@@ -411,6 +412,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
             width: "100%", padding: "16px 18px", borderRadius: 12, fontSize: 16,
             background: C.surfaceLight, border: `1px solid ${C.border}`,
             color: C.text, outline: "none", fontFamily: "'Outfit', sans-serif",
+            direction: "ltr", textAlign: "left",
           }}
         />
         <p style={{ fontSize: 13, color: C.textMuted, marginTop: 12, lineHeight: 1.5 }}>
@@ -439,6 +441,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
           </div>
           {intent === "__custom" && (
             <input
+              dir="ltr"
               type="text"
               placeholder="What's your goal?"
               value={customIntent}
@@ -448,6 +451,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 width: "100%", padding: "14px 16px", borderRadius: 10, fontSize: 14,
                 background: C.surfaceLight, border: `1px solid ${C.border}`,
                 color: C.text, outline: "none", marginTop: 4,
+                direction: "ltr", textAlign: "left",
               }}
             />
           )}
@@ -473,6 +477,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
               &nbsp;·&nbsp;Goal: <span style={{ color: C.text }}>{finalIntent}</span>
             </div>
             <textarea
+              dir="ltr"
               placeholder={`Write your ${methodLabel.toLowerCase()} to ${recipientName}...`}
               value={messageDraft}
               onChange={e => setMessageDraft(e.target.value)}
@@ -484,6 +489,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
                 minHeight: 180, direction: "ltr", textAlign: "left",
+                unicodeBidi: "plaintext",
               }}
             />
             {messageDraft.trim() && (
@@ -524,6 +530,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
               </div>
             </div>
             <textarea
+              dir="ltr"
               placeholder="Any notes for yourself? (optional)"
               value={messageDraft}
               onChange={e => setMessageDraft(e.target.value)}
@@ -534,6 +541,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
                 minHeight: 100, direction: "ltr", textAlign: "left",
+                unicodeBidi: "plaintext",
               }}
             />
           </>
