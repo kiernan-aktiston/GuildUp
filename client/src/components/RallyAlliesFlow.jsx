@@ -491,7 +491,6 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
                 minHeight: 180, direction: "ltr", textAlign: "left",
-                unicodeBidi: "plaintext",
               }}
             />
             {messageDraft.trim() && (
@@ -543,7 +542,6 @@ export default function RallyAlliesFlow({ onBack, userId }) {
                 color: C.text, outline: "none", resize: "vertical",
                 fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
                 minHeight: 100, direction: "ltr", textAlign: "left",
-                unicodeBidi: "plaintext",
               }}
             />
           </>
