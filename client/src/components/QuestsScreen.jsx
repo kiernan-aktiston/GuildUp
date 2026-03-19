@@ -6,8 +6,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, comp
   const rituals = [
     { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "20 min bodyweight workout" },
     { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "20 min walk or jog outside" },
-    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "Read. Think. Prove it. ~10 min." },
-    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "10 min of prayer or meditation" },
+    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "20 min of focused reading" },
+    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "10 min guided stillness. Breathe." },
     { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️", desc: "Reach out to someone meaningfully" },
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
 
