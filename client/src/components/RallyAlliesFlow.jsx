@@ -28,7 +28,7 @@ const INTENTS = [
 ];
 
 export default function RallyAlliesFlow({ onBack, userId }) {
-  const [step, setStep] = useState("prep"); // prep, category, method, recipient, intent, compose, confirm, done
+  const [step, setStep] = useState("prep"); // prep, category, method, recipient, intent, goDoIt, confirm
   const [category, setCategory] = useState(null);
   const [method, setMethod] = useState(null);
   const [recipientName, setRecipientName] = useState("");
@@ -106,53 +106,15 @@ export default function RallyAlliesFlow({ onBack, userId }) {
     color: C.text, marginBottom: 20,
   };
 
-  // ── DONE — COMPLETION SCREEN (must be checked before step checks) ──
-  if (done) {
-    return (
-      <div dir="ltr" style={{ minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.3s ease" }}>
-        <div style={{
-          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
-          width: "100%", maxWidth: 430, height: "100vh",
-          backgroundImage: "url(/rally-bg.png)",
-          backgroundSize: "cover", backgroundPosition: "center",
-          opacity: 0.2, pointerEvents: "none", zIndex: 0,
-        }} />
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>🗡️</div>
-          <div style={{
-            fontSize: 48, color: C.ritualDone, fontWeight: 800,
-            fontFamily: "'Cinzel', serif", marginBottom: 8,
-          }}>✓</div>
-          <div style={{
-            fontSize: 20, color: C.ritualDone, fontWeight: 700, marginBottom: 8,
-          }}>Ritual Complete!</div>
-          <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 8 }}>
-            You reached out to <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span>
-          </div>
-          <div style={{
-            padding: "12px 20px", borderRadius: 10, display: "inline-block",
-            background: C.card, border: `1px solid ${C.cardBorder}`,
-            marginBottom: 32,
-          }}>
-            <span style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic" }}>
-              "{quote.text}"
-            </span>
-            <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
-          </div>
-          <div>
-            <button onClick={() => onBack(true)} style={{
-              padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
-              color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 1,
-              boxShadow: `0 4px 20px ${C.ritualDone}44`,
-            }}>
-              Claim +10 XP
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const BgLayer = () => (
+    <div style={{
+      position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+      width: "100%", maxWidth: 430, height: "100vh",
+      backgroundImage: "url(/rally-bg.png)",
+      backgroundSize: "cover", backgroundPosition: "center",
+      opacity: 0.2, pointerEvents: "none", zIndex: 0,
+    }} />
+  );
 
   // ── PREP SLIDES ──
   const slides = [
@@ -363,7 +325,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
       }} />
       <div style={{ position: "relative", zIndex: 1 }}>
       <button onClick={() => {
-        const steps = ["prep", "category", "method", "recipient", "intent", "compose", "confirm"];
+        const steps = ["prep", "category", "method", "recipient", "intent", "goDoIt"];
         const idx = steps.indexOf(step);
         setStep(steps[Math.max(0, idx - 1)]);
       }} style={{
@@ -405,7 +367,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
   // ── CATEGORY ──
   if (step === "category") {
     return (
-      <StepWrapper stepNum={1} total={6} label="Step 1" title="Who needs to hear from you?"
+      <StepWrapper stepNum={1} total={5} label="Step 1" title="Who needs to hear from you?"
         canContinue={!!category} onContinue={() => setStep("method")}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {CATEGORIES.map(c => (
@@ -428,7 +390,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
   // ── METHOD ──
   if (step === "method") {
     return (
-      <StepWrapper stepNum={2} total={6} label="Step 2" title="How will you reach out?"
+      <StepWrapper stepNum={2} total={5} label="Step 2" title="How will you reach out?"
         canContinue={!!method} onContinue={() => setStep("recipient")}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {METHODS.map(m => (
@@ -449,7 +411,7 @@ export default function RallyAlliesFlow({ onBack, userId }) {
   // ── RECIPIENT ──
   if (step === "recipient") {
     return (
-      <StepWrapper stepNum={3} total={6} label="Step 3" title="Who specifically?"
+      <StepWrapper stepNum={3} total={5} label="Step 3" title="Who specifically?"
         canContinue={recipientName.trim().length > 0} onContinue={() => setStep("intent")}>
         <input
           dir="ltr"
@@ -475,9 +437,9 @@ export default function RallyAlliesFlow({ onBack, userId }) {
   // ── INTENT ──
   if (step === "intent") {
     return (
-      <StepWrapper stepNum={4} total={6} label="Step 4" title={`What's the goal with ${recipientName}?`}
+      <StepWrapper stepNum={4} total={5} label="Step 4" title={`What's the goal with ${recipientName}?`}
         canContinue={intent && (intent !== "__custom" || customIntent.trim().length > 0)}
-        onContinue={() => setStep("compose")}>
+        onContinue={() => setStep("goDoIt")}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {INTENTS.map(i => (
             <div key={i} onClick={() => { setIntent(i); setCustomIntent(""); }}
@@ -510,180 +472,95 @@ export default function RallyAlliesFlow({ onBack, userId }) {
     );
   }
 
-  // ── COMPOSE ──
-  if (step === "compose") {
-    const methodLabel = METHODS.find(m => m.key === method)?.label || method;
-    return (
-      <StepWrapper stepNum={5} total={6} label="Step 5"
-        title={isTextBased ? "Draft your message" : `Plan your ${methodLabel.toLowerCase()}`}
-        canContinue={true} onContinue={() => setStep("confirm")}>
-
-        {isTextBased ? (
-          <>
-            <div style={{
-              fontSize: 12, color: C.textMuted, marginBottom: 10,
-            }}>
-              To: <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span>
-              &nbsp;·&nbsp;Goal: <span style={{ color: C.text }}>{finalIntent}</span>
-            </div>
-            <textarea
-              dir="ltr"
-              placeholder={`Write your ${methodLabel.toLowerCase()} to ${recipientName}...`}
-              value={messageDraft}
-              onChange={e => setMessageDraft(e.target.value)}
-              autoFocus
-              rows={8}
-              style={{
-                width: "100%", padding: "16px", borderRadius: 12, fontSize: 15,
-                background: C.surfaceLight, border: `1px solid ${C.border}`,
-                color: C.text, outline: "none", resize: "vertical",
-                fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
-                minHeight: 180, direction: "ltr", textAlign: "left",
-              }}
-            />
-            {messageDraft.trim() && (
-              <>
-                <button onClick={() => {
-                  navigator.clipboard.writeText(messageDraft);
-                  setCopied(true);
-                }} style={{
-                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                  cursor: "pointer", fontSize: 14, fontWeight: 700,
-                  background: "#f59e0b", color: "#000",
-                  marginTop: 12,
-                }}>
-                  {copied ? "✓ Copied!" : "📋 Copy to Clipboard"}
-                </button>
-                {copied && (
-                  <div style={{
-                    marginTop: 12, padding: "12px 16px", borderRadius: 10,
-                    background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)",
-                    textAlign: "center",
-                  }}>
-                    <span style={{ fontSize: 14, color: "#22c55e", fontWeight: 600 }}>
-                      🗡️ Your allies await — go send it!
-                    </span>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <div style={{
-              ...cardStyle, marginBottom: 16,
-            }}>
-              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 8 }}>Your plan:</div>
-              <div style={{ fontSize: 15, color: C.text, lineHeight: 1.6 }}>
-                <strong style={{ color: C.gold }}>{methodLabel}</strong> {recipientName} to <strong>{finalIntent.toLowerCase()}</strong>
-              </div>
-            </div>
-            <textarea
-              dir="ltr"
-              placeholder="Any notes for yourself? (optional)"
-              value={messageDraft}
-              onChange={e => setMessageDraft(e.target.value)}
-              rows={4}
-              style={{
-                width: "100%", padding: "16px", borderRadius: 12, fontSize: 15,
-                background: C.surfaceLight, border: `1px solid ${C.border}`,
-                color: C.text, outline: "none", resize: "vertical",
-                fontFamily: "'Outfit', sans-serif", lineHeight: 1.6,
-                minHeight: 100, direction: "ltr", textAlign: "left",
-              }}
-            />
-          </>
-        )}
-      </StepWrapper>
-    );
-  }
-
-  // ── CONFIRM ──
-  if (step === "confirm") {
+  // ── GO DO IT ──
+  if (step === "goDoIt") {
     const methodLabel = METHODS.find(m => m.key === method)?.label || method;
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
-        <div style={{
-          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
-          width: "100%", maxWidth: 430, height: "100vh",
-          backgroundImage: "url(/rally-bg.png)",
-          backgroundSize: "cover", backgroundPosition: "center",
-          opacity: 0.2, pointerEvents: "none", zIndex: 0,
-        }} />
+        <BgLayer />
         <div style={{ position: "relative", zIndex: 1 }}>
-        <button onClick={() => setStep("compose")} style={{
-          background: "none", border: "none", color: C.textMuted, fontSize: 14,
-          cursor: "pointer", marginBottom: 24, padding: 0,
-        }}>← Back</button>
+          <button onClick={() => setStep("intent")} style={{
+            background: "none", border: "none", color: C.textMuted, fontSize: 14,
+            cursor: "pointer", marginBottom: 24, padding: 0,
+          }}>← Back</button>
 
-        {/* Progress bar — full */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: C.gold }} />
-          ))}
-        </div>
+          {/* Progress bar — full */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: C.gold }} />
+            ))}
+          </div>
 
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🗡️</div>
-          <div style={stepLabel}>Final Step</div>
-          <div style={{ ...stepTitle, marginBottom: 12 }}>Did you reach out?</div>
-          <p style={{ color: C.textMuted, fontSize: 14, lineHeight: 1.6 }}>
-            {isTextBased
-              ? `Did you send your ${methodLabel.toLowerCase()} to ${recipientName}?`
-              : `Did you ${methodLabel === "Call" ? "call" : "meet"} ${recipientName}?`
-            }
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>🗡️</div>
+            <div style={stepLabel}>Your Mission</div>
+            <div style={{ ...stepTitle, marginBottom: 20 }}>Go. Reach Out. Return.</div>
+          </div>
+
+          {/* Mission card */}
+          <div style={{
+            ...cardStyle, marginBottom: 24, padding: "20px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: C.textMuted }}>Who</span>
+              <span style={{ fontSize: 15, color: C.gold, fontWeight: 700 }}>{recipientName}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: C.textMuted }}>How</span>
+              <span style={{ fontSize: 15, color: C.text, fontWeight: 600 }}>{methodLabel}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13, color: C.textMuted }}>Goal</span>
+              <span style={{ fontSize: 15, color: C.text, fontWeight: 600 }}>{finalIntent}</span>
+            </div>
+          </div>
+
+          <p style={{ fontSize: 14, color: C.textMuted, textAlign: "center", lineHeight: 1.6, marginBottom: 24 }}>
+            {methodLabel} <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span> about <span style={{ color: C.text }}>{finalIntent.toLowerCase()}</span>. Come back to GuildUp when it's done.
           </p>
-        </div>
 
-        {/* Summary card */}
-        <div style={{
-          ...cardStyle, marginBottom: 24,
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>To</span>
-            <span style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{recipientName}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>Via</span>
-            <span style={{ fontSize: 14, color: C.text }}>{methodLabel}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>Category</span>
-            <span style={{ fontSize: 14, color: C.text }}>{CATEGORIES.find(c => c.key === category)?.label}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>Goal</span>
-            <span style={{ fontSize: 14, color: C.text }}>{finalIntent}</span>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={handleComplete} style={{
-            width: "100%", padding: "16px", borderRadius: 12, border: "none",
-            cursor: "pointer", fontSize: 15, fontWeight: 700,
+          <button onClick={() => setStep("confirm")} style={{
+            width: "100%", padding: "18px", borderRadius: 12, border: "none",
+            cursor: "pointer", fontSize: 16, fontWeight: 700,
             background: "#22c55e", color: "#000",
           }}>
-            ✓ Yes — Quest Complete
-          </button>
-          <button onClick={handleNotYet} style={{
-            width: "100%", padding: "14px", borderRadius: 12, border: "none",
-            cursor: "pointer", fontSize: 14, fontWeight: 700,
-            background: "#ef4444", color: "#000",
-          }}>
-            Not Today
+            On It!
           </button>
         </div>
+      </div>
+    );
+  }
 
-        <div style={{
-          marginTop: 20, padding: "12px 16px", borderRadius: 10,
-          background: C.card, border: `1px solid ${C.cardBorder}`,
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic", lineHeight: 1.5 }}>
-            "{quote.text}"
+  // ── CONFIRM — Did you do it? ──
+  if (step === "confirm") {
+    return (
+      <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
+        <BgLayer />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🗡️</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, fontWeight: 700, color: C.gold, marginBottom: 12 }}>
+            Did you reach out to {recipientName}?
           </div>
-          <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
-        </div>
+          <p style={{ fontSize: 14, color: C.textMuted, marginBottom: 32, lineHeight: 1.6 }}>
+            Be honest. The only person you're accountable to is yourself.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 300, margin: "0 auto" }}>
+            <button onClick={handleComplete} style={{
+              width: "100%", padding: "18px", borderRadius: 12, border: "none",
+              cursor: "pointer", fontSize: 16, fontWeight: 700,
+              background: "#22c55e", color: "#000",
+            }}>
+              Yes, I Did It
+            </button>
+            <button onClick={() => setStep("goDoIt")} style={{
+              width: "100%", padding: "14px", borderRadius: 12, border: "none",
+              cursor: "pointer", fontSize: 14, fontWeight: 600,
+              background: C.surfaceLight, color: C.textMuted,
+            }}>
+              Not yet — go back
+            </button>
+          </div>
         </div>
       </div>
     );
