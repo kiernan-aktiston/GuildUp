@@ -106,6 +106,54 @@ export default function RallyAlliesFlow({ onBack, userId }) {
     color: C.text, marginBottom: 20,
   };
 
+  // ── DONE — COMPLETION SCREEN (must be checked before step checks) ──
+  if (done) {
+    return (
+      <div dir="ltr" style={{ minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.3s ease" }}>
+        <div style={{
+          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "100%", maxWidth: 430, height: "100vh",
+          backgroundImage: "url(/rally-bg.png)",
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: 0.2, pointerEvents: "none", zIndex: 0,
+        }} />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🗡️</div>
+          <div style={{
+            fontSize: 48, color: C.ritualDone, fontWeight: 800,
+            fontFamily: "'Cinzel', serif", marginBottom: 8,
+          }}>✓</div>
+          <div style={{
+            fontSize: 20, color: C.ritualDone, fontWeight: 700, marginBottom: 8,
+          }}>Ritual Complete!</div>
+          <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 8 }}>
+            You reached out to <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span>
+          </div>
+          <div style={{
+            padding: "12px 20px", borderRadius: 10, display: "inline-block",
+            background: C.card, border: `1px solid ${C.cardBorder}`,
+            marginBottom: 32,
+          }}>
+            <span style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic" }}>
+              "{quote.text}"
+            </span>
+            <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
+          </div>
+          <div>
+            <button onClick={() => onBack(true)} style={{
+              padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
+              color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 1,
+              boxShadow: `0 4px 20px ${C.ritualDone}44`,
+            }}>
+              Claim +10 XP
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── PREP SLIDES ──
   const slides = [
     {
@@ -636,54 +684,6 @@ export default function RallyAlliesFlow({ onBack, userId }) {
           </div>
           <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
         </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── DONE — COMPLETION SCREEN ──
-  if (done) {
-    return (
-      <div dir="ltr" style={{ minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.3s ease" }}>
-        <div style={{
-          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
-          width: "100%", maxWidth: 430, height: "100vh",
-          backgroundImage: "url(/rally-bg.png)",
-          backgroundSize: "cover", backgroundPosition: "center",
-          opacity: 0.2, pointerEvents: "none", zIndex: 0,
-        }} />
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>🗡️</div>
-          <div style={{
-            fontSize: 48, color: C.ritualDone, fontWeight: 800,
-            fontFamily: "'Cinzel', serif", marginBottom: 8,
-          }}>✓</div>
-          <div style={{
-            fontSize: 20, color: C.ritualDone, fontWeight: 700, marginBottom: 8,
-          }}>Ritual Complete!</div>
-          <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 8 }}>
-            You reached out to <span style={{ color: C.gold, fontWeight: 600 }}>{recipientName}</span>
-          </div>
-          <div style={{
-            padding: "12px 20px", borderRadius: 10, display: "inline-block",
-            background: C.card, border: `1px solid ${C.cardBorder}`,
-            marginBottom: 32,
-          }}>
-            <span style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic" }}>
-              "{quote.text}"
-            </span>
-            <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>— {quote.author}</div>
-          </div>
-          <div>
-            <button onClick={() => onBack(true)} style={{
-              padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${C.ritualDone}, #16a34a)`,
-              color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 1,
-              boxShadow: `0 4px 20px ${C.ritualDone}44`,
-            }}>
-              Claim +10 XP
-            </button>
-          </div>
         </div>
       </div>
     );
