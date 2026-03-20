@@ -547,15 +547,11 @@ export default function App() {
             animation: "fadeIn 0.4s ease",
           }}>
             <div style={{ fontSize: 64, marginBottom: 24 }}>🎭</div>
-            <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: C.gold, marginBottom: 12, textAlign: "center" }}>
-              Time to Discover Your Class
+            <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: C.gold, marginBottom: 16, textAlign: "center" }}>
+              Your Answers Shape Your Character
             </h2>
-            <p style={{ color: C.textMuted, lineHeight: 1.7, fontSize: 15, textAlign: "center", marginBottom: 12 }}>
-              Answer 10 quick questions. The first 5 reveal your personality and determine your class.
-              The last 5 assess your current habits and set your starting level.
-            </p>
-            <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginBottom: 40 }}>
-              There are no wrong answers — just be honest.
+            <p style={{ color: C.textMuted, lineHeight: 1.7, fontSize: 15, textAlign: "center", marginBottom: 40, maxWidth: 320 }}>
+              11 questions. Answer honestly — your responses determine your starting class and level. Your class will evolve based on what you actually do, not just what you say.
             </p>
             <button onClick={() => setScreen("interview")} style={{
               width: "100%", maxWidth: 300, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",

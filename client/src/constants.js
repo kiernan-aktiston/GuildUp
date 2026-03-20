@@ -176,57 +176,90 @@ export const RITUAL_INSTRUCTIONS = {
   },
 };
 
-export const PERSONALITY_QUESTIONS = [
-  { id: "p1", text: "Are you more of an...", options: [
-    { value: "intro", label: "Introvert", desc: "You recharge alone" },
-    { value: "ambi", label: "Ambivert", desc: "Depends on the day" },
-    { value: "extro", label: "Extrovert", desc: "People energize you" },
+// ============================================
+// INTERVIEW QUESTIONS — 11 total, interleaved
+// P = personality (scenario → stat points for class)
+// H = habit (frequency → points for starting level)
+// T = tiebreaker (pick what to improve → +1 stat)
+// ============================================
+export const INTERVIEW_QUESTIONS = [
+  // 1. Personality — decision-making
+  { id: "p1", type: "personality", text: "When faced with a tough decision, you tend to...", options: [
+    { value: "head", label: "Analyze the options", desc: "Logic and data first" },
+    { value: "gut", label: "Trust your instincts", desc: "Move fast, adjust later" },
+    { value: "heart", label: "Follow your heart", desc: "Feelings are data too" },
+    { value: "counsel", label: "Seek advice from someone you trust", desc: "Wisdom is borrowed before it's earned" },
   ]},
-  { id: "p2", text: "When do you feel most alive?", options: [
-    { value: "morning", label: "Morning", desc: "Early riser, clear mind" },
-    { value: "afternoon", label: "Afternoon", desc: "You hit your stride midday" },
-    { value: "night", label: "Night", desc: "You come alive after dark" },
+  // 2. Habit — exercise
+  { id: "h1", type: "habit", text: "How often do you train your body — gym, sports, bodyweight, anything physical?", options: [
+    { value: 0, label: "Rarely or never" },
+    { value: 1, label: "Once or twice a week" },
+    { value: 2, label: "3-4 times a week" },
+    { value: 3, label: "5+ times a week" },
   ]},
-  { id: "p3", text: "When faced with a tough decision, you tend to...", options: [
-    { value: "head", label: "Analyze it", desc: "Logic and data first" },
-    { value: "gut", label: "Trust your gut", desc: "Instinct over analysis" },
-    { value: "heart", label: "Follow your heart", desc: "Feelings matter most" },
-    { value: "counsel", label: "Ask someone wise", desc: "Seek outside perspective" },
+  // 3. Personality — group role
+  { id: "p2", type: "personality", text: "You're dropped into a team with strangers. What role do you naturally take?", options: [
+    { value: "lead", label: "I take charge", desc: "Someone has to step up" },
+    { value: "strategize", label: "I plan from the side", desc: "The brain behind the operation" },
+    { value: "support", label: "I make sure everyone's good", desc: "The team is only as strong as its weakest link" },
+    { value: "lone", label: "I work best on my own", desc: "Let me handle my part" },
   ]},
-  { id: "p4", text: "In a group, you naturally...", options: [
-    { value: "lead", label: "Take charge", desc: "Someone has to lead" },
-    { value: "strategize", label: "Plan from the side", desc: "The brain behind the operation" },
-    { value: "support", label: "Support others", desc: "You lift people up" },
-    { value: "lone", label: "Work solo", desc: "You do your best work alone" },
+  // 4. Habit — reading
+  { id: "h2", type: "habit", text: "How often do you read — books, articles, anything longer than a headline?", options: [
+    { value: 0, label: "Almost never" },
+    { value: 1, label: "A few times a month" },
+    { value: 2, label: "A few times a week" },
+    { value: 3, label: "Daily" },
   ]},
-  { id: "p5", text: "What drives you most?", options: [
-    { value: "mastery", label: "Mastery", desc: "Being the best at what you do" },
-    { value: "freedom", label: "Freedom", desc: "Living on your own terms" },
-    { value: "connection", label: "Connection", desc: "Deep relationships" },
-    { value: "purpose", label: "Purpose", desc: "Something bigger than yourself" },
+  // 5. Personality — motivation
+  { id: "p3", type: "personality", text: "What would you sacrifice the most for?", options: [
+    { value: "mastery", label: "Being the best at what I do", desc: "Excellence is non-negotiable" },
+    { value: "freedom", label: "Complete independence", desc: "No one tells me how to live" },
+    { value: "connection", label: "The people I care about", desc: "Relationships are everything" },
+    { value: "purpose", label: "Something bigger than myself", desc: "Legacy over comfort" },
   ]},
-];
-
-export const HABIT_QUESTIONS = [
-  { id: "h1", text: "How often do you exercise?", options: [
-    { value: 0, label: "Rarely or never" }, { value: 1, label: "1-2 times a week" },
-    { value: 2, label: "3-4 times a week" }, { value: 3, label: "5+ times a week" },
+  // 6. Habit — meditation/prayer
+  { id: "h3", type: "habit", text: "Do you have any kind of stillness practice — prayer, meditation, journaling, or quiet reflection?", options: [
+    { value: 0, label: "No, not really" },
+    { value: 1, label: "Occasionally, when I think of it" },
+    { value: 2, label: "A few times a week" },
+    { value: 3, label: "Daily" },
   ]},
-  { id: "h2", text: "How often do you read (books, articles, long-form)?", options: [
-    { value: 0, label: "Almost never" }, { value: 1, label: "A few times a month" },
-    { value: 2, label: "A few times a week" }, { value: 3, label: "Daily" },
+  // 7. Personality — conflict
+  { id: "p4", type: "personality", text: "Someone disrespects you publicly. Your first instinct is to...", options: [
+    { value: "confront", label: "Address it directly, right there", desc: "Disrespect answered is disrespect ended" },
+    { value: "calculate", label: "Stay quiet and handle it later", desc: "Timing is everything" },
+    { value: "absorb", label: "Let it go — it says more about them", desc: "Not every battle is worth fighting" },
+    { value: "deflect", label: "Laugh it off and move on", desc: "Never let them see you rattled" },
   ]},
-  { id: "h3", text: "Do you have a prayer, meditation, or mindfulness practice?", options: [
-    { value: 0, label: "No" }, { value: 1, label: "Occasionally" },
-    { value: 2, label: "A few times a week" }, { value: 3, label: "Daily" },
+  // 8. Habit — social connection
+  { id: "h4", type: "habit", text: "How often do you reach out to people in your life — not just responding, but initiating?", options: [
+    { value: 0, label: "Rarely" },
+    { value: 1, label: "A few times a month" },
+    { value: 2, label: "Weekly" },
+    { value: 3, label: "Multiple times a week" },
   ]},
-  { id: "h4", text: "How often do you intentionally connect with friends or family?", options: [
-    { value: 0, label: "Rarely" }, { value: 1, label: "A few times a month" },
-    { value: 2, label: "Weekly" }, { value: 3, label: "Multiple times a week" },
+  // 9. Personality — values
+  { id: "p5", type: "personality", text: "You can only keep one quality for the rest of your life. You choose...", options: [
+    { value: "discipline", label: "Discipline", desc: "The ability to do what needs doing" },
+    { value: "adaptability", label: "Adaptability", desc: "Surviving anything life throws at you" },
+    { value: "wisdom", label: "Wisdom", desc: "Seeing what others miss" },
+    { value: "loyalty", label: "Loyalty", desc: "The people around you can always count on you" },
   ]},
-  { id: "h5", text: "How would you rate your overall daily discipline?", options: [
-    { value: 0, label: "Needs a lot of work" }, { value: 1, label: "Hit or miss" },
-    { value: 2, label: "Pretty consistent" }, { value: 3, label: "Very disciplined" },
+  // 10. Habit — discipline
+  { id: "h5", type: "habit", text: "Be honest — how disciplined are you on a daily basis right now?", options: [
+    { value: 0, label: "I have a lot of work to do" },
+    { value: 1, label: "Hit or miss, depends on the day" },
+    { value: 2, label: "Pretty consistent" },
+    { value: 3, label: "Very disciplined" },
+  ]},
+  // 11. Tiebreaker
+  { id: "t1", type: "tiebreaker", text: "If you could level up one area of your life starting tomorrow, what would it be?", options: [
+    { value: "str", label: "Physical strength and endurance", desc: "Train harder. Get stronger." },
+    { value: "agi", label: "Speed, flexibility, and adaptability", desc: "Move faster. React quicker." },
+    { value: "int", label: "Knowledge and mental sharpness", desc: "Outthink everyone in the room." },
+    { value: "spi", label: "Inner peace and clarity", desc: "A calm mind sees further." },
+    { value: "cha", label: "Social confidence and influence", desc: "Be the person people gravitate toward." },
   ]},
 ];
 

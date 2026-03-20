@@ -4,11 +4,9 @@ import { C } from '../constants';
 export default function WelcomeSlides({ onComplete }) {
   const [slide, setSlide] = useState(0);
   const slides = [
-    { emoji: "⚔️", title: "Welcome, Adventurer", text: "GuildUp transforms your daily habits into an RPG journey. Complete quests. Level up. Become legendary." },
-    { emoji: "🏋️", title: "The Five", text: "Five daily rituals form your foundation. Each one builds a different part of your character — strength, agility, intellect, spirit, and charisma." },
-    { emoji: "🔄", title: "Your Class Will Evolve", text: "Your starting class is based on who you are today. But the quests you choose will shape who you become. Your class can shift as your habits change." },
-    { emoji: "💪", title: "Every Quest Makes You Stronger", text: "Completing daily quests powers up your avatar. The more you do, the stronger you'll be when you battle your friends." },
-    { emoji: "🏰", title: "Find Your Guild", text: "Join or create a guild with friends. Rise together, compete, and hold each other accountable." },
+    { emoji: "⚔️", title: "This Isn't Another Habit App", text: "Most apps tell you what to do. GuildUp makes you want to do it. Five daily rituals. Real effort. Real XP. A character that evolves with you." },
+    { emoji: "🔥", title: "Train. Read. Connect. Be Still. Move.", text: "Every day you complete real-world quests that build five dimensions of your character — strength, intelligence, spirit, charisma, and agility. Every action counts." },
+    { emoji: "🏰", title: "Your Class. Your Guild. Your Legacy.", text: "Discover your starting class. Level up through discipline. Join a guild with friends and hold each other accountable. The game is your life — play it well." },
   ];
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: 32 }}>
