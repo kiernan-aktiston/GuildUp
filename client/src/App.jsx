@@ -19,6 +19,7 @@ import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
+import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
 
 export default function App() {
@@ -593,6 +594,13 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Pray/Meditate 10min" ? (
                 <StillTheSpiritFlow
+                  onBack={(didComplete) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                    setShowRitualDetail(null);
+                  }}
+                />
+              ) : showRitualDetail.name === "Walk/Jog 20min" ? (
+                <ExploreTheLandFlow
                   onBack={(didComplete) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name);
                     setShowRitualDetail(null);
