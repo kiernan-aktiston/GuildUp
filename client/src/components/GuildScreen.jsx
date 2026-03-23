@@ -8,35 +8,33 @@ const CREST_COLORS = [
 ];
 const CREST_EMBLEMS = ["⚔️", "🛡️", "🏹", "📖", "🕯️", "🗡️", "🔥", "⚡", "🌿", "💀", "🦅", "🐺", "🦁", "🐉", "👑", "💎"];
 
-// Simple SVG shield renderer
 function GuildCrest({ crest = {}, size = 80 }) {
   const shape = crest.shape || "shield";
   const c1 = crest.color1 || "#3b82f6";
   const c2 = crest.color2 || "#1e3a5f";
   const emblem = crest.emblem || "⚔️";
   const s = size;
-
   const shieldPath = shape === "shield"
     ? `M${s/2} ${s*0.05} L${s*0.9} ${s*0.25} L${s*0.85} ${s*0.7} L${s/2} ${s*0.95} L${s*0.15} ${s*0.7} L${s*0.1} ${s*0.25} Z`
     : shape === "diamond"
     ? `M${s/2} ${s*0.05} L${s*0.95} ${s/2} L${s/2} ${s*0.95} L${s*0.05} ${s/2} Z`
     : shape === "banner"
     ? `M${s*0.1} ${s*0.05} L${s*0.9} ${s*0.05} L${s*0.9} ${s*0.85} L${s/2} ${s*0.95} L${s*0.1} ${s*0.85} Z`
-    : null; // circle uses <circle>
-
+    : null;
+  const uid = `cg-${shape}-${c1.replace('#','')}-${size}`;
   return (
     <div style={{ width: s, height: s, position: "relative", display: "inline-block" }}>
       <svg viewBox={`0 0 ${s} ${s}`} width={s} height={s}>
         <defs>
-          <linearGradient id={`cg-${shape}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={uid} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={c1} />
             <stop offset="100%" stopColor={c2} />
           </linearGradient>
         </defs>
         {shape === "circle" ? (
-          <circle cx={s/2} cy={s/2} r={s*0.45} fill={`url(#cg-${shape})`} stroke="#ffffff33" strokeWidth="2" />
+          <circle cx={s/2} cy={s/2} r={s*0.45} fill={`url(#${uid})`} stroke="#ffffff33" strokeWidth="2" />
         ) : (
-          <path d={shieldPath} fill={`url(#cg-${shape})`} stroke="#ffffff33" strokeWidth="2" />
+          <path d={shieldPath} fill={`url(#${uid})`} stroke="#ffffff33" strokeWidth="2" />
         )}
       </svg>
       <div style={{
@@ -50,19 +48,16 @@ function GuildCrest({ crest = {}, size = 80 }) {
 }
 
 const MAX_MEMBERS = 8;
-const WEEKLY_CHEST_THRESHOLD = 15; // rituals per member needed for epic chest
+const WEEKLY_CHEST_THRESHOLD = 15;
 
 export default function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJoinByCode, onLeaveGuild }) {
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
-  const [showCrestEditor, setShowCrestEditor] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [guildName, setGuildName] = useState("");
   const [guildDesc, setGuildDesc] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
-
-  // Crest editor state
   const [crestShape, setCrestShape] = useState("shield");
   const [crestColor1, setCrestColor1] = useState("#3b82f6");
   const [crestColor2, setCrestColor2] = useState("#1e3a5f");
@@ -84,20 +79,16 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
     }} />
   );
 
-  // ── NO GUILD — JOIN OR CREATE ──
+  // ── NO GUILD ──
   if (!userGuild && !showCreate && !showJoin) {
     return (
-      <div style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", padding: "40px 32px 120px",
-        animation: "fadeIn 0.3s ease", position: "relative",
-      }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 32px 120px", animation: "fadeIn 0.3s ease", position: "relative" }}>
         <BgLayer />
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
           <GuildCrest crest={{ shape: "shield", color1: "#2d7a4f", color2: "#1a4a30", emblem: "🏰" }} size={100} />
           <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: C.gold, marginBottom: 8, marginTop: 16 }}>Find Your Guild</h3>
           <p style={{ color: C.textMuted, fontSize: 14, textAlign: "center", lineHeight: 1.6, marginBottom: 32, maxWidth: 280 }}>
-            Join forces with up to 7 others. Complete rituals together. Unlock epic rewards as a team. No one rises alone.
+            Join forces with up to 7 others. Complete rituals together. Unlock epic rewards as a team.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
             <button onClick={() => setShowCreate(true)} style={{
@@ -115,7 +106,7 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
     );
   }
 
-  // ── CREATE GUILD ──
+  // ── CREATE GUILD (with crest designer) ──
   if (showCreate) {
     return (
       <div style={{ minHeight: "100vh", padding: "40px 24px 120px", animation: "fadeIn 0.3s ease", position: "relative" }}>
@@ -127,7 +118,6 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
           }}>← Back</button>
           <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.gold, marginBottom: 20 }}>Found Your Guild</h3>
 
-          {/* Crest preview */}
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <GuildCrest crest={{ shape: crestShape, color1: crestColor1, color2: crestColor2, emblem: crestEmblem }} size={100} />
           </div>
@@ -136,13 +126,12 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
             <input dir="ltr" type="text" placeholder="Guild Name" value={guildName} onChange={e => setGuildName(e.target.value)} style={inputStyle} />
             <input dir="ltr" type="text" placeholder="Description (optional)" value={guildDesc} onChange={e => setGuildDesc(e.target.value)} style={inputStyle} />
 
-            {/* Shape selector */}
             <div>
               <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>Crest Shape</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {SHIELD_SHAPES.map(s => (
                   <button key={s} onClick={() => setCrestShape(s)} style={{
-                    flex: 1, padding: "10px", borderRadius: 10, border: "none", cursor: "pointer",
+                    flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer",
                     background: crestShape === s ? `${C.gold}22` : C.surfaceLight,
                     border: crestShape === s ? `2px solid ${C.gold}` : `1px solid ${C.border}`,
                     color: crestShape === s ? C.gold : C.textMuted,
@@ -152,7 +141,6 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
               </div>
             </div>
 
-            {/* Color pickers */}
             <div>
               <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>Colors</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -170,7 +158,6 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
               <div style={{ fontSize: 10, color: C.textDim, marginTop: 4 }}>Tap once for primary, twice for secondary</div>
             </div>
 
-            {/* Emblem picker */}
             <div>
               <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>Emblem</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -179,8 +166,7 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
                     width: 40, height: 40, borderRadius: 10, cursor: "pointer",
                     background: crestEmblem === e ? `${C.gold}22` : C.surfaceLight,
                     border: crestEmblem === e ? `2px solid ${C.gold}` : `1px solid ${C.border}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 20,
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
                   }}>{e}</div>
                 ))}
               </div>
@@ -194,7 +180,7 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
                 const crest = { shape: crestShape, color1: crestColor1, color2: crestColor2, emblem: crestEmblem };
                 await onCreateGuild(guildName, guildDesc, crest);
                 setShowCreate(false);
-              } catch (e) { setError(e.message); }
+              } catch (e) { setError(e.message || "Failed to create guild"); }
             }} style={{
               width: "100%", padding: "16px", borderRadius: 12, border: "none", cursor: "pointer",
               background: "#22c55e", color: "#000", fontSize: 15, fontWeight: 700,
@@ -237,21 +223,15 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
   // ── GUILD HOME ──
   const guild = userGuild?.guilds || {};
   const guildCrest = guild.crest || { shape: "shield", color1: "#3b82f6", color2: "#1e3a5f", emblem: "⚔️" };
-  const isLeader = guildMembers.some(m => m.user_id === userId && m.role === "leader");
-
-  // Calculate weekly stats
   const totalWeeklyRituals = guildMembers.reduce((sum, m) => sum + (m.weekly_rituals || 0), 0);
   const chestTarget = guildMembers.length * WEEKLY_CHEST_THRESHOLD;
   const chestProgress = Math.min((totalWeeklyRituals / Math.max(chestTarget, 1)) * 100, 100);
   const chestUnlocked = totalWeeklyRituals >= chestTarget;
-
-  // Find most active member this week
   const sortedByActivity = [...guildMembers].sort((a, b) => (b.weekly_rituals || 0) - (a.weekly_rituals || 0));
-  const mostActive = sortedByActivity[0];
 
   const handleShare = () => {
     const code = guild.invite_code || "";
-    const text = `Join my guild "${guild.name}" on GuildUp! Use invite code: ${code}\n\nhttps://guildup.app`;
+    const text = `Join my guild "${guild.name}" on GuildUp! Use invite code: ${code}\nhttps://guildup.app`;
     if (navigator.share) {
       navigator.share({ title: "Join my GuildUp guild!", text }).catch(() => {});
     } else {
@@ -259,110 +239,23 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
     }
   };
 
-  // ── CREST EDITOR MODAL ──
-  const CrestEditorModal = () => (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 200,
-      background: "rgba(0,0,0,0.85)", display: "flex",
-      alignItems: "center", justifyContent: "center",
-      animation: "fadeIn 0.3s ease", padding: 24, overflowY: "auto",
-    }}>
-      <div onClick={e => e.stopPropagation()} style={{
-        width: "100%", maxWidth: 360, padding: 24, borderRadius: 20,
-        background: C.surface, border: `1px solid ${C.border}`,
-        maxHeight: "85vh", overflowY: "auto",
-      }}>
-        <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>
-          Edit Guild Crest
-        </div>
-
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <GuildCrest crest={{ shape: crestShape, color1: crestColor1, color2: crestColor2, emblem: crestEmblem }} size={120} />
-        </div>
-
-        {/* Shape */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, marginBottom: 6 }}>Shape</div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {SHIELD_SHAPES.map(s => (
-              <button key={s} onClick={() => setCrestShape(s)} style={{
-                flex: 1, padding: "8px", borderRadius: 8, border: "none", cursor: "pointer",
-                background: crestShape === s ? `${C.gold}22` : C.surfaceLight,
-                border: crestShape === s ? `2px solid ${C.gold}` : `1px solid ${C.border}`,
-                color: crestShape === s ? C.gold : C.textMuted,
-                fontSize: 11, fontWeight: 600, textTransform: "capitalize",
-              }}>{s}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Colors */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, marginBottom: 6 }}>Colors</div>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-            {CREST_COLORS.map(c => (
-              <div key={c} onClick={() => {
-                if (crestColor1 !== c) setCrestColor1(c);
-                else setCrestColor2(c);
-              }} style={{
-                width: 28, height: 28, borderRadius: 6, background: c, cursor: "pointer",
-                border: (crestColor1 === c || crestColor2 === c) ? "2px solid #fff" : "1px solid transparent",
-              }} />
-            ))}
-          </div>
-        </div>
-
-        {/* Emblems */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, marginBottom: 6 }}>Emblem</div>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-            {CREST_EMBLEMS.map(e => (
-              <div key={e} onClick={() => setCrestEmblem(e)} style={{
-                width: 36, height: 36, borderRadius: 8, cursor: "pointer",
-                background: crestEmblem === e ? `${C.gold}22` : C.surfaceLight,
-                border: crestEmblem === e ? `2px solid ${C.gold}` : `1px solid ${C.border}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 18,
-              }}>{e}</div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button onClick={() => setShowCrestEditor(false)} style={{
-            width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
-            background: "#22c55e", color: "#000", fontSize: 14, fontWeight: 700,
-          }}>Save Crest</button>
-          <button onClick={() => setShowCrestEditor(false)} style={{
-            background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 13,
-          }}>Cancel</button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div style={{ padding: "20px 16px 120px", animation: "fadeIn 0.3s ease", position: "relative", minHeight: "100vh" }}>
       <BgLayer />
       <div style={{ position: "relative", zIndex: 1 }}>
 
-        {/* Guild header with crest */}
+        {/* Header */}
         <div style={{
           padding: "20px", borderRadius: 16, textAlign: "center", marginBottom: 16,
-          background: C.card, border: `1px solid ${C.cardBorder}`,
-          backdropFilter: "blur(8px)",
+          background: C.card, border: `1px solid ${C.cardBorder}`, backdropFilter: "blur(8px)",
         }}>
           <div style={{ marginBottom: 8 }}>
             <GuildCrest crest={guildCrest} size={80} />
           </div>
           <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: C.gold }}>{guild.name || "Guild"}</h3>
           {guild.description && <p style={{ color: C.textMuted, fontSize: 12, marginTop: 4 }}>{guild.description}</p>}
-
-          {/* Invite code + share */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 12 }}>
-            <div style={{
-              padding: "6px 12px", background: C.surfaceLight, borderRadius: 8,
-            }}>
+            <div style={{ padding: "6px 12px", background: C.surfaceLight, borderRadius: 8 }}>
               <span style={{ fontSize: 11, color: C.textMuted }}>Code: </span>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.gold, fontFamily: "monospace" }}>{guild.invite_code || "—"}</span>
             </div>
@@ -371,69 +264,51 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
               background: "#22c55e", color: "#000", fontSize: 12, fontWeight: 700,
             }}>Share</button>
           </div>
-
           <div style={{ fontSize: 11, color: C.textDim, marginTop: 8 }}>
             {guildMembers.length} / {MAX_MEMBERS} members
           </div>
         </div>
 
-        {/* Weekly Guild Chest Progress */}
+        {/* Weekly Chest Progress */}
         <div style={{
           padding: "16px", borderRadius: 14, marginBottom: 16,
-          background: C.card, border: `1px solid ${C.cardBorder}`,
-          backdropFilter: "blur(8px)",
+          background: C.card, border: `1px solid ${C.cardBorder}`, backdropFilter: "blur(8px)",
         }}>
-          <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10,
-          }}>
-            <div style={{
-              fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
-              textTransform: "uppercase", fontFamily: "'Cinzel', serif",
-            }}>Weekly Guild Chest</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: "'Cinzel', serif" }}>Weekly Guild Chest</div>
             <span style={{ fontSize: 20 }}>{chestUnlocked ? "🎉" : "📦"}</span>
           </div>
-
           <div style={{ height: 8, background: C.surfaceLight, borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
             <div style={{
               width: `${chestProgress}%`, height: "100%", borderRadius: 4,
-              background: chestUnlocked
-                ? `linear-gradient(90deg, #22c55e, #16a34a)`
-                : `linear-gradient(90deg, ${C.gold}, #f59e0b)`,
+              background: chestUnlocked ? "linear-gradient(90deg, #22c55e, #16a34a)" : `linear-gradient(90deg, ${C.gold}, #f59e0b)`,
               transition: "width 0.5s ease",
             }} />
           </div>
-
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, color: C.textMuted }}>
-              {totalWeeklyRituals} / {chestTarget} rituals
-            </span>
+            <span style={{ fontSize: 12, color: C.textMuted }}>{totalWeeklyRituals} / {chestTarget} rituals</span>
             <span style={{ fontSize: 12, color: chestUnlocked ? "#22c55e" : C.gold, fontWeight: 600 }}>
               {chestUnlocked ? "Epic Chest Unlocked!" : `${chestTarget - totalWeeklyRituals} more to unlock`}
             </span>
           </div>
-
           {chestUnlocked && (
             <div style={{
               marginTop: 10, padding: "8px 12px", borderRadius: 8, textAlign: "center",
               background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)",
             }}>
-              <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 600 }}>
-                🎉 Every member earns an Epic Chest this week!
-              </span>
+              <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 600 }}>🎉 Every member earns an Epic Chest this week!</span>
             </div>
           )}
         </div>
 
-        {/* Members list */}
+        {/* Members */}
         <div style={{
           fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1.5,
           textTransform: "uppercase", marginBottom: 10, fontFamily: "'Cinzel', serif",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
+          display: "flex", justifyContent: "space-between",
         }}>
           <span>Members</span>
-          <span style={{ fontSize: 10, color: C.textDim, fontWeight: 500, fontFamily: "'Outfit', sans-serif" }}>
-            Sorted by activity
-          </span>
+          <span style={{ fontSize: 10, color: C.textDim, fontWeight: 500, fontFamily: "'Outfit', sans-serif" }}>Sorted by activity</span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
@@ -444,45 +319,34 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
             const weeklyCount = m.weekly_rituals || 0;
             const isMe = m.user_id === userId;
             const isMostActive = i === 0 && weeklyCount > 0;
-            const isActive = weeklyCount > 0;
-
             return (
               <div key={i} style={{
                 display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
                 background: isMe ? `${C.gold}0a` : C.card,
                 border: `1px solid ${isMe ? `${C.gold}33` : C.cardBorder}`,
-                borderRadius: 12, transition: "all 0.2s ease",
+                borderRadius: 12,
               }}>
-                {/* Activity dot */}
                 <div style={{
                   width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                  background: isActive ? "#22c55e" : "#4b5563",
-                  boxShadow: isActive ? "0 0 6px #22c55e44" : "none",
+                  background: weeklyCount > 0 ? "#22c55e" : "#4b5563",
+                  boxShadow: weeklyCount > 0 ? "0 0 6px #22c55e44" : "none",
                 }} />
-
-                {/* Class emoji */}
                 <span style={{ fontSize: 22 }}>{memberClass.emoji}</span>
-
-                {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: isMe ? C.gold : C.text }}>
                       {p.display_name || "Member"}
                     </span>
-                    {m.role === "leader" && <span style={{ fontSize: 10, color: C.gold }}>👑</span>}
-                    {isMostActive && <span style={{ fontSize: 10, color: "#22c55e" }}>🔥</span>}
+                    {m.role === "leader" && <span style={{ fontSize: 10 }}>👑</span>}
+                    {isMostActive && <span style={{ fontSize: 10 }}>🔥</span>}
                   </div>
                   <div style={{ fontSize: 11, color: C.textMuted }}>
                     Lv.{p.level || 1} {memberClass.title} · {memberRank}
                   </div>
                 </div>
-
-                {/* Weekly count */}
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: weeklyCount > 0 ? C.gold : C.textDim }}>
-                    {weeklyCount}
-                  </div>
-                  <div style={{ fontSize: 9, color: C.textDim, letterSpacing: 0.5 }}>this week</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: weeklyCount > 0 ? C.gold : C.textDim }}>{weeklyCount}</div>
+                  <div style={{ fontSize: 9, color: C.textDim }}>this week</div>
                 </div>
               </div>
             );
@@ -491,40 +355,18 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
 
         {/* Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* Edit crest — only for most active member or leader */}
-          {(isLeader || (mostActive && mostActive.user_id === userId)) && (
-            <button onClick={() => {
-              setCrestShape(guildCrest.shape || "shield");
-              setCrestColor1(guildCrest.color1 || "#3b82f6");
-              setCrestColor2(guildCrest.color2 || "#1e3a5f");
-              setCrestEmblem(guildCrest.emblem || "⚔️");
-              setShowCrestEditor(true);
-            }} style={{
-              width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
-              color: "#000", fontSize: 14, fontWeight: 700,
-            }}>
-              Edit Guild Crest
-            </button>
-          )}
-
           <button onClick={handleShare} style={{
             width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
             background: "#22c55e", color: "#000", fontSize: 14, fontWeight: 700,
-          }}>
-            Invite Friends
-          </button>
-
+          }}>Invite Friends</button>
           <button onClick={() => setShowLeaveConfirm(true)} style={{
-            width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: "pointer",
+            width: "100%", padding: "12px", borderRadius: 12, cursor: "pointer",
             background: "transparent", color: "#ef4444", fontSize: 13, fontWeight: 500,
-            border: `1px solid #7f1d1d`,
-          }}>
-            Leave Guild
-          </button>
+            border: "1px solid #7f1d1d",
+          }}>Leave Guild</button>
         </div>
 
-        {/* Leave confirmation */}
+        {/* Leave confirm */}
         {showLeaveConfirm && (
           <div style={{
             position: "fixed", inset: 0, zIndex: 200,
@@ -558,9 +400,6 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
             </div>
           </div>
         )}
-
-        {/* Crest editor modal */}
-        {showCrestEditor && <CrestEditorModal />}
       </div>
     </div>
   );
