@@ -193,6 +193,18 @@ export default function App() {
 
   // Check for existing session on load
   useEffect(() => {
+    // Detect password recovery BEFORE checking session
+    // Supabase puts type=recovery in the URL hash when user clicks reset link
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecovery = hashParams.get("type") === "recovery";
+
+    if (isRecovery) {
+      setScreen("resetPassword");
+      // Clean the URL hash so refresh doesn't re-trigger
+      window.history.replaceState(null, "", window.location.pathname);
+      return; // Don't run checkSession — let them reset their password first
+    }
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
