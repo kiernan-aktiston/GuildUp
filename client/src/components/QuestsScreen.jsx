@@ -4,11 +4,11 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, comp
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
-    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "8 exercises. 10 minutes. No excuses." },
-    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "20 min intervals. Walk. Jog. Advance." },
-    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "Read. Think. Prove it. ~10 min." },
-    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "10 min guided stillness. Breathe." },
-    { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️", desc: "One person. One real message." },
+    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "Build strength and discipline. 8 exercises, 10 min." },
+    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "Clear your mind, build endurance. 20 min intervals." },
+    { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "Knowledge compounds. Read an article, prove you learned." },
+    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "A calm mind sees further. 10 min guided stillness." },
+    { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️", desc: "No one builds alone. Reach out to one person today." },
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
 
   const streakIcons = [
