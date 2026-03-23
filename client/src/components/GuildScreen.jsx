@@ -370,7 +370,7 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
         {showLeaveConfirm && (
           <div style={{
             position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.85)", display: "flex",
+            background: "#ef4444", color: "#000",
             alignItems: "center", justifyContent: "center",
             animation: "fadeIn 0.3s ease", padding: 24,
           }}>
