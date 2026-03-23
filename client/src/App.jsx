@@ -20,6 +20,7 @@ import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
 import LevelUpModal from "./components/LevelUpModal";
+import ResetPasswordScreen from "./components/ResetPasswordScreen";
 
 export default function App() {
   const [screen, setScreen] = useState("loading");
@@ -212,8 +213,10 @@ export default function App() {
     };
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setScreen("resetPassword");
+      } else if (!session) {
         setScreen("landing");
         setUserId(null);
       }
@@ -467,40 +470,34 @@ export default function App() {
   };
 
   // Guild handlers
-  const handleCreateGuild = async (name, description, crest) => {
+  const handleCreateGuild = async (name, description) => {
     if (!userId) return;
-    const { data: guild, error } = await supabase
-      .from("guilds").insert({
-        name, description, leader_id: userId,
-        ...(crest ? { crest } : {}),
-      }).select().single();
-    if (error) throw error;
-    const { error: memberErr } = await supabase
-      .from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
-    if (memberErr) throw memberErr;
-    setUserGuild({ guilds: guild, guild_id: guild.id });
-    setGuildMembers([{ user_id: userId, role: "leader", weekly_rituals: 0, profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
+    try {
+      const { data: guild, error } = await supabase
+        .from("guilds").insert({ name, description, leader_id: userId }).select().single();
+      if (error) throw error;
+      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
+      setUserGuild({ guilds: guild, guild_id: guild.id });
+      setGuildMembers([{ user_id: userId, role: "leader", profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
+    } catch (e) {
+      console.error("Failed to create guild:", e);
+    }
   };
 
   const handleJoinByCode = async (code) => {
     if (!userId) return;
-    const { data: guild, error } = await supabase
-      .from("guilds").select("*").eq("invite_code", code).single();
-    if (error || !guild) throw new Error("Invalid invite code");
-    const { error: memberErr } = await supabase
-      .from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
-    if (memberErr) throw memberErr;
-    setUserGuild({ guilds: guild, guild_id: guild.id });
-    const { data: members } = await supabase
-      .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
-    setGuildMembers(members || []);
-  };
-
-  const handleLeaveGuild = async () => {
-    if (!userId || !userGuild) return;
-    await supabase.from("guild_members").delete().eq("user_id", userId).eq("guild_id", userGuild.guild_id);
-    setUserGuild(null);
-    setGuildMembers([]);
+    try {
+      const { data: guild, error } = await supabase
+        .from("guilds").select("*").eq("invite_code", code).single();
+      if (error) throw new Error("Invalid invite code");
+      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
+      setUserGuild({ guilds: guild, guild_id: guild.id });
+      const { data: members } = await supabase
+        .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
+      setGuildMembers(members || []);
+    } catch (e) {
+      console.error("Failed to join guild:", e);
+    }
   };
 
   const xpNeeded = xpForLevel(playerLevel);
@@ -546,6 +543,7 @@ export default function App() {
         )}
         {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
         {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} initialMode={authMode} />}
+        {screen === "resetPassword" && <ResetPasswordScreen onDone={() => setScreen("landing")} />}
         {screen === "interviewIntro" && (
           <div style={{
             minHeight: "100vh", display: "flex", flexDirection: "column",
@@ -642,7 +640,6 @@ export default function App() {
                   userId={userId}
                   onCreateGuild={handleCreateGuild}
                   onJoinByCode={handleJoinByCode}
-                  onLeaveGuild={handleLeaveGuild}
                   userGuild={userGuild}
                   guildMembers={guildMembers}
                 />}
