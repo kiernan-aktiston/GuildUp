@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { C } from '../constants';
+import { supabase } from '../supabase';
 
 export default function AuthScreen({ onAuth, serverError, initialMode = "signin" }) {
-  const [mode, setMode] = useState(initialMode);
+  const [mode, setMode] = useState(initialMode); // signin, signup, forgot
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const displayError = error || serverError;
 
@@ -32,6 +34,78 @@ export default function AuthScreen({ onAuth, serverError, initialMode = "signin"
     }
   };
 
+  const handleForgotPassword = async () => {
+    setError("");
+    if (!email) { setError("Enter your email address first"); return; }
+    setLoading(true);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+      if (resetError) throw resetError;
+      setResetSent(true);
+    } catch (e) {
+      setError(e.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── FORGOT PASSWORD SCREEN ──
+  if (mode === "forgot") {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: 24 }}>
+        <div style={{ textAlign: "center", marginBottom: 40, animation: "fadeIn 0.4s ease" }}>
+          <div style={{ fontSize: 56, marginBottom: 8 }}>🔑</div>
+          <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 1 }}>Reset Password</h2>
+          <p style={{ color: C.textMuted, marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+            {resetSent
+              ? "Check your email for a password reset link."
+              : "Enter your email and we'll send you a reset link."
+            }
+          </p>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, animation: "fadeIn 0.6s ease" }}>
+          {!resetSent ? (
+            <>
+              <input
+                type="email" placeholder="Email" value={email}
+                onChange={e => setEmail(e.target.value)} style={inputStyle}
+                onKeyDown={e => e.key === "Enter" && handleForgotPassword()}
+              />
+              {displayError && <div style={{ color: "#ef4444", fontSize: 13, textAlign: "center" }}>{displayError}</div>}
+              <button onClick={handleForgotPassword} disabled={loading} style={{
+                width: "100%", padding: "16px", borderRadius: 12, border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+                color: "#000", fontSize: 16, fontWeight: 700, opacity: loading ? 0.6 : 1,
+              }}>
+                {loading ? "Sending..." : "Send Reset Link"}
+              </button>
+            </>
+          ) : (
+            <div style={{
+              padding: "16px 20px", borderRadius: 12, textAlign: "center",
+              background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)",
+            }}>
+              <span style={{ fontSize: 14, color: "#22c55e", fontWeight: 600 }}>
+                ✓ Reset link sent to {email}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => { setMode("signin"); setError(""); setResetSent(false); }}
+            style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 14, marginTop: 8, textAlign: "center" }}
+          >
+            ← Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SIGN IN / SIGN UP ──
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: 24 }}>
       <div style={{ textAlign: "center", marginBottom: 40, animation: "fadeIn 0.4s ease" }}>
@@ -67,9 +141,18 @@ export default function AuthScreen({ onAuth, serverError, initialMode = "signin"
           {loading ? "..." : mode === "signup" ? "Create Account" : "Sign In"}
         </button>
 
+        {mode === "signin" && (
+          <button
+            onClick={() => { setMode("forgot"); setError(""); }}
+            style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 13, textAlign: "center" }}
+          >
+            Forgot your password?
+          </button>
+        )}
+
         <button
           onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); }}
-          style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 14, marginTop: 8, textAlign: "center" }}
+          style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 14, marginTop: 4, textAlign: "center" }}
         >
           {mode === "signin" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
         </button>
