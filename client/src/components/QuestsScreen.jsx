@@ -49,7 +49,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, comp
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "100%", maxWidth: 430, height: "100vh",
-        background: "linear-gradient(160deg, #c8a96e 0%, #b8935a 40%, #a07840 100%)",
+        backgroundImage: "url(/quest-map.png)",
+        backgroundSize: "cover", backgroundPosition: "center",
         opacity: 0.85, pointerEvents: "none", zIndex: 0,
       }} />
 
