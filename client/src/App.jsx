@@ -191,21 +191,25 @@ export default function App() {
     } catch (e) { console.error("Failed to load guild:", e); }
   };
 
+  // Track password recovery mode across re-renders
+  const recoveryMode = useRef(false);
+
   // Check for existing session on load
   useEffect(() => {
     // Detect password recovery BEFORE checking session
-    // Supabase puts type=recovery in the URL hash when user clicks reset link
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const isRecovery = hashParams.get("type") === "recovery";
 
     if (isRecovery) {
+      recoveryMode.current = true;
       setScreen("resetPassword");
-      // Clean the URL hash so refresh doesn't re-trigger
       window.history.replaceState(null, "", window.location.pathname);
-      return; // Don't run checkSession — let them reset their password first
     }
 
     const checkSession = async () => {
+      // Don't redirect to dashboard if we're resetting password
+      if (recoveryMode.current) return;
+
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserId(session.user.id);
@@ -227,7 +231,11 @@ export default function App() {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Don't redirect during password recovery
+      if (recoveryMode.current && event !== "PASSWORD_RECOVERY") return;
+
       if (event === "PASSWORD_RECOVERY") {
+        recoveryMode.current = true;
         setScreen("resetPassword");
       } else if (!session) {
         setScreen("landing");
@@ -562,7 +570,7 @@ export default function App() {
         )}
         {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
         {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} initialMode={authMode} />}
-        {screen === "resetPassword" && <ResetPasswordScreen onDone={() => setScreen("landing")} />}
+        {screen === "resetPassword" && <ResetPasswordScreen onDone={() => { recoveryMode.current = false; supabase.auth.signOut(); setScreen("landing"); }} />}
         {screen === "interviewIntro" && (
           <div style={{
             minHeight: "100vh", display: "flex", flexDirection: "column",
