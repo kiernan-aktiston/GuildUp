@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C } from '../constants';
 import { supabase } from '../supabase';
 
@@ -8,6 +8,24 @@ export default function ResetPasswordScreen({ onDone }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+
+  // Wait for Supabase to establish the recovery session from URL hash
+  useEffect(() => {
+    const checkSession = async () => {
+      // Poll for session — Supabase processes hash tokens asynchronously
+      for (let i = 0; i < 20; i++) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSessionReady(true);
+          return;
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+      setError("Session expired. Please request a new reset link.");
+    };
+    checkSession();
+  }, []);
 
   const inputStyle = {
     width: "100%", padding: "14px 16px", borderRadius: 12, fontSize: 15,
@@ -41,7 +59,7 @@ export default function ResetPasswordScreen({ onDone }) {
           Set New Password
         </h2>
         <p style={{ color: C.textMuted, marginTop: 8, fontSize: 14 }}>
-          Choose a new password for your account.
+          {sessionReady ? "Choose a new password for your account." : "Verifying reset link..."}
         </p>
       </div>
 
@@ -56,7 +74,7 @@ export default function ResetPasswordScreen({ onDone }) {
               Password updated! Redirecting...
             </span>
           </div>
-        ) : (
+        ) : sessionReady ? (
           <>
             <input
               type="password" placeholder="New password (min 6 characters)"
@@ -78,6 +96,17 @@ export default function ResetPasswordScreen({ onDone }) {
             }}>
               {loading ? "Updating..." : "Update Password"}
             </button>
+          </>
+        ) : (
+          <>
+            <div style={{ textAlign: "center", color: C.textMuted, fontSize: 14 }}>
+              {error || "Preparing secure session..."}
+            </div>
+            {error && (
+              <button onClick={() => onDone()} style={{
+                background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 14, textAlign: "center",
+              }}>← Back to Sign In</button>
+            )}
           </>
         )}
       </div>
