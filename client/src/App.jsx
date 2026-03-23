@@ -19,7 +19,6 @@ import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
-import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
 
 export default function App() {
@@ -468,15 +467,18 @@ export default function App() {
   };
 
   // Guild handlers
-  const handleCreateGuild = async (name, description) => {
+  const handleCreateGuild = async (name, description, crest) => {
     if (!userId) return;
     try {
       const { data: guild, error } = await supabase
-        .from("guilds").insert({ name, description, leader_id: userId }).select().single();
+        .from("guilds").insert({
+          name, description, leader_id: userId,
+          crest: crest || { shape: "shield", color1: "#3b82f6", color2: "#1e3a5f", emblem: "⚔️" },
+        }).select().single();
       if (error) throw error;
       await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
       setUserGuild({ guilds: guild, guild_id: guild.id });
-      setGuildMembers([{ user_id: userId, role: "leader", profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
+      setGuildMembers([{ user_id: userId, role: "leader", weekly_rituals: 0, profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
     } catch (e) {
       console.error("Failed to create guild:", e);
     }
@@ -495,6 +497,17 @@ export default function App() {
       setGuildMembers(members || []);
     } catch (e) {
       console.error("Failed to join guild:", e);
+    }
+  };
+
+  const handleLeaveGuild = async () => {
+    if (!userId || !userGuild) return;
+    try {
+      await supabase.from("guild_members").delete().eq("user_id", userId).eq("guild_id", userGuild.guild_id);
+      setUserGuild(null);
+      setGuildMembers([]);
+    } catch (e) {
+      console.error("Failed to leave guild:", e);
     }
   };
 
@@ -599,13 +612,6 @@ export default function App() {
                     setShowRitualDetail(null);
                   }}
                 />
-              ) : showRitualDetail.name === "Walk/Jog 20min" ? (
-                <ExploreTheLandFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
-                    setShowRitualDetail(null);
-                  }}
-                />
               ) : (
                 <RitualDetailScreen
                   ritual={showRitualDetail}
@@ -644,6 +650,7 @@ export default function App() {
                   userId={userId}
                   onCreateGuild={handleCreateGuild}
                   onJoinByCode={handleJoinByCode}
+                  onLeaveGuild={handleLeaveGuild}
                   userGuild={userGuild}
                   guildMembers={guildMembers}
                 />}
