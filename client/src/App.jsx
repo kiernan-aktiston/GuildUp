@@ -469,46 +469,38 @@ export default function App() {
   // Guild handlers
   const handleCreateGuild = async (name, description, crest) => {
     if (!userId) return;
-    try {
-      const { data: guild, error } = await supabase
-        .from("guilds").insert({
-          name, description, leader_id: userId,
-          crest: crest || { shape: "shield", color1: "#3b82f6", color2: "#1e3a5f", emblem: "⚔️" },
-        }).select().single();
-      if (error) throw error;
-      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
-      setUserGuild({ guilds: guild, guild_id: guild.id });
-      setGuildMembers([{ user_id: userId, role: "leader", weekly_rituals: 0, profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
-    } catch (e) {
-      console.error("Failed to create guild:", e);
-    }
+    const { data: guild, error } = await supabase
+      .from("guilds").insert({
+        name, description, leader_id: userId,
+        ...(crest ? { crest } : {}),
+      }).select().single();
+    if (error) throw error;
+    const { error: memberErr } = await supabase
+      .from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "leader" });
+    if (memberErr) throw memberErr;
+    setUserGuild({ guilds: guild, guild_id: guild.id });
+    setGuildMembers([{ user_id: userId, role: "leader", weekly_rituals: 0, profiles: { display_name: playerName, class: playerClass, level: playerLevel } }]);
   };
 
   const handleJoinByCode = async (code) => {
     if (!userId) return;
-    try {
-      const { data: guild, error } = await supabase
-        .from("guilds").select("*").eq("invite_code", code).single();
-      if (error) throw new Error("Invalid invite code");
-      await supabase.from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
-      setUserGuild({ guilds: guild, guild_id: guild.id });
-      const { data: members } = await supabase
-        .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
-      setGuildMembers(members || []);
-    } catch (e) {
-      console.error("Failed to join guild:", e);
-    }
+    const { data: guild, error } = await supabase
+      .from("guilds").select("*").eq("invite_code", code).single();
+    if (error || !guild) throw new Error("Invalid invite code");
+    const { error: memberErr } = await supabase
+      .from("guild_members").insert({ guild_id: guild.id, user_id: userId, role: "member" });
+    if (memberErr) throw memberErr;
+    setUserGuild({ guilds: guild, guild_id: guild.id });
+    const { data: members } = await supabase
+      .from("guild_members").select("*, profiles(display_name, class, level)").eq("guild_id", guild.id);
+    setGuildMembers(members || []);
   };
 
   const handleLeaveGuild = async () => {
     if (!userId || !userGuild) return;
-    try {
-      await supabase.from("guild_members").delete().eq("user_id", userId).eq("guild_id", userGuild.guild_id);
-      setUserGuild(null);
-      setGuildMembers([]);
-    } catch (e) {
-      console.error("Failed to leave guild:", e);
-    }
+    await supabase.from("guild_members").delete().eq("user_id", userId).eq("guild_id", userGuild.guild_id);
+    setUserGuild(null);
+    setGuildMembers([]);
   };
 
   const xpNeeded = xpForLevel(playerLevel);
