@@ -46,6 +46,7 @@ export default function App() {
   // Completion tracking
   const [completedRituals, setCompletedRituals] = useState({});
   const [completedQuests, setCompletedQuests] = useState([]);
+  const [completedArticles, setCompletedArticles] = useState([]);
 
   // Today's randomized daily quests (generated from pool)
   const [dailyQuests, setDailyQuests] = useState([]);
@@ -147,6 +148,17 @@ export default function App() {
         setCompletedQuests(data.map(d => d.quest_id));
       }
     } catch (e) { console.error("Failed to load quests:", e); }
+  };
+
+  // Load completed articles (ever — not daily)
+  const loadCompletedArticles = async (uid) => {
+    try {
+      const { data } = await supabase
+        .from("profiles").select("completed_articles").eq("id", uid).single();
+      if (data?.completed_articles) {
+        setCompletedArticles(data.completed_articles);
+      }
+    } catch (e) { console.error("Failed to load articles:", e); }
   };
 
   // Load weekly ritual counts from Supabase (Mon-Sun)
@@ -313,6 +325,7 @@ export default function App() {
           await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
           await loadStreaks(session.user.id);
+          await loadCompletedArticles(session.user.id);
           setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
           setScreen("dashboard");
         } else {
@@ -354,6 +367,7 @@ export default function App() {
             await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
             await loadStreaks(data.user.id);
+            await loadCompletedArticles(data.user.id);
             setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
             setScreen("dashboard");
           } else {
@@ -543,6 +557,12 @@ export default function App() {
       });
       // Update streak for this ritual
       updateStreak(userId, ritualName);
+      // Track completed article if provided
+      if (rewards?.articleId) {
+        const newArticles = [...completedArticles, rewards.articleId];
+        setCompletedArticles(newArticles);
+        supabase.from("profiles").update({ completed_articles: newArticles }).eq("id", userId);
+      }
     }
   };
 
@@ -708,8 +728,10 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Read 20min" ? (
                 <SharpenTheMindFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                  playerStats={playerStats}
+                  completedArticles={completedArticles}
+                  onBack={(didComplete, rewards) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
                   }}
                 />
