@@ -191,23 +191,116 @@ export default function App() {
     } catch (e) { console.error("Failed to load guild:", e); }
   };
 
-  // Track password recovery mode across re-renders
+  // Streak mappings
+  const STREAK_TYPE_MAP = {
+    "workout": "Bodyweight Workout",
+    "walk": "Walk/Jog 20min",
+    "read": "Read 20min",
+    "meditate": "Pray/Meditate 10min",
+    "reach_out": "Reach Out",
+  };
+  const RITUAL_STREAK_MAP = {
+    "Bodyweight Workout": "workout",
+    "Walk/Jog 20min": "walk",
+    "Read 20min": "read",
+    "Pray/Meditate 10min": "meditate",
+    "Reach Out": "reach_out",
+  };
+
+  // Load streaks from Supabase
+  const loadStreaks = async (uid) => {
+    try {
+      const { data } = await supabase.from("streaks").select("*").eq("user_id", uid);
+      if (data && data.length > 0) {
+        const streaks = {};
+        const today = getLocalDate();
+        const yesterday = new Date(Date.now() - 86400000);
+        const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        data.forEach(row => {
+          const ritualName = STREAK_TYPE_MAP[row.streak_type];
+          if (ritualName) {
+            if (row.last_completed_date === today || row.last_completed_date === yStr) {
+              streaks[ritualName] = row.current_streak;
+            } else {
+              streaks[ritualName] = 0;
+            }
+          }
+        });
+        setRitualStreaks(prev => ({ ...prev, ...streaks }));
+      }
+    } catch (e) { console.error("Failed to load streaks:", e); }
+  };
+
+  // Update a single streak on ritual completion
+  const updateStreak = async (uid, ritualName) => {
+    const streakType = RITUAL_STREAK_MAP[ritualName];
+    if (!streakType) return;
+    const today = getLocalDate();
+    const yesterday = new Date(Date.now() - 86400000);
+    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    try {
+      const { data: streak } = await supabase
+        .from("streaks").select("*").eq("user_id", uid).eq("streak_type", streakType).maybeSingle();
+      if (!streak) {
+        await supabase.from("streaks").insert({
+          user_id: uid, streak_type: streakType,
+          current_streak: 1, longest_streak: 1, last_completed_date: today,
+        });
+        setRitualStreaks(prev => ({ ...prev, [ritualName]: 1 }));
+        return;
+      }
+      if (streak.last_completed_date === today) return;
+      let newCurrent = 1;
+      if (streak.last_completed_date === yStr) {
+        newCurrent = streak.current_streak + 1;
+      }
+      await supabase.from("streaks").update({
+        current_streak: newCurrent,
+        longest_streak: Math.max(newCurrent, streak.longest_streak),
+        last_completed_date: today,
+      }).eq("id", streak.id);
+      setRitualStreaks(prev => ({ ...prev, [ritualName]: newCurrent }));
+    } catch (e) { console.error("Failed to update streak:", e); }
+  };
+
+  // Track password recovery mode
   const recoveryMode = useRef(false);
 
   // Check for existing session on load
   useEffect(() => {
-    // Detect password recovery BEFORE checking session
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const isRecovery = hashParams.get("type") === "recovery";
-
-    if (isRecovery) {
+    // Check if URL contains recovery hash — DON'T clean it, Supabase needs it
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
       recoveryMode.current = true;
-      setScreen("resetPassword");
-      window.history.replaceState(null, "", window.location.pathname);
     }
 
+    // Subscribe to auth events FIRST — Supabase will process the hash tokens
+    // and fire PASSWORD_RECOVERY when the recovery session is ready
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryMode.current = true;
+        setScreen("resetPassword");
+        // NOW clean the hash — session is established
+        window.history.replaceState(null, "", window.location.pathname);
+        return;
+      }
+      // Block redirects while in recovery mode
+      if (recoveryMode.current) return;
+
+      if (event === "SIGNED_IN" && session?.user) {
+        // Normal sign-in — load profile
+        setUserId(session.user.id);
+      } else if (!session) {
+        setScreen("landing");
+        setUserId(null);
+      }
+    });
+
     const checkSession = async () => {
-      // Don't redirect to dashboard if we're resetting password
+      // Wait a beat for Supabase to process hash tokens
+      await new Promise(r => setTimeout(r, 300));
+
+      // If recovery mode was set by hash detection or onAuthStateChange, skip
       if (recoveryMode.current) return;
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -219,6 +312,7 @@ export default function App() {
           await loadTodayQuests(session.user.id);
           await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
+          await loadStreaks(session.user.id);
           setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
           setScreen("dashboard");
         } else {
@@ -230,18 +324,6 @@ export default function App() {
     };
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Don't redirect during password recovery
-      if (recoveryMode.current && event !== "PASSWORD_RECOVERY") return;
-
-      if (event === "PASSWORD_RECOVERY") {
-        recoveryMode.current = true;
-        setScreen("resetPassword");
-      } else if (!session) {
-        setScreen("landing");
-        setUserId(null);
-      }
-    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -271,6 +353,7 @@ export default function App() {
             await loadTodayQuests(data.user.id);
             await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
+            await loadStreaks(data.user.id);
             setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
             setScreen("dashboard");
           } else {
@@ -456,6 +539,8 @@ export default function App() {
         xp: newXP, gold: newGold,
         [`tally_${stat}`]: newTally[stat],
       });
+      // Update streak for this ritual
+      updateStreak(userId, ritualName);
     }
   };
 
@@ -570,7 +655,10 @@ export default function App() {
         )}
         {screen === "welcome" && <WelcomeSlides onComplete={() => setScreen("auth")} />}
         {screen === "auth" && <AuthScreen onAuth={handleAuth} serverError={authError} initialMode={authMode} />}
-        {screen === "resetPassword" && <ResetPasswordScreen onDone={() => { recoveryMode.current = false; supabase.auth.signOut(); setScreen("landing"); }} />}
+        {screen === "resetPassword" && <ResetPasswordScreen onDone={() => {
+          recoveryMode.current = false;
+          supabase.auth.signOut().then(() => setScreen("landing"));
+        }} />}
         {screen === "interviewIntro" && (
           <div style={{
             minHeight: "100vh", display: "flex", flexDirection: "column",
