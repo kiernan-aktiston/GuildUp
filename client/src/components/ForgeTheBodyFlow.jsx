@@ -6,16 +6,12 @@ const TIERS = [
     name: "Warm Blood", emoji: "\u{1FA78}", xp: 10, gold: 2, reqStr: 0,
     desc: "Stretch and move. Build the habit.",
     exercises: [
-      { name: "Neck Rolls", emoji: "\u{1F504}", duration: 30, instruction: "Slow circles, both directions. Release the tension.", type: "stretch" },
-      { name: "Shoulder Stretch", emoji: "\u{1F646}", duration: 30, instruction: "Pull each arm across your chest. Hold and breathe.", type: "stretch" },
-      { name: "Quad Stretch", emoji: "\u{1F9B5}", duration: 30, instruction: "Standing, pull each foot to your glute. Balance.", type: "stretch" },
-      { name: "Hamstring Touch", emoji: "\u{1F938}", duration: 30, instruction: "Feet together, bend and reach for your toes. Don't bounce.", type: "stretch" },
-      { name: "Hip Circles", emoji: "\u{1F501}", duration: 30, instruction: "Hands on hips, wide circles. Loosen up.", type: "stretch" },
-      { name: "Child's Pose", emoji: "\u{1F9D8}", duration: 30, instruction: "Knees wide, arms forward, forehead down. Breathe deep.", type: "stretch" },
-      { name: "Spinal Twist", emoji: "\u{1F300}", duration: 30, instruction: "Seated, twist each direction. Look over your shoulder.", type: "stretch" },
-      { name: "Cat-Cow", emoji: "\u{1F431}", duration: 30, instruction: "On all fours \u2014 arch up, then drop belly. Flow with your breath.", type: "stretch" },
-      { name: "Deep Breath Hold", emoji: "\u{1FAC1}", duration: 30, instruction: "Inhale fully, hold 5 seconds, exhale slowly. Repeat.", type: "stretch" },
-      { name: "Full Body Shake-Out", emoji: "\u{1F4AB}", duration: 30, instruction: "Shake every limb loose. Let go of stiffness.", type: "stretch" },
+      { name: "Neck Rolls", emoji: "\u{1F504}", duration: 20, instruction: "Slow circles, both directions. Release the tension.", type: "stretch" },
+      { name: "Shoulder Stretch", emoji: "\u{1F646}", duration: 20, instruction: "Pull each arm across your chest. Hold and breathe.", type: "stretch" },
+      { name: "Quad Stretch", emoji: "\u{1F9B5}", duration: 20, instruction: "Standing, pull each foot to your glute. Balance.", type: "stretch" },
+      { name: "Hamstring Touch", emoji: "\u{1F938}", duration: 20, instruction: "Feet together, bend and reach for your toes. Don't bounce.", type: "stretch" },
+      { name: "Hip Circles", emoji: "\u{1F501}", duration: 20, instruction: "Hands on hips, wide circles. Loosen up.", type: "stretch" },
+      { name: "Standing Twists", emoji: "\u{1F300}", duration: 30, instruction: "Feet planted, twist your torso side to side. Arms swing loose. Rotate through the spine.", type: "stretch" },
       { name: "Push-ups", emoji: "\u{1F4AA}", duration: 30, instruction: "Wall or floor. Full range of motion. Scale as needed.", type: "work" },
       { name: "Bodyweight Squats", emoji: "\u{1F9B5}", duration: 30, instruction: "Feet shoulder-width, break parallel, drive up.", type: "work" },
       { name: "Crunches", emoji: "\u{1F525}", duration: 30, instruction: "Hands behind head, curl up, squeeze at the top.", type: "work" },
@@ -187,7 +183,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {} }) {
   const slides = [
     { emoji: "\u2694\uFE0F", title: "Forge the Body", body: "There are no shortcuts. No hacks, no workarounds. Your body is the weapon \u2014 and weapons are forged in fire.", accent: null },
     { emoji: "\u{1F528}", title: "Choose Your Intensity", body: "Four tiers. Warm Blood is for building the habit. Obsidian is for those who've earned the right to suffer. Pick the tier that matches your level \u2014 or challenge yourself.", accent: "Harder tiers unlock as your Strength grows." },
-    { emoji: "\u{1F525}", title: "How It Works", body: "Follow the guided exercises. A timer counts down each movement. Rest when it says rest. Push when it says push. The workout runs even if your phone locks.", accent: "Every rep counts. Every set is earned." },
+    { emoji: "\u{1F525}", title: "How It Works", body: "Follow the guided exercises. A timer counts down each movement. Rest when it says rest. Push when it says push.", accent: "Every rep counts. Every set is earned." },
   ];
   const isLastSlide = prepSlide === slides.length - 1;
 
@@ -313,28 +309,32 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {} }) {
   if (step === "active" && currentExercise) {
     const isRest = currentExercise.type === "rest";
     const isBurnout = currentExercise.type === "burnout";
+    const isStretch = currentExercise.type === "stretch";
     const progress = currentExercise.duration > 0 ? ((currentExercise.duration - displayTime) / currentExercise.duration) * 100 : 0;
-    const bgColor = isBurnout ? "#1a0a0a" : isRest ? "#0a0e1a" : "#0a1a0a";
+    // Fire colors: alternate between deep red and dark orange for work exercises
+    const fireColors = ["#1a0800", "#1a0400", "#1a0600"];
+    const bgColor = isBurnout ? "#1a0000" : isRest ? "#0a0e1a" : isStretch ? "#1a1000" : fireColors[exerciseIdx % fireColors.length];
+    const accentColor = isBurnout ? "#ef4444" : isRest ? "#60a5fa" : isStretch ? "#f59e0b" : exerciseIdx % 2 === 0 ? "#ef4444" : "#f97316";
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", position: "relative", background: bgColor, transition: "background 0.5s ease" }}>
         <BgLayer />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
           <div style={{ fontSize: 11, color: C.textDim, letterSpacing: 2, marginBottom: 4 }}>{exerciseIdx + 1} / {tier.exercises.length}</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: isBurnout ? "#ef4444" : isRest ? "#60a5fa" : "#22c55e", marginBottom: 12, letterSpacing: 1 }}>{currentExercise.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: accentColor, marginBottom: 12, letterSpacing: 1 }}>{currentExercise.name}</div>
           <div style={{ fontSize: 72, fontWeight: 800, fontFamily: "monospace", color: displayTime <= 5 && !isRest ? "#ef4444" : C.text, marginBottom: 8 }}>{formatTime(displayTime)}</div>
           <p style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>{currentExercise.instruction}</p>
           <div style={{ width: 280, height: 6, background: C.surfaceLight, borderRadius: 3, overflow: "hidden", margin: "0 auto 16px" }}>
-            <div style={{ width: `${progress}%`, height: "100%", borderRadius: 3, background: isBurnout ? "#ef4444" : isRest ? "#60a5fa" : "#22c55e", transition: "width 0.5s linear" }} />
+            <div style={{ width: `${progress}%`, height: "100%", borderRadius: 3, background: isBurnout ? "#ef4444" : isRest ? "#60a5fa" : `linear-gradient(90deg, #ef4444, #f97316)`, transition: "width 0.5s linear" }} />
           </div>
           {!exerciseFinished && (
             <button onClick={togglePause} style={{ padding: "10px 32px", borderRadius: 10, border: `1px solid ${C.border}`, cursor: "pointer", background: "transparent", color: C.textMuted, fontSize: 13, fontWeight: 600 }}>{paused ? "Resume" : "Pause"}</button>
           )}
           {exerciseFinished && (
-            <button onClick={nextExercise} style={{ padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer", background: isLastExercise ? `linear-gradient(135deg, ${C.ritualDone}, #16a34a)` : "#22c55e", color: isLastExercise ? "#fff" : "#000", fontSize: 16, fontWeight: 700, animation: "fadeIn 0.3s ease" }}>{isLastExercise ? "Finish Workout" : `Next: ${tier.exercises[exerciseIdx + 1]?.name}`}</button>
+            <button onClick={nextExercise} style={{ padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer", background: isLastExercise ? `linear-gradient(135deg, ${C.ritualDone}, #16a34a)` : `linear-gradient(135deg, #f97316, #ef4444)`, color: isLastExercise ? "#fff" : "#000", fontSize: 16, fontWeight: 700, animation: "fadeIn 0.3s ease" }}>{isLastExercise ? "Finish Workout" : `Next: ${tier.exercises[exerciseIdx + 1]?.name}`}</button>
           )}
           <div style={{ marginTop: 24 }}>
             <div style={{ width: 280, height: 3, background: C.surfaceLight, borderRadius: 2, overflow: "hidden", margin: "0 auto" }}>
-              <div style={{ width: `${overallProgress}%`, height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${C.gold}, #22c55e)`, transition: "width 0.5s linear" }} />
+              <div style={{ width: `${overallProgress}%`, height: "100%", borderRadius: 2, background: `linear-gradient(90deg, #ef4444, #f97316, #f59e0b)`, transition: "width 0.5s linear" }} />
             </div>
             <div style={{ fontSize: 10, color: C.textDim, marginTop: 4 }}>{tier.name}</div>
           </div>
