@@ -505,7 +505,9 @@ export default function App() {
     setPlayerXP(newXP);
   };
 
-  const handleRitualComplete = async (ritualName) => {
+  const handleRitualComplete = async (ritualName, rewards) => {
+    const xpReward = rewards?.xp || 10;
+    const goldReward = rewards?.gold || 2;
     if (completedRituals[ritualName]) return;
     if (processingRef.current.has(`ritual:${ritualName}`)) return;
     processingRef.current.add(`ritual:${ritualName}`);
@@ -513,8 +515,8 @@ export default function App() {
     // Increment weekly count for this ritual
     setWeeklyRitualCounts(prev => ({ ...prev, [ritualName]: (prev[ritualName] || 0) + 1 }));
     const stat = ACTIVITY_STAT_MAP[ritualName] || "str";
-    awardXP(10, stat);
-    setPlayerGold(prev => prev + 2);
+    awardXP(xpReward, stat);
+    setPlayerGold(prev => prev + goldReward);
 
     // Save ritual to Supabase
     if (userId) {
@@ -532,8 +534,8 @@ export default function App() {
         }, { onConflict: "user_id,ritual_date" });
       }
       // Save XP/gold/tally to profile (use computed values to avoid stale closures)
-      const newXP = playerXP + 10;
-      const newGold = playerGold + 2;
+      const newXP = playerXP + xpReward;
+      const newGold = playerGold + goldReward;
       const newTally = { ...activityTally, [stat]: (activityTally[stat] || 0) + 1 };
       saveProfile({
         xp: newXP, gold: newGold,
@@ -698,8 +700,9 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Bodyweight Workout" ? (
                 <ForgeTheBodyFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                  playerStats={playerStats}
+                  onBack={(didComplete, rewards) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
                   }}
                 />
