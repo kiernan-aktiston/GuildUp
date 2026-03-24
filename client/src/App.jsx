@@ -722,8 +722,9 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Walk/Jog 20min" ? (
                 <ExploreTheLandFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                  playerStats={playerStats}
+                  onBack={(didComplete, rewards) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
                   }}
                 />

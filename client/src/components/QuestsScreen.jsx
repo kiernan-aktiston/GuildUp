@@ -4,8 +4,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, comp
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
-    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "Bodyweight exercises to strengthen the body and build consistency." },
-    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "Clear your mind, build endurance. 20 min intervals." },
+    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "⚔️", desc: "Build strength and discipline. 8 exercises, 10 min." },
+    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "🏹", desc: "Get outside. Walk or run. Clear your mind, build endurance." },
     { name: "Read 20min", label: "Sharpen the Mind", emoji: "📖", desc: "Knowledge compounds. Read an article, prove you learned." },
     { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "🕯️", desc: "A calm mind sees further. 10 min guided stillness." },
     { name: "Reach Out", label: "Rally Your Allies", emoji: "🗡️", desc: "No one builds alone. Reach out to one person today." },
