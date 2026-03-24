@@ -79,13 +79,13 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {} }) {
     return msg;
   };
 
-  const BgLayer = () => (
+  const BgLayer = ({ opacity = 0.2 }) => (
     <div style={{
       position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
       width: "100%", maxWidth: 430, height: "100vh",
       backgroundImage: "url(/explore-bg.png)",
       backgroundSize: "cover", backgroundPosition: "center",
-      opacity: 0.2, pointerEvents: "none", zIndex: 0,
+      opacity, pointerEvents: "none", zIndex: 0,
     }} />
   );
 
@@ -219,8 +219,18 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {} }) {
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px 120px", position: "relative",
-        background: "#050a05",
+        background: "#000",
       }}>
+        {/* Background image at higher opacity */}
+        <BgLayer opacity={0.45} />
+        {/* Dark gradient overlay for readability */}
+        <div style={{
+          position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "100%", maxWidth: 430, height: "100vh",
+          background: "radial-gradient(circle at 50% 40%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%)",
+          pointerEvents: "none", zIndex: 1,
+        }} />
+        <div style={{ position: "relative", zIndex: 2 }}>
         {/* Subtle progress ring */}
         <div style={{ position: "relative", width: 220, height: 220, marginBottom: 24 }}>
           <svg viewBox="0 0 220 220" width="220" height="220" style={{ transform: "rotate(-90deg)" }}>
@@ -255,17 +265,18 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {} }) {
 
         {/* Minutes remaining */}
         <div style={{
-          position: "absolute", bottom: 80,
-          fontSize: 11, color: C.textDim, letterSpacing: 1,
+          marginTop: 40,
+          fontSize: 11, color: C.textDim, letterSpacing: 1, textAlign: "center",
         }}>
           {minutesLeft} {minutesLeft === 1 ? "minute" : "minutes"} remaining
         </div>
 
         {/* Tier name */}
         <div style={{
-          position: "absolute", bottom: 50,
-          fontSize: 10, color: C.textDim, letterSpacing: 2, textTransform: "uppercase",
+          marginTop: 8,
+          fontSize: 10, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", textAlign: "center",
         }}>{tier.name}</div>
+        </div>
       </div>
     );
   }
