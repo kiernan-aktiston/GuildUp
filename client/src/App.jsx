@@ -48,6 +48,10 @@ export default function App() {
   const [completedQuests, setCompletedQuests] = useState([]);
   const [completedArticles, setCompletedArticles] = useState([]);
 
+  // Inventory & equipment
+  const [inventory, setInventory] = useState([]);    // array of item IDs owned
+  const [equipment, setEquipment] = useState({ head: null, chest: null, offhand: null, accessory: null });
+
   // Today's randomized daily quests (generated from pool)
   const [dailyQuests, setDailyQuests] = useState([]);
 
@@ -150,15 +154,15 @@ export default function App() {
     } catch (e) { console.error("Failed to load quests:", e); }
   };
 
-  // Load completed articles (ever — not daily)
-  const loadCompletedArticles = async (uid) => {
+  // Load completed articles, inventory, and equipment (ever — not daily)
+  const loadPlayerData = async (uid) => {
     try {
       const { data } = await supabase
-        .from("profiles").select("completed_articles").eq("id", uid).single();
-      if (data?.completed_articles) {
-        setCompletedArticles(data.completed_articles);
-      }
-    } catch (e) { console.error("Failed to load articles:", e); }
+        .from("profiles").select("completed_articles, inventory, equipment").eq("id", uid).single();
+      if (data?.completed_articles) setCompletedArticles(data.completed_articles);
+      if (data?.inventory) setInventory(data.inventory);
+      if (data?.equipment) setEquipment(prev => ({ ...prev, ...data.equipment }));
+    } catch (e) { console.error("Failed to load player data:", e); }
   };
 
   // Load weekly ritual counts from Supabase (Mon-Sun)
@@ -325,7 +329,7 @@ export default function App() {
           await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
           await loadStreaks(session.user.id);
-          await loadCompletedArticles(session.user.id);
+          await loadPlayerData(session.user.id);
           setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
           setScreen("dashboard");
         } else {
@@ -367,7 +371,7 @@ export default function App() {
             await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
             await loadStreaks(data.user.id);
-            await loadCompletedArticles(data.user.id);
+            await loadPlayerData(data.user.id);
             setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
             setScreen("dashboard");
           } else {
@@ -563,6 +567,34 @@ export default function App() {
         setCompletedArticles(newArticles);
         supabase.from("profiles").update({ completed_articles: newArticles }).eq("id", userId);
       }
+    }
+  };
+
+  // ── EQUIPMENT HANDLERS ──
+  const handleBuyItem = async (itemId, price) => {
+    if (inventory.includes(itemId) || playerGold < price) return;
+    const newInventory = [...inventory, itemId];
+    const newGold = playerGold - price;
+    setInventory(newInventory);
+    setPlayerGold(newGold);
+    if (userId) {
+      saveProfile({ gold: newGold, inventory: newInventory });
+    }
+  };
+
+  const handleEquip = async (slot, itemId) => {
+    const newEquipment = { ...equipment, [slot]: itemId };
+    setEquipment(newEquipment);
+    if (userId) {
+      supabase.from("profiles").update({ equipment: newEquipment }).eq("id", userId);
+    }
+  };
+
+  const handleUnequip = async (slot) => {
+    const newEquipment = { ...equipment, [slot]: null };
+    setEquipment(newEquipment);
+    if (userId) {
+      supabase.from("profiles").update({ equipment: newEquipment }).eq("id", userId);
     }
   };
 
@@ -781,10 +813,12 @@ export default function App() {
                     playerStats={playerStats} playerGold={playerGold}
                     playerName={playerName} onSignOut={handleSignOut}
                     avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
+                    inventory={inventory} equipment={equipment}
+                    onEquip={handleEquip} onUnequip={handleUnequip}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
-                {tab === "store" && <StoreScreen playerGold={playerGold} />}
+                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} onBuy={handleBuyItem} />}
                 {tab === "guild" && <GuildScreen
                   userId={userId}
                   onCreateGuild={handleCreateGuild}
