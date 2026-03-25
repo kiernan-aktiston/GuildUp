@@ -19,6 +19,7 @@ import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
 import MeditationScreen, { getTodayMeditation } from "./components/MeditationScreen";
+import { getItem as getEquipmentItem } from "./equipmentData";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
 import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
@@ -566,8 +567,10 @@ export default function App() {
   };
 
   // ── EQUIPMENT HANDLERS ──
+  const INVENTORY_CAP = 50;
+
   const handleBuyItem = async (itemId, price) => {
-    if (inventory.includes(itemId) || playerGold < price) return;
+    if (inventory.includes(itemId) || playerGold < price || inventory.length >= INVENTORY_CAP) return;
     const newInventory = [...inventory, itemId];
     const newGold = playerGold - price;
     setInventory(newInventory);
@@ -575,6 +578,23 @@ export default function App() {
     if (userId) {
       saveProfile({ gold: newGold, inventory: newInventory });
     }
+  };
+
+  const handleSellItem = async (itemId) => {
+    if (!inventory.includes(itemId)) return;
+    // Can't sell equipped items
+    if (Object.values(equipment).includes(itemId)) return;
+    const item = getEquipmentItem(itemId);
+    if (!item) return;
+    const sellPrice = Math.floor(item.price * 0.35);
+    const newInventory = inventory.filter(id => id !== itemId);
+    const newGold = playerGold + sellPrice;
+    setInventory(newInventory);
+    setPlayerGold(newGold);
+    if (userId) {
+      saveProfile({ gold: newGold, inventory: newInventory });
+    }
+    return sellPrice;
   };
 
   const handleEquip = async (slot, itemId) => {
@@ -816,10 +836,11 @@ export default function App() {
                     avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
                     inventory={inventory} equipment={equipment}
                     onEquip={handleEquip} onUnequip={handleUnequip}
+                    onSell={handleSellItem} inventoryCap={INVENTORY_CAP}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
-                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} userId={userId} onBuy={handleBuyItem} />}
+                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} userId={userId} onBuy={handleBuyItem} inventoryCap={INVENTORY_CAP} />}
                 {tab === "guild" && <GuildScreen
                   userId={userId}
                   onCreateGuild={handleCreateGuild}

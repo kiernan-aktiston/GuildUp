@@ -9,9 +9,10 @@ const SUB_TABS = [
   { key: "spells", label: "Spells", emoji: "\u2728" },
 ];
 
-export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut, avatarUrl, onAvatarUpload, inventory = [], equipment = {}, onEquip, onUnequip }) {
+export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1, playerStats = {}, playerGold = 0, playerName = "Adventurer", onSignOut, avatarUrl, onAvatarUpload, inventory = [], equipment = {}, onEquip, onUnequip, onSell, inventoryCap = 50 }) {
   const [subTab, setSubTab] = useState("avatar");
   const [inspectItem, setInspectItem] = useState(null);
+  const [sellConfirm, setSellConfirm] = useState(null);
   const [filterSlot, setFilterSlot] = useState("all");
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
@@ -260,6 +261,23 @@ export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1,
         {/* ═══ INVENTORY SUB-TAB ═══ */}
         {subTab === "inventory" && (
           <div style={{ animation: "fadeIn 0.25s ease" }}>
+            {/* Inventory capacity */}
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              marginBottom: 12, padding: "10px 14px", borderRadius: 10,
+              background: C.card, border: `1px solid ${C.cardBorder}`,
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.textMuted }}>
+                {"\u{1F392}"} Inventory
+              </span>
+              <span style={{
+                fontSize: 12, fontWeight: 700, fontFamily: "monospace",
+                color: inventory.length >= inventoryCap ? "#ef4444" : inventory.length >= inventoryCap * 0.8 ? "#f59e0b" : C.text,
+              }}>
+                {inventory.length} / {inventoryCap}
+              </span>
+            </div>
+
             {/* Filter pills */}
             <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
               <button onClick={() => setFilterSlot("all")} style={{
@@ -399,20 +417,36 @@ export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1,
               {/* Actions */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {isOwned && !isEquipped && playerLevel >= inspectItem.levelReq && (
-                  <button onClick={() => { onEquip?.(inspectItem.slot, inspectItem.id); setInspectItem(null); }} style={{
+                  <button onClick={() => { onEquip?.(inspectItem.slot, inspectItem.id); setInspectItem(null); setSellConfirm(null); }} style={{
                     width: "100%", padding: "14px", borderRadius: 12, border: "none",
                     cursor: "pointer", fontSize: 15, fontWeight: 700,
                     background: "#22c55e", color: "#000",
                   }}>Equip</button>
                 )}
                 {isEquipped && (
-                  <button onClick={() => { onUnequip?.(inspectItem.slot); setInspectItem(null); }} style={{
+                  <button onClick={() => { onUnequip?.(inspectItem.slot); setInspectItem(null); setSellConfirm(null); }} style={{
                     width: "100%", padding: "14px", borderRadius: 12, border: "none",
                     cursor: "pointer", fontSize: 15, fontWeight: 700,
                     background: "#ef4444", color: "#000",
                   }}>Unequip</button>
                 )}
-                <button onClick={() => setInspectItem(null)} style={{
+                {isOwned && !isEquipped && (
+                  sellConfirm === inspectItem.id ? (
+                    <button onClick={() => { onSell?.(inspectItem.id); setInspectItem(null); setSellConfirm(null); }} style={{
+                      width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                      cursor: "pointer", fontSize: 15, fontWeight: 700,
+                      background: "#f59e0b", color: "#000",
+                    }}>Confirm Sell {"\u2014"} {"\u{1FA99}"} +{Math.floor(inspectItem.price * 0.35)}</button>
+                  ) : (
+                    <button onClick={() => setSellConfirm(inspectItem.id)} style={{
+                      width: "100%", padding: "12px", borderRadius: 12,
+                      border: "1px solid rgba(245, 158, 11, 0.4)", cursor: "pointer",
+                      background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b",
+                      fontSize: 13, fontWeight: 600,
+                    }}>Sell to Merchant {"\u2014"} {"\u{1FA99}"} {Math.floor(inspectItem.price * 0.35)}</button>
+                  )
+                )}
+                <button onClick={() => { setInspectItem(null); setSellConfirm(null); }} style={{
                   width: "100%", padding: "12px", borderRadius: 12,
                   border: `1px solid ${C.border}`, cursor: "pointer",
                   background: "transparent", color: C.textMuted, fontSize: 13, fontWeight: 600,

@@ -110,7 +110,7 @@ function rollChest(chestType, playerLevel, ownedIds = []) {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory = [], userId = "", onBuy, onChestOpen }) {
+export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory = [], userId = "", onBuy, inventoryCap = 50 }) {
   const [inspectItem, setInspectItem] = useState(null);
   const [buyConfirm, setBuyConfirm] = useState(null);
   const [openingChest, setOpeningChest] = useState(null); // chest being opened
@@ -128,7 +128,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   }, [userId]);
 
   const handleBuy = (item) => {
-    if (playerGold < item.price || playerLevel < item.levelReq) return;
+    if (playerGold < item.price || playerLevel < item.levelReq || inventory.length >= inventoryCap) return;
     onBuy?.(item.id, item.price);
     setJustBought(item.id);
     setBuyConfirm(null);
@@ -137,17 +137,17 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   };
 
   const handleOpenChest = (chest) => {
-    if (playerGold < chest.price) return;
+    if (playerGold < chest.price || inventory.length >= inventoryCap) return;
     const result = rollChest(chest, playerLevel, inventory);
     if (!result) return;
     setOpeningChest(chest);
-    // Deduct gold immediately
     onBuy?.(result.id, chest.price);
-    // Show reveal after brief delay
     setTimeout(() => {
       setChestResult(result);
     }, 800);
   };
+
+  const isFull = inventory.length >= inventoryCap;
 
   return (
     <div style={{
@@ -188,12 +188,24 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.gold }}>The Wanderer</div>
                 <div style={{ fontSize: 10, color: C.textDim, letterSpacing: 1, textTransform: "uppercase" }}>Traveling Merchant</div>
               </div>
-              <div style={{
-                padding: "4px 12px", borderRadius: 8,
-                background: C.surfaceLight, display: "flex", alignItems: "center", gap: 4,
-              }}>
-                <span style={{ fontSize: 14 }}>{"\u{1FA99}"}</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.gold }}>{playerGold}</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{
+                  padding: "4px 10px", borderRadius: 8,
+                  background: C.surfaceLight, display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  <span style={{ fontSize: 12 }}>{"\u{1F392}"}</span>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, fontFamily: "monospace",
+                    color: inventory.length >= inventoryCap ? "#ef4444" : C.text,
+                  }}>{inventory.length}/{inventoryCap}</span>
+                </div>
+                <div style={{
+                  padding: "4px 10px", borderRadius: 8,
+                  background: C.surfaceLight, display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  <span style={{ fontSize: 14 }}>{"\u{1FA99}"}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: C.gold }}>{playerGold}</span>
+                </div>
               </div>
             </div>
             <div style={{
@@ -273,22 +285,23 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {CHEST_TYPES.map(chest => {
               const canAfford = playerGold >= chest.price;
+              const canOpen = canAfford && !isFull;
               return (
-                <div key={chest.id} onClick={() => { if (canAfford) handleOpenChest(chest); }} style={{
-                  padding: "16px 14px", borderRadius: 14, cursor: canAfford ? "pointer" : "default",
+                <div key={chest.id} onClick={() => { if (canOpen) handleOpenChest(chest); }} style={{
+                  padding: "16px 14px", borderRadius: 14, cursor: canOpen ? "pointer" : "default",
                   background: C.card, border: `1px solid ${C.cardBorder}`,
-                  opacity: canAfford ? 1 : 0.5, textAlign: "center",
+                  opacity: canOpen ? 1 : 0.5, textAlign: "center",
                   transition: "all 0.2s ease",
                 }}>
                   <div style={{ fontSize: 36, marginBottom: 6 }}>{chest.emoji}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: chest.color }}>{chest.name}</div>
-                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4, lineHeight: 1.4 }}>{chest.desc}</div>
+                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4, lineHeight: 1.4 }}>{isFull ? "Inventory full" : chest.desc}</div>
                   <div style={{
                     marginTop: 8, padding: "6px 12px", borderRadius: 8,
-                    background: canAfford ? `${chest.color}22` : C.surfaceLight,
+                    background: canOpen ? `${chest.color}22` : C.surfaceLight,
                     display: "inline-block",
                   }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? chest.color : C.textDim }}>{"\u{1FA99}"} {chest.price}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: canOpen ? chest.color : C.textDim }}>{"\u{1FA99}"} {chest.price}</span>
                   </div>
                 </div>
               );
@@ -351,15 +364,15 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
                     background: "#22c55e", color: "#000",
                   }}>Confirm {"\u2014"} {"\u{1FA99}"} {inspectItem.price}</button>
                 ) : (
-                  <button onClick={() => { if (canAfford && meetsLevel) setBuyConfirm(inspectItem.id); }} disabled={!canAfford || !meetsLevel} style={{
+                  <button onClick={() => { if (canAfford && meetsLevel && !isFull) setBuyConfirm(inspectItem.id); }} disabled={!canAfford || !meetsLevel || isFull} style={{
                     width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                    cursor: canAfford && meetsLevel ? "pointer" : "default",
+                    cursor: canAfford && meetsLevel && !isFull ? "pointer" : "default",
                     fontSize: 15, fontWeight: 700,
-                    background: canAfford && meetsLevel ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : C.surfaceLight,
-                    color: canAfford && meetsLevel ? "#000" : C.textDim,
-                    opacity: canAfford && meetsLevel ? 1 : 0.5,
+                    background: canAfford && meetsLevel && !isFull ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : C.surfaceLight,
+                    color: canAfford && meetsLevel && !isFull ? "#000" : C.textDim,
+                    opacity: canAfford && meetsLevel && !isFull ? 1 : 0.5,
                   }}>
-                    {!canAfford ? `Need ${inspectItem.price - playerGold} more gold` : !meetsLevel ? `Requires Level ${inspectItem.levelReq}` : `Buy \u2014 \u{1FA99} ${inspectItem.price}`}
+                    {isFull ? "Inventory full" : !canAfford ? `Need ${inspectItem.price - playerGold} more gold` : !meetsLevel ? `Requires Level ${inspectItem.levelReq}` : `Buy \u2014 \u{1FA99} ${inspectItem.price}`}
                   </button>
                 )}
                 <button onClick={() => { setInspectItem(null); setBuyConfirm(null); }} style={{
