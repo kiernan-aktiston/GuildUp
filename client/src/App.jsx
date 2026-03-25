@@ -818,7 +818,7 @@ export default function App() {
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
-                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} onBuy={handleBuyItem} />}
+                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} userId={userId} onBuy={handleBuyItem} />}
                 {tab === "guild" && <GuildScreen
                   userId={userId}
                   onCreateGuild={handleCreateGuild}
