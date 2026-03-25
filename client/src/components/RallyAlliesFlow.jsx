@@ -4,24 +4,37 @@ import { C, RITUAL_INSTRUCTIONS, getRandomQuote } from "../constants";
 const TIERS = [
   { name: "Signal Fire", emoji: "\u{1F54A}\uFE0F", xp: 10, gold: 2, reqCha: 0, minAway: 60,
     desc: "Text or DM a friend or family member.",
-    mission: "Send a real message to someone you care about. Not a meme. Not a forward. Something personal \u2014 even if it's just \"Hey, thinking about you.\"",
-    action: "Open your messages and send it.",
+    method: "Text / DM",
   },
   { name: "The Call", emoji: "\u{1F4EF}", xp: 15, gold: 3, reqCha: 15, minAway: 180,
     desc: "Call a friend or family member. Actually talk.",
-    mission: "Pick up the phone and call someone. Not a voice note \u2014 a real call. Ask how they're doing. Listen. Three minutes minimum.",
-    action: "Open your phone and make the call.",
+    method: "Phone Call",
   },
   { name: "Seek the Wise", emoji: "\u{1F989}", xp: 20, gold: 4, reqCha: 20, minAway: 180,
     desc: "Reach out to a mentor or someone you want to learn from.",
-    mission: "Message someone you respect \u2014 a mentor, a professional you admire, someone further down the path you want to walk. Ask a genuine question. Introduce yourself if you haven't met.",
-    action: "Find them and reach out.",
+    method: "Any Method",
   },
   { name: "War Council", emoji: "\u2694\uFE0F", xp: 25, gold: 5, reqCha: 25, minAway: 120,
     desc: "Coordinate and schedule an activity with someone this week.",
-    mission: "Don't just reach out \u2014 lock something in. A coffee, a workout, a study session, a meal. Pick a person, pick a day, pick a time. Confirm it before you come back.",
-    action: "Message them and confirm a day and time.",
+    method: "Any Method",
   },
+];
+
+const CATEGORIES = [
+  { key: "family", emoji: "\u{1FA78}", label: "Family", desc: "Blood runs deep" },
+  { key: "friends", emoji: "\u{1F37B}", label: "Friends", desc: "Your inner circle" },
+  { key: "network", emoji: "\u{1F6E1}\uFE0F", label: "Network", desc: "Professional connections & mentors" },
+  { key: "romance", emoji: "\u2764\uFE0F\u200D\u{1F525}", label: "Romance", desc: "Someone special" },
+];
+
+const INTENTS = [
+  { key: "check_in", label: "Check in on them", emoji: "\u{1F44B}" },
+  { key: "advice", label: "Ask for advice", emoji: "\u{1F9E0}" },
+  { key: "reconnect", label: "Reconnect after a while", emoji: "\u{1F504}" },
+  { key: "encourage", label: "Encourage or support them", emoji: "\u{1F4AA}" },
+  { key: "plans", label: "Set up plans to meet", emoji: "\u{1F4C5}" },
+  { key: "thank", label: "Thank them for something", emoji: "\u{1F64F}" },
+  { key: "share", label: "Share something meaningful", emoji: "\u{1F4AC}" },
 ];
 
 export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
@@ -29,9 +42,11 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
   const [prepSlide, setPrepSlide] = useState(0);
   const [showWhy, setShowWhy] = useState(false);
   const [selectedTier, setSelectedTier] = useState(0);
+  const [category, setCategory] = useState(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [intent, setIntent] = useState(null);
 
   // Visibility tracking
-  const [awayStarted, setAwayStarted] = useState(false);
   const [totalAwayTime, setTotalAwayTime] = useState(0);
   const [canConfirm, setCanConfirm] = useState(false);
   const leftAtRef = useRef(null);
@@ -42,23 +57,19 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
   const tier = TIERS[selectedTier];
   const chaLevel = playerStats.cha || 10;
 
-  // Page Visibility API — track time away
+  // Page Visibility API
   useEffect(() => {
     if (step !== "away") return;
     const handleVisibility = () => {
       if (document.hidden) {
-        // User left the app
         leftAtRef.current = Date.now();
       } else {
-        // User came back
         if (leftAtRef.current) {
           const awayMs = Date.now() - leftAtRef.current;
           awayAccumulatedRef.current += awayMs;
           const totalSec = Math.floor(awayAccumulatedRef.current / 1000);
           setTotalAwayTime(totalSec);
-          if (totalSec >= tier.minAway) {
-            setCanConfirm(true);
-          }
+          if (totalSec >= tier.minAway) setCanConfirm(true);
           leftAtRef.current = null;
         }
       }
@@ -68,7 +79,6 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
   }, [step, tier.minAway]);
 
   const startMission = () => {
-    setAwayStarted(true);
     setTotalAwayTime(0);
     setCanConfirm(false);
     awayAccumulatedRef.current = 0;
@@ -81,6 +91,19 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
     const sec = s % 60;
     if (min > 0) return `${min}m ${sec}s`;
     return `${sec}s`;
+  };
+
+  const getMissionText = () => {
+    const cat = CATEGORIES.find(c => c.key === category);
+    const int = INTENTS.find(i => i.key === intent);
+    const catLabel = cat?.label?.toLowerCase() || "someone";
+    const intLabel = int?.label?.toLowerCase() || "reach out";
+
+    if (selectedTier === 0) return `Send a text or DM to ${recipientName || "them"}. ${int?.label || "Reach out"}.`;
+    if (selectedTier === 1) return `Call ${recipientName || "them"} on the phone. ${int?.label || "Reach out"}. Talk for at least 3 minutes.`;
+    if (selectedTier === 2) return `Reach out to ${recipientName || "someone you want to learn from"}. ${int?.label || "Ask a genuine question"}. Introduce yourself if you haven't met.`;
+    if (selectedTier === 3) return `Message ${recipientName || "them"} and lock in plans. Pick a day, pick a time, confirm it. ${int?.label || "Set up plans to meet"}.`;
+    return `Reach out to ${recipientName || "someone"}.`;
   };
 
   const BgLayer = ({ opacity = 0.2 }) => (
@@ -104,7 +127,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
   const slides = [
     { emoji: "\u{1F5E1}\uFE0F", title: "Rally Your Allies", body: "No one builds alone. The strongest warriors have the strongest bonds. This ritual is about reaching out \u2014 not waiting to be reached.", accent: null },
     { emoji: "\u{1F91D}", title: "Choose Your Challenge", body: "Four tiers. A text takes courage. A phone call takes more. Reaching out to a mentor takes real nerve. Scheduling something and following through? That's leadership.", accent: "Harder tiers unlock as your Charisma grows." },
-    { emoji: "\u{1F4F1}", title: "How It Works", body: "Pick your tier. Read the mission. Leave the app and go do it. When you come back, confirm you completed it. The app tracks that you actually left \u2014 no shortcuts.", accent: "You must leave the app to complete this ritual." },
+    { emoji: "\u{1F4F1}", title: "How It Works", body: "Pick your tier. Decide who you'll reach out to and why. Leave the app and go do it. When you come back, confirm you completed it.", accent: "You must leave the app to complete this ritual." },
   ];
   const isLastSlide = prepSlide === slides.length - 1;
 
@@ -194,7 +217,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
                         {locked && <span style={{ fontSize: 10, color: "#ef4444", fontWeight: 600 }}>{"\u{1F512}"} CHA {t.reqCha}</span>}
                       </div>
                       <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>{t.desc}</div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>{t.xp} XP {"\u00B7"} {t.gold} gold</div>
+                      <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>{t.method} {"\u00B7"} {t.xp} XP {"\u00B7"} {t.gold} gold</div>
                     </div>
                     {selected && !locked && <span style={{ fontSize: 18, color: C.gold }}>{"\u2713"}</span>}
                   </div>
@@ -202,7 +225,108 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
               );
             })}
           </div>
-          <button onClick={() => setStep("mission")} style={{ width: "100%", padding: "18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, background: "#22c55e", color: "#000", marginTop: 20 }}>Accept Mission</button>
+          <button onClick={() => { setCategory(null); setStep("category"); }} style={{ width: "100%", padding: "18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, background: "#22c55e", color: "#000", marginTop: 20 }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── CATEGORY ──
+  if (step === "category") {
+    return (
+      <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
+        <BgLayer />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <button onClick={() => setStep("tierSelect")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 14, cursor: "pointer", marginBottom: 24, padding: 0 }}>{"\u2190"} Back</button>
+          <div style={{ fontSize: 11, color: C.textDim, letterSpacing: 2, marginBottom: 8 }}>{tier.emoji} {tier.name}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 20 }}>Who are you reaching out to?</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {CATEGORIES.map(cat => {
+              const selected = category === cat.key;
+              return (
+                <div key={cat.key} onClick={() => setCategory(cat.key)} style={{
+                  padding: "16px 18px", borderRadius: 14, cursor: "pointer",
+                  background: selected ? "rgba(240, 178, 50, 0.1)" : C.card,
+                  border: selected ? `2px solid ${C.gold}` : `1px solid ${C.cardBorder}`,
+                  transition: "all 0.2s ease",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 24 }}>{cat.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: selected ? C.gold : C.text }}>{cat.label}</div>
+                      <div style={{ fontSize: 12, color: C.textMuted }}>{cat.desc}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={() => { if (category) { setRecipientName(""); setStep("recipient"); } }} disabled={!category} style={{ ...btnPrimary, marginTop: 20, opacity: category ? 1 : 0.4, cursor: category ? "pointer" : "default" }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── RECIPIENT ──
+  if (step === "recipient") {
+    const cat = CATEGORIES.find(c => c.key === category);
+    return (
+      <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
+        <BgLayer />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <button onClick={() => setStep("category")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 14, cursor: "pointer", marginBottom: 24, padding: 0 }}>{"\u2190"} Back</button>
+          <div style={{ fontSize: 11, color: C.textDim, letterSpacing: 2, marginBottom: 8 }}>{tier.emoji} {tier.name} {"\u00B7"} {cat?.emoji} {cat?.label}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 8 }}>Who specifically?</div>
+          <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 20 }}>Type their name. Making it specific makes it real.</p>
+          <input
+            type="text"
+            value={recipientName}
+            onChange={e => setRecipientName(e.target.value)}
+            placeholder="First name"
+            autoFocus
+            style={{
+              width: "100%", padding: "16px 18px", borderRadius: 12, fontSize: 16,
+              background: C.surfaceLight, border: `1px solid ${C.border}`,
+              color: C.text, outline: "none", marginBottom: 20,
+            }}
+            onKeyDown={e => { if (e.key === "Enter" && recipientName.trim()) { setIntent(null); setStep("intent"); } }}
+          />
+          <button onClick={() => { if (recipientName.trim()) { setIntent(null); setStep("intent"); } }} disabled={!recipientName.trim()} style={{ ...btnPrimary, opacity: recipientName.trim() ? 1 : 0.4, cursor: recipientName.trim() ? "pointer" : "default" }}>Next</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── INTENT ──
+  if (step === "intent") {
+    const cat = CATEGORIES.find(c => c.key === category);
+    return (
+      <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 20px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
+        <BgLayer />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <button onClick={() => setStep("recipient")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 14, cursor: "pointer", marginBottom: 24, padding: 0 }}>{"\u2190"} Back</button>
+          <div style={{ fontSize: 11, color: C.textDim, letterSpacing: 2, marginBottom: 8 }}>{tier.emoji} {tier.name} {"\u00B7"} {recipientName}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 8 }}>Why are you reaching out?</div>
+          <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 20 }}>Pick your intent. This shapes your mission.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {INTENTS.map(int => {
+              const selected = intent === int.key;
+              return (
+                <div key={int.key} onClick={() => setIntent(int.key)} style={{
+                  padding: "14px 16px", borderRadius: 12, cursor: "pointer",
+                  background: selected ? "rgba(240, 178, 50, 0.1)" : C.card,
+                  border: selected ? `2px solid ${C.gold}` : `1px solid ${C.cardBorder}`,
+                  transition: "all 0.2s ease",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>{int.emoji}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: selected ? C.gold : C.text }}>{int.label}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={() => { if (intent) setStep("mission"); }} disabled={!intent} style={{ ...btnPrimary, marginTop: 20, opacity: intent ? 1 : 0.4, cursor: intent ? "pointer" : "default" }}>See Your Mission</button>
         </div>
       </div>
     );
@@ -210,6 +334,8 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
 
   // ── MISSION CARD ──
   if (step === "mission") {
+    const cat = CATEGORIES.find(c => c.key === category);
+    const int = INTENTS.find(i => i.key === intent);
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", animation: "fadeIn 0.25s ease", position: "relative" }}>
         <BgLayer opacity={0.3} />
@@ -218,16 +344,28 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, fontWeight: 700, color: C.gold, marginBottom: 4 }}>{tier.name}</div>
           <div style={{ fontSize: 11, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Your Mission</div>
 
+          {/* Summary card */}
           <div style={{ padding: "20px", borderRadius: 14, background: C.card, border: `1px solid ${C.cardBorder}`, textAlign: "left", marginBottom: 16 }}>
-            <p style={{ fontSize: 15, color: C.text, lineHeight: 1.8 }}>{tier.mission}</p>
-          </div>
-
-          <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", marginBottom: 24 }}>
-            <p style={{ fontSize: 13, color: "#f59e0b", fontWeight: 600 }}>{tier.action}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: C.textDim }}>WHO</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{cat?.emoji} {recipientName}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: C.textDim }}>HOW</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{tier.method}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: C.textDim }}>WHY</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{int?.emoji} {int?.label}</span>
+              </div>
+            </div>
+            <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
+            <p style={{ fontSize: 15, color: C.text, lineHeight: 1.8 }}>{getMissionText()}</p>
           </div>
 
           <button onClick={startMission} style={{ width: "100%", padding: "18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, background: "#22c55e", color: "#000" }}>Go Do It</button>
-          <button onClick={() => setStep("tierSelect")} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, background: "transparent", color: C.textMuted, marginTop: 8 }}>{"\u2190"} Change Tier</button>
+          <button onClick={() => setStep("intent")} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, background: "transparent", color: C.textMuted, marginTop: 8 }}>{"\u2190"} Change Mission</button>
         </div>
       </div>
     );
@@ -235,7 +373,8 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
 
   // ── AWAY / WAITING ──
   if (step === "away") {
-    const remaining = Math.max(0, tier.minAway - totalAwayTime);
+    const cat = CATEGORIES.find(c => c.key === category);
+    const int = INTENTS.find(i => i.key === intent);
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", position: "relative" }}>
         <BgLayer opacity={0.35} />
@@ -251,40 +390,29 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
           {canConfirm ? (
             <>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#22c55e", marginBottom: 8 }}>Welcome back.</div>
-              <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 24 }}>
-                You were away for {formatMinSec(totalAwayTime)}. Did you complete the mission?
-              </p>
-              <div style={{ padding: "16px", borderRadius: 14, background: C.card, border: `1px solid ${C.cardBorder}`, marginBottom: 24, textAlign: "left" }}>
-                <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{tier.name}</div>
-                <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>{tier.mission}</p>
+              <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 16 }}>You were away for {formatMinSec(totalAwayTime)}.</p>
+              <div style={{ padding: "14px 16px", borderRadius: 12, background: C.card, border: `1px solid ${C.cardBorder}`, marginBottom: 20, textAlign: "left" }}>
+                <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>{tier.name}</div>
+                <div style={{ fontSize: 13, color: C.text }}>{recipientName} {"\u00B7"} {int?.label}</div>
               </div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 20 }}>Did you do it?</p>
               <button onClick={() => setStep("done")} style={{ width: "100%", padding: "18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, background: "#22c55e", color: "#000", marginBottom: 10 }}>Yes, I Did It</button>
-              <button onClick={() => {
-                // Reset and let them try again
-                awayAccumulatedRef.current = 0;
-                leftAtRef.current = null;
-                setTotalAwayTime(0);
-                setCanConfirm(false);
-              }} style={{ width: "100%", padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, cursor: "pointer", fontSize: 14, fontWeight: 600, background: "transparent", color: C.textMuted }}>Not yet {"\u2014"} I need more time</button>
+              <button onClick={() => { awayAccumulatedRef.current = 0; leftAtRef.current = null; setTotalAwayTime(0); setCanConfirm(false); }} style={{ width: "100%", padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, cursor: "pointer", fontSize: 14, fontWeight: 600, background: "transparent", color: C.textMuted }}>Not yet {"\u2014"} I need more time</button>
             </>
           ) : (
             <>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.gold, marginBottom: 8 }}>
                 {totalAwayTime > 0 ? "Looks like you came back quickly." : "We'll be here when you get back."}
               </div>
-              <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 8 }}>
-                {totalAwayTime > 0
-                  ? "Take your time \u2014 go finish the mission."
-                  : "Leave the app now. Go complete your mission."
-                }
+              <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 12 }}>
+                {totalAwayTime > 0 ? "Take your time \u2014 go finish the mission." : "Leave the app now. Reach out to " + recipientName + "."}
               </p>
               {totalAwayTime > 0 && (
-                <div style={{ fontSize: 12, color: C.textDim, marginBottom: 8 }}>
-                  Away: {formatMinSec(totalAwayTime)} / {formatMinSec(tier.minAway)} needed
-                </div>
+                <div style={{ fontSize: 12, color: C.textDim, marginBottom: 12 }}>Away: {formatMinSec(totalAwayTime)} / {formatMinSec(tier.minAway)} needed</div>
               )}
-              <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", marginBottom: 24 }}>
-                <p style={{ fontSize: 13, color: "#f59e0b", lineHeight: 1.5 }}>{tier.action}</p>
+              <div style={{ padding: "12px 16px", borderRadius: 10, background: C.card, border: `1px solid ${C.cardBorder}`, marginBottom: 20, textAlign: "left" }}>
+                <div style={{ fontSize: 12, color: C.textDim, marginBottom: 4 }}>{tier.method} {"\u00B7"} {int?.label}</div>
+                <div style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{recipientName}</div>
               </div>
               <div style={{ fontSize: 11, color: C.textDim, fontStyle: "italic" }}>The app is tracking that you leave to complete this.</div>
             </>
@@ -303,7 +431,8 @@ export default function RallyAlliesFlow({ onBack, playerStats = {} }) {
           <div style={{ fontSize: 64, marginBottom: 16 }}>{tier.emoji}</div>
           <div style={{ fontSize: 48, color: C.ritualDone, fontWeight: 800, fontFamily: "'Cinzel', serif", marginBottom: 8 }}>{"\u2713"}</div>
           <div style={{ fontSize: 20, color: C.ritualDone, fontWeight: 700, marginBottom: 4 }}>Ritual Complete!</div>
-          <div style={{ fontSize: 14, color: C.gold, fontWeight: 600, marginBottom: 8 }}>{tier.name} {"\u2014"} bond strengthened</div>
+          <div style={{ fontSize: 14, color: C.gold, fontWeight: 600, marginBottom: 4 }}>{tier.name} {"\u2014"} bond strengthened</div>
+          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 12 }}>You reached out to {recipientName}.</div>
           <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 16 }}>
             <div style={{ textAlign: "center" }}><div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>{tier.xp}</div><div style={{ fontSize: 10, color: C.textDim }}>XP</div></div>
             <div style={{ textAlign: "center" }}><div style={{ fontSize: 20, fontWeight: 700, color: "#f59e0b" }}>{tier.gold}</div><div style={{ fontSize: 10, color: C.textDim }}>Gold</div></div>
