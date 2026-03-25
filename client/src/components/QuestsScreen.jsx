@@ -66,16 +66,16 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
         {meditationComplete && meditationTitle && (
           <div style={{
             padding: "12px 16px", borderRadius: 12, marginBottom: 12,
-            background: "rgba(45, 35, 20, 0.8)", backdropFilter: "blur(8px)",
-            border: "1px solid rgba(212, 160, 80, 0.3)",
+            background: "rgba(30, 40, 70, 0.8)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(42, 82, 152, 0.4)",
             textAlign: "center",
           }}>
-            <div style={{ fontSize: 10, color: "#d4a050", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, color: "#5b8fd9", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
               {"\u{1F4DC}"} Today's Meditation
             </div>
             <div style={{
               fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700,
-              color: "#f5e6d0", fontStyle: "italic", lineHeight: 1.4,
+              color: "#c8d8f0", fontStyle: "italic", lineHeight: 1.4,
             }}>"{meditationTitle}"</div>
           </div>
         )}
@@ -101,16 +101,16 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
           </div>
         </div>
 
-        {/* ═══ DAILY MEDITATION — GOLD ACCENTED ═══ */}
+        {/* ═══ DAILY MEDITATION — BLUE ACCENTED ═══ */}
         {todayMeditation && (
           <div style={{
             marginBottom: 16, padding: "16px 14px", borderRadius: 14,
             background: meditationComplete ? doneRow : parchCard,
             border: `1px solid ${meditationComplete ? doneBorder : parchCardBorder}`,
-            borderLeft: "4px solid #d4a050",
+            borderLeft: "4px solid #2a5298",
           }}>
             <div style={{
-              fontSize: 13, fontWeight: 700, color: "#d4a050", letterSpacing: 1.5,
+              fontSize: 13, fontWeight: 700, color: "#2a5298", letterSpacing: 1.5,
               textTransform: "uppercase", marginBottom: 10, fontFamily: "'Cinzel', serif",
             }}>Daily Meditation</div>
             <div onClick={() => { if (!meditationComplete) onOpenMeditation?.(); }} style={{
@@ -123,8 +123,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                border: `2px solid ${meditationComplete ? "#2d6a30" : "#d4a050"}`,
-                background: meditationComplete ? "#2d6a30" : "rgba(212, 160, 80, 0.15)",
+                border: `2px solid ${meditationComplete ? "#2d6a30" : "#2a5298"}`,
+                background: meditationComplete ? "#2d6a30" : "rgba(42, 82, 152, 0.15)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {meditationComplete && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{"\u2713"}</span>}
@@ -140,9 +140,9 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
               {!meditationComplete ? (
                 <div style={{
                   padding: "6px 14px", borderRadius: 8, border: "none",
-                  background: "linear-gradient(135deg, #d4a050, #b8862e)",
-                  color: "#000", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
-                  boxShadow: "0 2px 8px rgba(212, 160, 80, 0.4)",
+                  background: "linear-gradient(135deg, #2a5298, #1e3f7a)",
+                  color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+                  boxShadow: "0 2px 8px rgba(42, 82, 152, 0.4)",
                   flexShrink: 0,
                 }}>Reflect</div>
               ) : (
