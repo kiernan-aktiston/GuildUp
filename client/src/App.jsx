@@ -737,8 +737,9 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Pray/Meditate 10min" ? (
                 <StillTheSpiritFlow
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                  playerStats={playerStats}
+                  onBack={(didComplete, rewards) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
                   }}
                 />
