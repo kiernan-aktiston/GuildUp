@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
-import { C, CLASSES, ACTIVITY_STAT_MAP, getLocalDate, getWeekStart, getDailyQuests } from "./constants";
+import { C, CLASSES, ACTIVITY_STAT_MAP, getLocalDate, getWeekStart } from "./constants";
 import { xpForLevel, totalXpForLevel, statPointsForLevel, distributeStatPoints, evaluateClass, processLevelUp } from "./gameLogic";
 import TabBar from "./components/TabBar";
 import XPBar from "./components/XPBar";
@@ -18,6 +18,7 @@ import GuildScreen from "./components/GuildScreen";
 import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
+import MeditationScreen, { getTodayMeditation } from "./components/MeditationScreen";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
 import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
@@ -45,15 +46,16 @@ export default function App() {
 
   // Completion tracking
   const [completedRituals, setCompletedRituals] = useState({});
-  const [completedQuests, setCompletedQuests] = useState([]);
   const [completedArticles, setCompletedArticles] = useState([]);
 
   // Inventory & equipment
   const [inventory, setInventory] = useState([]);    // array of item IDs owned
   const [equipment, setEquipment] = useState({ head: null, chest: null, gloves: null, pants: null, boots: null });
 
-  // Today's randomized daily quests (generated from pool)
-  const [dailyQuests, setDailyQuests] = useState([]);
+  // Daily Meditation
+  const [meditationComplete, setMeditationComplete] = useState(false);
+  const [meditationTitle, setMeditationTitle] = useState("");
+  const [showMeditation, setShowMeditation] = useState(false);
 
   // Weekly ritual counts (summed from Supabase for Mon-Sun)
   const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
@@ -142,26 +144,20 @@ export default function App() {
     } catch (e) { console.error("Failed to load rituals:", e); }
   };
 
-  // Load today's completed quests from Supabase
-  const loadTodayQuests = async (uid) => {
-    try {
-      const today = getLocalDate();
-      const { data } = await supabase
-        .from("quest_progress").select("quest_id").eq("user_id", uid).eq("quest_date", today);
-      if (data && data.length > 0) {
-        setCompletedQuests(data.map(d => d.quest_id));
-      }
-    } catch (e) { console.error("Failed to load quests:", e); }
-  };
-
-  // Load completed articles, inventory, and equipment (ever — not daily)
+  // Load completed articles, inventory, equipment, and meditation status
   const loadPlayerData = async (uid) => {
     try {
       const { data } = await supabase
-        .from("profiles").select("completed_articles, inventory, equipment").eq("id", uid).single();
+        .from("profiles").select("completed_articles, inventory, equipment, meditation_date, meditation_title").eq("id", uid).single();
       if (data?.completed_articles) setCompletedArticles(data.completed_articles);
       if (data?.inventory) setInventory(data.inventory);
       if (data?.equipment) setEquipment(prev => ({ ...prev, ...data.equipment }));
+      // Check if today's meditation is complete
+      const today = getLocalDate();
+      if (data?.meditation_date === today) {
+        setMeditationComplete(true);
+        setMeditationTitle(data.meditation_title || "");
+      }
     } catch (e) { console.error("Failed to load player data:", e); }
   };
 
@@ -325,12 +321,10 @@ export default function App() {
         const onboarded = await loadProfile(session.user.id);
         if (onboarded) {
           await loadTodayRituals(session.user.id);
-          await loadTodayQuests(session.user.id);
           await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
           await loadStreaks(session.user.id);
           await loadPlayerData(session.user.id);
-          setDailyQuests(getDailyQuests(getLocalDate(), session.user.id));
           setScreen("dashboard");
         } else {
           setScreen("interviewIntro");
@@ -367,12 +361,10 @@ export default function App() {
           const onboarded = await loadProfile(data.user.id);
           if (onboarded) {
             await loadTodayRituals(data.user.id);
-            await loadTodayQuests(data.user.id);
             await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
             await loadStreaks(data.user.id);
             await loadPlayerData(data.user.id);
-            setDailyQuests(getDailyQuests(getLocalDate(), data.user.id));
             setScreen("dashboard");
           } else {
             setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
@@ -398,8 +390,11 @@ export default function App() {
     setPlayerGold(100);
     setActivityTally({ str: 0, agi: 0, int: 0, spi: 0, cha: 0 });
     setCompletedRituals({});
-    setCompletedQuests([]);
-    setDailyQuests([]);
+    setMeditationComplete(false);
+    setMeditationTitle("");
+    setShowMeditation(false);
+    setInventory([]);
+    setEquipment({ head: null, chest: null, gloves: null, pants: null, boots: null });
     setWeeklyRitualCounts({ "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0, "Pray/Meditate 10min": 0, "Reach Out": 0 });
     setUserGuild(null);
     setGuildMembers([]);
@@ -598,34 +593,30 @@ export default function App() {
     }
   };
 
-  // Daily quest completion
-  const handleQuestComplete = async (questId, xpReward, goldReward, statCategories) => {
-    if (completedQuests.includes(questId)) return;
-    if (processingRef.current.has(`quest:${questId}`)) return;
-    processingRef.current.add(`quest:${questId}`);
-    setCompletedQuests(prev => [...prev, questId]);
+  // Daily meditation completion
+  const handleMeditationComplete = async (title, chestItem) => {
+    setMeditationComplete(true);
+    setMeditationTitle(title);
+    setShowMeditation(false);
 
-    // Tally all stats for dual-stat quests
-    const stats = Array.isArray(statCategories) ? statCategories : [statCategories];
-    stats.forEach(stat => {
-      if (stat) setActivityTally(prev => ({ ...prev, [stat]: prev[stat] + 1 }));
-    });
-    awardXP(xpReward, null); // XP awarded without double-tallying
-    setPlayerGold(prev => prev + goldReward);
-
-    if (userId) {
+    // Add chest item to inventory if received
+    if (chestItem) {
+      const newInventory = [...inventory, chestItem.id];
+      setInventory(newInventory);
+      if (userId) {
+        const today = getLocalDate();
+        saveProfile({
+          meditation_date: today,
+          meditation_title: title,
+          inventory: newInventory,
+        });
+      }
+    } else if (userId) {
       const today = getLocalDate();
-      await supabase.from("quest_progress").upsert({
-        user_id: userId, quest_id: questId, quest_date: today,
-      }, { onConflict: "user_id,quest_id,quest_date" });
-      // Save XP/gold/tally using computed values
-      const newXP = playerXP + xpReward;
-      const newGold = playerGold + goldReward;
-      const profile = { xp: newXP, gold: newGold };
-      stats.forEach(stat => {
-        if (stat) profile[`tally_${stat}`] = (activityTally[stat] || 0) + 1;
+      saveProfile({
+        meditation_date: today,
+        meditation_title: title,
       });
-      saveProfile(profile);
     }
   };
 
@@ -794,17 +785,27 @@ export default function App() {
               )
             ) : (
               <>
-                {tab === "quests" && (
+                {tab === "quests" && !showMeditation && (
                   <QuestsScreen
                     onOpenRitual={(r) => setShowRitualDetail(r)}
                     completedRituals={completedRituals}
-                    completedQuests={completedQuests}
-                    onCompleteQuest={handleQuestComplete}
                     playerClass={playerClass}
                     playerLevel={playerLevel}
                     ritualStreaks={ritualStreaks}
-                    dailyQuests={dailyQuests}
                     weeklyRitualCounts={weeklyRitualCounts}
+                    todayMeditation={getTodayMeditation(getLocalDate(), userId)}
+                    meditationComplete={meditationComplete}
+                    meditationTitle={meditationTitle}
+                    onOpenMeditation={() => setShowMeditation(true)}
+                  />
+                )}
+                {tab === "quests" && showMeditation && (
+                  <MeditationScreen
+                    meditation={getTodayMeditation(getLocalDate(), userId)}
+                    playerLevel={playerLevel}
+                    inventory={inventory}
+                    onBack={() => setShowMeditation(false)}
+                    onComplete={handleMeditationComplete}
                   />
                 )}
                 {tab === "avatar" && (
