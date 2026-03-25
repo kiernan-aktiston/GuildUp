@@ -712,9 +712,9 @@ export default function App() {
             {showRitualDetail ? (
               showRitualDetail.name === "Reach Out" ? (
                 <RallyAlliesFlow
-                  userId={userId}
-                  onBack={(didComplete) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name);
+                  playerStats={playerStats}
+                  onBack={(didComplete, rewards) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
                   }}
                 />
@@ -737,9 +737,8 @@ export default function App() {
                 />
               ) : showRitualDetail.name === "Pray/Meditate 10min" ? (
                 <StillTheSpiritFlow
-                  playerStats={playerStats}
-                  onBack={(didComplete, rewards) => {
-                    if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
+                  onBack={(didComplete) => {
+                    if (didComplete) handleRitualComplete(showRitualDetail.name);
                     setShowRitualDetail(null);
                   }}
                 />
