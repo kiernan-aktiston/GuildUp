@@ -48,8 +48,8 @@ export default function AvatarScreen({ playerClass = "warrior", playerLevel = 1,
           position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
           objectFit: "contain", imageRendering: "auto",
         }} onError={e => { e.target.style.display = "none"; }} />
-        {/* Equipment layers — rendered in order: chest, offhand, head (top) */}
-        {["chest", "offhand", "head"].map(slot => {
+        {/* Equipment layers — rendered bottom to top: boots, pants, chest, gloves, head */}
+        {["boots", "pants", "chest", "gloves", "head"].map(slot => {
           const itemId = equipment[slot];
           if (!itemId) return null;
           const path = getSpritePath(itemId);

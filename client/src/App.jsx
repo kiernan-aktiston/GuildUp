@@ -50,7 +50,7 @@ export default function App() {
 
   // Inventory & equipment
   const [inventory, setInventory] = useState([]);    // array of item IDs owned
-  const [equipment, setEquipment] = useState({ head: null, chest: null, offhand: null, accessory: null });
+  const [equipment, setEquipment] = useState({ head: null, chest: null, gloves: null, pants: null, boots: null });
 
   // Today's randomized daily quests (generated from pool)
   const [dailyQuests, setDailyQuests] = useState([]);
