@@ -11,18 +11,26 @@ const TERM = "#33cc66"; // terminal green
 const TERM_DIM = "#1a7a3a";
 const TERM_BG = "rgba(51, 204, 102, 0.04)";
 
-const OCTOPUS_ASCII = `
-      ___
-   .-'   '-.
-  / \\$   \\$ \\
- |           |
-  \\  \\___/  /
-   '._____.'
-  /  /| |\\  \\
- /  / | | \\  \\
-'--'  | |  '--'
-     _| |_
-`;
+const OCTOPUS_ASCII = [
+  '                        ___                    ',
+  "                    .-'   `'.                  ",
+  '                   /         \\                 ',
+  '                   |         ;                 ',
+  '                   |         |           ___.--,',
+  '          _.._     |$) ~ ($) |    _.---\'`__.-( (_.',
+  '     __.--\'`_.. \'.__\\    \'--. \\_.-\' ,.--\'`     `""`',
+  '    ( ,.--\'`   \',__ /./;   ;, \'.__.\' __          ',
+  '    _`) )  .---.__.\' / |   |\\   \\__..--""  """--.,_',
+  '   `---\' .\'.\'\'-._.--\'`_./  /\\ \'.  \\ _.-~~~````~~~-._`-.__.',
+  '         | |  .\' _.-\' |  |  \\  \\  \'.               `~---`',
+  '          \\ \\/ .\'     \\  \\   \'. \'-._)              ',
+  '           \\/ /        \\  \\    `=.__`~-.           ',
+  '          / /\\         `) )    / / `"".`\\          ',
+  '        , _.-\'.\'\\ \\    / /    ( (     / /          ',
+  '        `--~`   ) )  .-\'.\'    \'.\'.  | (           ',
+  '               (/`  ( (`       ) )  \'-;           ',
+  "                `    '-;      (-'                 ",
+].join('\n');
 
 const MARKET_QUOTES = [
   "You are worth what you can repeat.",
@@ -175,11 +183,11 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
           </div>
 
           {/* ASCII octopus */}
-          <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <div style={{ textAlign: "center", marginBottom: 8, overflowX: "hidden" }}>
             <pre style={{
-              fontFamily: "monospace", fontSize: 11, lineHeight: 1.2,
+              fontFamily: "'Courier New', monospace", fontSize: 8, lineHeight: 1.15,
               color: TERM, margin: 0, display: "inline-block", textAlign: "left",
-              opacity: 0.7,
+              opacity: 0.6,
             }}>{OCTOPUS_ASCII}</pre>
           </div>
 
