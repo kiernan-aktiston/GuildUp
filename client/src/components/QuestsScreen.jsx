@@ -4,14 +4,14 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const rituals = [
-    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "\u2694\uFE0F", desc: "Bodyweight exercises to strengthen the body and build consistency." },
-    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "\u{1F3F9}", desc: "Get outside. Walk or run. Clear your mind, build endurance." },
-    { name: "Read 20min", label: "Sharpen the Mind", emoji: "\u{1F4D6}", desc: "Knowledge compounds. Read an article, prove you learned." },
-    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "\u{1F56F}\uFE0F", desc: "A calm mind sees further. Breathe, sit, be still." },
-    { name: "Reach Out", label: "Rally Your Allies", emoji: "\u{1F5E1}\uFE0F", desc: "No one builds alone. Reach out to one person today." },
+    { name: "Bodyweight Workout", label: "Forge the Body", emoji: "\u2694\uFE0F", desc: "Train your strength." },
+    { name: "Walk/Jog 20min", label: "Explore the Land", emoji: "\u{1F3F9}", desc: "Get outside. Walk or run." },
+    { name: "Read 20min", label: "Sharpen the Mind", emoji: "\u{1F4D6}", desc: "Read. Prove you learned." },
+    { name: "Pray/Meditate 10min", label: "Still the Spirit", emoji: "\u{1F56F}\uFE0F", desc: "Breathe. Be still." },
+    { name: "Reach Out", label: "Rally Your Allies", emoji: "\u{1F5E1}\uFE0F", desc: "Reach out to one person." },
   ].map(r => ({ ...r, done: !!completedRituals[r.name] }));
 
-  const streakIcons = [
+  const streakKeys = [
     { emoji: "\u2694\uFE0F", name: "Bodyweight Workout" },
     { emoji: "\u{1F3F9}", name: "Walk/Jog 20min" },
     { emoji: "\u{1F4D6}", name: "Read 20min" },
@@ -20,62 +20,81 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
   ];
 
   const weeklyQuests = [
-    { name: "Forge the Body", desc: "Forge the Body 4x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4 },
-    { name: "Sharpen the Mind", desc: "Sharpen the Mind 5x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Read 20min"] || 0, target: 5 },
-    { name: "Rally Your Allies", desc: "Rally Your Allies 5x this week", xp: 50, gold: 10, progress: weeklyRitualCounts["Reach Out"] || 0, target: 5 },
+    { name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4 },
+    { name: "Sharpen the Mind", desc: "Complete 5x this week", progress: weeklyRitualCounts["Read 20min"] || 0, target: 5 },
+    { name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5 },
   ];
 
-  const ink = "#3d2b1f";
-  const inkLight = "#6b4c30";
-  const inkFaint = "#8b7355";
-  const parchCard = "rgba(210, 180, 140, 0.45)";
-  const parchCardBorder = "rgba(160, 120, 70, 0.4)";
-  const parchRow = "rgba(210, 180, 140, 0.3)";
-  const parchRowBorder = "rgba(160, 120, 70, 0.25)";
-  const doneRow = "rgba(34, 120, 60, 0.2)";
-  const doneBorder = "rgba(34, 120, 60, 0.35)";
+  const completedCount = rituals.filter(r => r.done).length;
+
+  const SectionHeader = ({ children, color = C.gold }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+      <span style={{
+        fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700,
+        letterSpacing: 2.5, textTransform: "uppercase", color, whiteSpace: "nowrap",
+      }}>{children}</span>
+      <div style={{ flex: 1, height: 1, background: `${color}22` }} />
+    </div>
+  );
 
   return (
-    <div style={{ padding: "16px 16px 120px", animation: "fadeIn 0.3s ease", minHeight: "100vh", position: "relative" }}>
-      {/* Parchment background */}
+    <div style={{
+      padding: "16px 18px 120px", animation: "fadeIn 0.3s ease",
+      minHeight: "100vh", position: "relative", background: C.bg,
+    }}>
+
+      {/* CSS-only background: radial warm glow + faint grid */}
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "100%", maxWidth: 430, height: "100vh",
-        backgroundImage: "url(/quest-map.png)", backgroundSize: "cover", backgroundPosition: "center",
-        opacity: 0.85, pointerEvents: "none", zIndex: 0,
-      }} />
+        pointerEvents: "none", zIndex: 0,
+        background: `
+          radial-gradient(ellipse 80% 50% at 50% 20%, rgba(201, 168, 76, 0.04) 0%, transparent 70%),
+          radial-gradient(ellipse 60% 40% at 30% 80%, rgba(74, 106, 148, 0.03) 0%, transparent 60%)
+        `,
+      }}>
+        {/* Subtle grid pattern via repeating gradient */}
+        <div style={{
+          width: "100%", height: "100%", opacity: 0.025,
+          backgroundImage: `
+            linear-gradient(rgba(201, 168, 76, 0.4) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(201, 168, 76, 0.4) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }} />
+      </div>
 
       <div style={{ position: "relative", zIndex: 1 }}>
+
         {/* Header */}
         <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12,
-          padding: "10px 14px", borderRadius: 12,
-          background: "rgba(60, 40, 20, 0.7)", backdropFilter: "blur(8px)",
-          border: "1px solid rgba(90, 60, 30, 0.5)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: 14, paddingBottom: 14,
+          borderBottom: `1px solid ${C.border}`,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 28 }}>{cls.emoji}</span>
+            <span style={{ fontSize: 24 }}>{cls.emoji}</span>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#f5e6d0", fontFamily: "'Cinzel', serif" }}>Level {playerLevel} {cls.title}</div>
-              <div style={{ fontSize: 12, color: "#d4a050", fontWeight: 600, letterSpacing: 1 }}>RANK: {rank.toUpperCase()}</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>Level {playerLevel} {cls.title}</div>
+              <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 500, letterSpacing: 1, textTransform: "uppercase" }}>{rank}</div>
             </div>
           </div>
+          <div style={{ fontSize: 11, color: C.textDim }}>{completedCount}/5 today</div>
         </div>
 
-        {/* ═══ TODAY'S BANNER — meditation title after completion ═══ */}
+        {/* Meditation banner */}
         {meditationComplete && meditationTitle && (
           <div style={{
-            padding: "12px 16px", borderRadius: 12, marginBottom: 12,
-            background: "rgba(30, 40, 70, 0.8)", backdropFilter: "blur(8px)",
-            border: "1px solid rgba(42, 82, 152, 0.4)",
-            textAlign: "center",
+            padding: "14px 18px", marginBottom: 14, borderRadius: 12,
+            background: C.blueFaint, borderLeft: `3px solid ${C.blue}`,
           }}>
-            <div style={{ fontSize: 10, color: "#5b8fd9", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
-              {"\u{1F4DC}"} Today's Meditation
-            </div>
             <div style={{
-              fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700,
-              color: "#c8d8f0", fontStyle: "italic", lineHeight: 1.4,
+              fontSize: 10, color: C.blue, fontWeight: 600, letterSpacing: 2,
+              textTransform: "uppercase", marginBottom: 4,
+            }}>Today's Meditation</div>
+            <div style={{
+              fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 600,
+              color: C.text, fontStyle: "italic",
             }}>"{meditationTitle}"</div>
           </div>
         )}
@@ -83,173 +102,122 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
         {/* Streaks */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "8px 12px", borderRadius: 10, marginBottom: 16,
-          background: "rgba(60, 40, 20, 0.6)", backdropFilter: "blur(8px)",
-          border: "1px solid rgba(90, 60, 30, 0.4)",
+          marginBottom: 20, padding: "0 2px",
         }}>
-          <span style={{ fontSize: 10, color: "#d4a050", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Streaks</span>
-          <div style={{ display: "flex", gap: 12 }}>
-            {streakIcons.map((s, i) => {
+          <span style={{ fontSize: 10, color: C.textDim, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase" }}>Streaks</span>
+          <div style={{ display: "flex", gap: 14 }}>
+            {streakKeys.map((s, i) => {
               const count = ritualStreaks[s.name] || 0;
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <span style={{ fontSize: 14 }}>{s.emoji}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", color: count > 0 ? "#d4a050" : "#f5e6d088" }}>{count}</span>
+                  <span style={{ fontSize: 13 }}>{s.emoji}</span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+                    color: count > 0 ? C.gold : C.textDim,
+                  }}>{count}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* ═══ DAILY MEDITATION — BLUE ACCENTED ═══ */}
+        {/* Daily Meditation */}
         {todayMeditation && (
-          <div style={{
-            marginBottom: 16, padding: "16px 14px", borderRadius: 14,
-            background: meditationComplete ? doneRow : parchCard,
-            border: `1px solid ${meditationComplete ? doneBorder : parchCardBorder}`,
-            borderLeft: "4px solid #2a5298",
-          }}>
-            <div style={{
-              fontSize: 13, fontWeight: 700, color: "#2a5298", letterSpacing: 1.5,
-              textTransform: "uppercase", marginBottom: 10, fontFamily: "'Cinzel', serif",
-            }}>Daily Meditation</div>
-            <div onClick={() => { if (!meditationComplete) onOpenMeditation?.(); }} style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "12px 14px", borderRadius: 10,
-              background: meditationComplete ? doneRow : parchRow,
-              border: `1px solid ${meditationComplete ? doneBorder : parchRowBorder}`,
-              cursor: meditationComplete ? "default" : "pointer",
-              transition: "all 0.3s ease",
-            }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                border: `2px solid ${meditationComplete ? "#2d6a30" : "#2a5298"}`,
-                background: meditationComplete ? "#2d6a30" : "rgba(42, 82, 152, 0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {meditationComplete && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{"\u2713"}</span>}
+          <div style={{ marginBottom: 24 }}>
+            <SectionHeader color={C.blue}>Daily Meditation</SectionHeader>
+            <div
+              onClick={() => { if (!meditationComplete) onOpenMeditation?.(); }}
+              style={{
+                padding: "16px 18px", borderRadius: 12, cursor: meditationComplete ? "default" : "pointer",
+                background: meditationComplete ? C.greenFaint : C.surface,
+                border: `1px solid ${meditationComplete ? C.green + "33" : C.border}`,
+                transition: "all 0.2s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 22, opacity: meditationComplete ? 0.4 : 1 }}>{todayMeditation.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: 15, fontWeight: 600,
+                    color: meditationComplete ? C.textDim : C.text,
+                  }}>{todayMeditation.title}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{todayMeditation.prompt}</div>
+                </div>
+                {meditationComplete ? (
+                  <span style={{ color: C.green, fontSize: 18 }}>{"\u2713"}</span>
+                ) : (
+                  <div style={{
+                    padding: "7px 18px", borderRadius: 20,
+                    background: C.blue, color: "#fff",
+                    fontSize: 13, fontWeight: 600,
+                  }}>Reflect</div>
+                )}
               </div>
-              <span style={{ fontSize: 20 }}>{todayMeditation.emoji}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 14, fontWeight: 600, color: meditationComplete ? inkFaint : ink,
-                  textDecoration: meditationComplete ? "line-through" : "none",
-                }}>{todayMeditation.title}</div>
-                <div style={{ fontSize: 11, color: inkLight, marginTop: 1 }}>{todayMeditation.prompt}</div>
-              </div>
-              {!meditationComplete ? (
-                <div style={{
-                  padding: "6px 14px", borderRadius: 8, border: "none",
-                  background: "linear-gradient(135deg, #2a5298, #1e3f7a)",
-                  color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
-                  boxShadow: "0 2px 8px rgba(42, 82, 152, 0.4)",
-                  flexShrink: 0,
-                }}>Reflect</div>
-              ) : (
-                <span style={{ color: "#2d6a30", fontSize: 18, flexShrink: 0 }}>{"\u2713"}</span>
-              )}
             </div>
-            {!meditationComplete && (
-              <div style={{ fontSize: 10, color: inkFaint, fontStyle: "italic", marginTop: 8, textAlign: "center" }}>
-                {"\u2728"} Awards a chest with double rare/epic chance
-              </div>
-            )}
           </div>
         )}
 
-        {/* ═══ THE FIVE — GREEN ACCENTED ═══ */}
-        <div style={{
-          marginBottom: 20, padding: "16px 14px", borderRadius: 14,
-          background: parchCard, border: `1px solid ${parchCardBorder}`,
-          borderLeft: "4px solid #2d6a30",
-        }}>
-          <div style={{
-            fontSize: 13, fontWeight: 700, color: "#2d6a30", letterSpacing: 1.5,
-            textTransform: "uppercase", marginBottom: 12, fontFamily: "'Cinzel', serif",
-          }}>The Five {"\u2014"} Daily Rituals</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {/* The Five — Daily Rituals */}
+        <div style={{ marginBottom: 24 }}>
+          <SectionHeader color={C.green}>The Five</SectionHeader>
+          <div>
             {rituals.map((r, i) => (
               <div key={i} style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "12px 14px", borderRadius: 10,
-                background: r.done ? doneRow : parchRow,
-                border: `1px solid ${r.done ? doneBorder : parchRowBorder}`,
-                transition: "all 0.3s ease",
+                display: "flex", alignItems: "center", gap: 14,
+                padding: "14px 4px",
+                borderBottom: i < rituals.length - 1 ? `1px solid ${C.border}` : "none",
+                opacity: r.done ? 0.4 : 1,
+                transition: "opacity 0.3s ease",
               }}>
-                <div style={{
-                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                  border: `2px solid ${r.done ? "#2d6a30" : "#8b6c42"}`,
-                  background: r.done ? "#2d6a30" : "rgba(139, 108, 66, 0.15)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  {r.done && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{"\u2713"}</span>}
+                <span style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0 }}>{r.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{r.label}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>{r.desc}</div>
                 </div>
-                <span style={{ fontSize: 18 }}>{r.emoji}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: r.done ? inkFaint : ink, textDecoration: r.done ? "line-through" : "none" }}>{r.label}</div>
-                  <div style={{ fontSize: 11, color: inkLight, marginTop: 1 }}>{r.desc}</div>
-                </div>
-                {!r.done ? (
-                  <button onClick={() => onOpenRitual(r)} style={{
-                    padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                    background: "linear-gradient(135deg, #2d6a30, #1a5c1e)",
-                    color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
-                    boxShadow: "0 2px 8px rgba(45, 106, 48, 0.4)", flexShrink: 0,
-                  }}>Start</button>
+                {r.done ? (
+                  <span style={{ color: C.green, fontSize: 18, flexShrink: 0 }}>{"\u2713"}</span>
                 ) : (
-                  <span style={{ color: "#2d6a30", fontSize: 18, flexShrink: 0 }}>{"\u2713"}</span>
+                  <button onClick={() => onOpenRitual(r)} style={{
+                    padding: "7px 20px", borderRadius: 20, border: "none", cursor: "pointer",
+                    background: C.green, color: "#fff",
+                    fontSize: 13, fontWeight: 600, flexShrink: 0,
+                  }}>Start</button>
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* ═══ WEEKLY QUESTS — PURPLE ACCENTED ═══ */}
-        <div style={{
-          padding: "16px 14px", borderRadius: 14,
-          background: parchCard, border: `1px solid ${parchCardBorder}`,
-          borderLeft: "4px solid #5b3a8c",
-        }}>
-          <div style={{
-            fontSize: 13, fontWeight: 700, color: "#5b3a8c", letterSpacing: 1.5,
-            textTransform: "uppercase", marginBottom: 12, fontFamily: "'Cinzel', serif",
-          }}>Weekly Quests</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Weekly Quests */}
+        <div>
+          <SectionHeader color={C.purple}>Weekly</SectionHeader>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {weeklyQuests.map((q, i) => {
               const done = q.progress >= q.target;
-              const inProgress = q.progress > 0 && !done;
-              const statusLabel = done ? "Conquered" : inProgress ? "In Progress" : "Not Started";
-              const statusBg = done ? "rgba(45, 106, 48, 0.2)" : inProgress ? "rgba(91, 58, 140, 0.15)" : "rgba(139, 108, 66, 0.15)";
-              const statusText = done ? "#2d6a30" : inProgress ? "#5b3a8c" : inkFaint;
+              const pct = Math.min((q.progress / q.target) * 100, 100);
               return (
                 <div key={i} style={{
-                  padding: "14px 16px", borderRadius: 10,
-                  background: done ? doneRow : parchRow,
-                  border: `1px solid ${done ? doneBorder : parchRowBorder}`,
+                  padding: "14px 16px", borderRadius: 12,
+                  background: done ? C.greenFaint : C.surface,
+                  border: `1px solid ${done ? C.green + "33" : C.border}`,
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: done ? "#2d6a30" : ink }}>{q.name}</span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 600, color: statusText,
-                          padding: "2px 8px", borderRadius: 6, background: statusBg, letterSpacing: 0.3,
-                        }}>{statusLabel}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: inkLight }}>{q.desc}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: done ? C.green : C.text }}>{q.name}</div>
+                      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{q.desc}</div>
                     </div>
-                    <div style={{ textAlign: "right", minWidth: 60 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#5b3a8c" }}>+{q.xp} XP</div>
-                      <div style={{ fontSize: 11, color: "#8b6c42" }}>+{q.gold} {"\u{1FA99}"}</div>
-                    </div>
+                    <span style={{
+                      fontSize: 12, fontWeight: 600, fontFamily: "monospace",
+                      color: done ? C.green : C.textMuted,
+                    }}>{q.progress}/{q.target}</span>
                   </div>
-                  <div style={{ height: 4, background: "rgba(139, 108, 66, 0.2)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: 3, background: C.surfaceLight, borderRadius: 2, overflow: "hidden" }}>
                     <div style={{
-                      width: `${Math.min((q.progress / q.target) * 100, 100)}%`, height: "100%", borderRadius: 2,
-                      background: done ? "#2d6a30" : "#5b3a8c", transition: "width 0.5s ease",
+                      width: `${pct}%`, height: "100%", borderRadius: 2,
+                      background: done ? C.green : C.purple,
+                      transition: "width 0.5s ease",
                     }} />
                   </div>
-                  <div style={{ fontSize: 11, color: inkFaint, marginTop: 4 }}>{q.progress} / {q.target} this week</div>
                 </div>
               );
             })}
