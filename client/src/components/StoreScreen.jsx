@@ -3,33 +3,14 @@ import { C } from '../constants';
 import { ITEMS, SLOTS, RARITIES, RANKS, getItem } from '../equipmentData';
 import { STORE_CHESTS, rollChest } from '../chestSystem';
 
+// ═══════════════════════════════════════
+// MARK.ET — THE ANONYMOUS TRADER
+// ═══════════════════════════════════════
+
 const T = "#33cc66";
 const TD = "#1a7a3a";
 const TBG = "rgba(51, 204, 102, 0.04)";
 const MONO = "'Courier New', 'Consolas', monospace";
-
-const OCTOPUS = [
-  "                  _,-'`'-._                ",
-  "               ,-'    $    '-,             ",
-  "             ,'    .-\"\"\"-,    ',           ",
-  "            /    ,'       ',    \\          ",
-  "           ;    ;   (0) (0)  ;    ;        ",
-  "           |   |      /\\     |   |        ",
-  "           ;    ;    '--'   ;    ;         ",
-  "            \\    '-,_____,-'    /          ",
-  "         ,---'-.    \\   /    .-'---,       ",
-  "        /  ;    '-._|||_.-'    ;  \\      ",
-  "       /  / \\      |   |      / \\  \\     ",
-  "      /  /   \\    /|   |\\    /   \\  \\    ",
-  "     ;  ;     \\  / |   | \\  /     ;  ;    ",
-  "     |  |      \\/ /|   |\\ \\/      |  |    ",
-  "     ;  ;      ; / |   | \\ ;      ;  ;    ",
-  "      \\  \\    / /  |   |  \\ \\    /  /     ",
-  "       \\  \\  / /  _|   |_  \\ \\  /  /      ",
-  "        '-._\\/ / -'       '- \\ \\/-.'       ",
-  "            '-.\\             /.-'          ",
-  "                '-.______.-'               ",
-].join('\n');
 
 const MARKET_PASSAGES = [
   "The market doesn't care how hard your week was.\nIt asks one question: did you produce?\nGet back to work.\n\nI have inventory to move.",
@@ -67,10 +48,12 @@ const SLOT_MACHINES = [
   { id: "mystery", price: 150, winSymbol: "?", label: "150g", color: "#f59e0b" },
 ];
 
-function useTypewriter(text, speed = 20, startDelay = 600) {
+// ── Typewriter hook ──
+function useTypewriter(text, speed = 20, startDelay = 0, active = true) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
   useEffect(() => {
+    if (!active) { setDisplayed(""); setDone(false); return; }
     setDisplayed(""); setDone(false);
     const dt = setTimeout(() => {
       let i = 0;
@@ -78,10 +61,11 @@ function useTypewriter(text, speed = 20, startDelay = 600) {
       return () => clearInterval(iv);
     }, startDelay);
     return () => clearTimeout(dt);
-  }, [text, speed, startDelay]);
+  }, [text, speed, startDelay, active]);
   return { displayed, done };
 }
 
+// ── Slot machine hook ──
 function useSlotMachine(spinning, chestId) {
   const [reels, setReels] = useState(['#', '#', '#']);
   const [locked, setLocked] = useState([false, false, false]);
@@ -105,6 +89,7 @@ function useSlotMachine(spinning, chestId) {
   return { reels, locked, phase };
 }
 
+// ── Utility ──
 function getDaySeed(userId = "") { return (new Date().toISOString().split("T")[0] + userId).split("").reduce((a, c) => a + c.charCodeAt(0), 0); }
 function seededRandom(seed) { let s = seed; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return (s >>> 0) / 0x7fffffff; }; }
 function getWeekSeed(userId = "") { const n = new Date(); return `${n.getFullYear()}-W${Math.floor((n - new Date(n.getFullYear(), 0, 1)) / 604800000)}-${userId}`.split("").reduce((a, c) => a + c.charCodeAt(0), 0); }
@@ -120,7 +105,65 @@ function generateWeeklyStock(playerLevel, userId, ownedIds = []) {
   return stock;
 }
 
+// ═══ BOOT SEQUENCE ═══
+const BOOT_LINES = [
+  { text: ">> contacting seller", delay: 0, dots: true },
+  { text: ">> connection established", delay: 3500 },
+  { text: ">> Mark.et has entered the chat", delay: 4500 },
+  { text: ">> location: BLOCKED", delay: 5500 },
+];
+const BOOT_TOTAL = 6500; // ms before main screen shows
+
+function BootSequence({ onComplete }) {
+  const [visibleLines, setVisibleLines] = useState([]);
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    const timers = BOOT_LINES.map((line, i) =>
+      setTimeout(() => setVisibleLines(prev => [...prev, i]), line.delay)
+    );
+    const completeTimer = setTimeout(onComplete, BOOT_TOTAL);
+    return () => { timers.forEach(clearTimeout); clearTimeout(completeTimer); };
+  }, []);
+
+  // Animate dots for first line
+  useEffect(() => {
+    const iv = setInterval(() => setDotCount(prev => (prev + 1) % 4), 800);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#050505", display: "flex",
+      flexDirection: "column", alignItems: "center", justifyContent: "center",
+      padding: 24, position: "relative",
+    }}>
+      {/* Scanlines */}
+      <div style={{ position: "fixed", inset: 0, opacity: 0.03, pointerEvents: "none", backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51,204,102,0.15) 2px, rgba(51,204,102,0.15) 4px)" }} />
+      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 320 }}>
+        {BOOT_LINES.map((line, i) => {
+          if (!visibleLines.includes(i)) return null;
+          const isFirst = i === 0;
+          return (
+            <div key={i} style={{
+              fontFamily: MONO, fontSize: 13, color: i === 2 ? T : TD,
+              marginBottom: 10, animation: "fadeIn 0.3s ease",
+              fontWeight: i === 2 ? 700 : 400,
+            }}>
+              {isFirst ? `${line.text} ${'.'.repeat(dotCount)}` : line.text}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══ MAIN COMPONENT ═══
 export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory = [], userId = "", onBuy, onChestReward, inventoryCap = 50 }) {
+  const [booted, setBooted] = useState(false);
+  const [showGreeting, setShowGreeting] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [inspectItem, setInspectItem] = useState(null);
   const [buyConfirm, setBuyConfirm] = useState(null);
   const [justBought, setJustBought] = useState(null);
@@ -132,7 +175,10 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   const weeklyStock = useMemo(() => generateWeeklyStock(playerLevel, userId, inventory), [playerLevel, userId, inventory]);
   const isFull = inventory.length >= inventoryCap;
   const todayPassage = useMemo(() => MARKET_PASSAGES[getDaySeed(userId) % MARKET_PASSAGES.length], [userId]);
-  const greeting = useTypewriter(todayPassage, 20, 1000);
+  const passage = useTypewriter(todayPassage, 18, 1500, showGreeting);
+
+  // Trigger greeting typewriter after boot
+  useEffect(() => { if (booted) { const t = setTimeout(() => setShowGreeting(true), 800); return () => clearTimeout(t); } }, [booted]);
 
   const handlePull = (machine) => {
     if (playerGold < machine.price || slotSpinning) return;
@@ -149,104 +195,124 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
     setTimeout(() => setJustBought(null), 2000);
   };
 
+  // ── BOOT SCREEN ──
+  if (!booted) return <BootSequence onComplete={() => setBooted(true)} />;
+
+  // ── MAIN TERMINAL ──
   return (
-    <div style={{ padding: "0 0 120px", minHeight: "100vh", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-      {/* Scanlines */}
-      <div style={{ position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, height: "100vh", pointerEvents: "none", zIndex: 0, opacity: 0.03, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51,204,102,0.15) 2px, rgba(51,204,102,0.15) 4px)" }} />
+    <div style={{ padding: "0 0 120px", minHeight: "100vh", background: "#050505", animation: "fadeIn 0.5s ease", position: "relative" }}>
+      {/* Scanline overlay — FULL SCREEN */}
+      <div style={{ position: "fixed", inset: 0, opacity: 0.03, pointerEvents: "none", zIndex: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51,204,102,0.15) 2px, rgba(51,204,102,0.15) 4px)" }} />
 
-      <div style={{ position: "relative", zIndex: 1 }}>
+      {/* Full terminal container — green tint extends through everything */}
+      <div style={{ position: "relative", zIndex: 1, background: TBG, minHeight: "100vh", padding: "24px 18px 40px" }}>
 
-        {/* ═══ MARK.ET ZONE ═══ */}
-        <div style={{ padding: "24px 18px 20px", background: TBG, borderBottom: `1px solid ${TD}33` }}>
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 700, color: T, letterSpacing: 4 }}>Mark.et</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 2, marginTop: 4 }}>ANONYMOUS TRADER {"\u2022"} LOCATION UNKNOWN</div>
+        {/* ═══ MARK.ET HEADER ═══ */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 700, color: T, letterSpacing: 4 }}>Mark.et</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 2, marginTop: 4 }}>ANONYMOUS TRADER {"\u2022"} LOCATION UNKNOWN</div>
+        </div>
+
+        {/* Octopus image */}
+        <div style={{ textAlign: "center", margin: "16px 0 20px" }}>
+          {imgError ? (
+            <div style={{ fontSize: 56, opacity: 0.5 }}>{"\u{1F419}"}</div>
+          ) : (
+            <img
+              src="/market-octopus.png" alt="Mark.et"
+              onError={() => setImgError(true)}
+              style={{ width: 120, height: 120, objectFit: "contain", opacity: 0.6, filter: "brightness(1.2) sepia(1) hue-rotate(80deg) saturate(3)" }}
+            />
+          )}
+        </div>
+
+        {/* Salutation sequence */}
+        <div style={{ fontFamily: MONO, fontSize: 11, color: TD, marginBottom: 6 }}>{">> welcome . . ."}</div>
+        <div style={{ fontFamily: MONO, fontSize: 11, color: TD, marginBottom: 6 }}>{">> market conditions: unchanged"}</div>
+        <div style={{ fontFamily: MONO, fontSize: 11, color: T, marginBottom: 16 }}>{">> you: variable"}</div>
+
+        {/* Passage box */}
+        <div style={{ padding: "14px 16px", background: "rgba(51, 204, 102, 0.03)", border: `1px solid ${TD}22`, marginBottom: 24 }}>
+          <div style={{ fontFamily: MONO, fontSize: 12, color: T, lineHeight: 1.8, whiteSpace: "pre-wrap", minHeight: 80 }}>
+            {showGreeting && (
+              <>
+                <span>{passage.displayed}</span>
+                {!passage.done && <span style={{ animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
+              </>
+            )}
           </div>
+        </div>
 
-          <div style={{ textAlign: "center", margin: "16px 0 20px" }}>
-            <pre style={{ fontFamily: MONO, fontSize: 9, lineHeight: 1.15, color: T, margin: 0, display: "inline-block", textAlign: "left", opacity: 0.55 }}>{OCTOPUS}</pre>
+        {/* ═══ SLOT MACHINES ═══ */}
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 10 }}>{">> pull_lever()"}</div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+          {SLOT_MACHINES.map(m => {
+            const canAfford = playerGold >= m.price;
+            return (
+              <div key={m.id} onClick={() => { if (canAfford && !slotSpinning) handlePull(m); }} style={{
+                flex: 1, padding: "14px 6px", cursor: canAfford && !slotSpinning ? "pointer" : "default",
+                background: "transparent", border: `1px solid ${canAfford ? m.color + '55' : TD + '22'}`,
+                opacity: canAfford ? 1 : 0.25, textAlign: "center",
+              }}>
+                <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: m.color, lineHeight: 1, marginBottom: 6 }}>{m.winSymbol}</div>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: TD }}>{m.label}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ═══ SEPARATOR ═══ */}
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD, opacity: 0.4, marginBottom: 20 }}>{"\u2500".repeat(44)}</div>
+
+        {/* ═══ YOUR INVENTORY / STOCK ═══ */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${TD}22` }}>
+          <div style={{ fontFamily: MONO, fontSize: 11, color: TD, letterSpacing: 1 }}>{">> your_inventory"}</div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <span style={{ fontFamily: MONO, fontSize: 11, color: isFull ? "#ef4444" : inventory.length >= inventoryCap * 0.8 ? "#f59e0b" : TD }}>[{inventory.length}/{inventoryCap}]</span>
+            <span style={{ fontFamily: MONO, fontSize: 11, color: T }}>[{playerGold}g]</span>
           </div>
+        </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginBottom: 16 }}>
-            <div>{">> connection established"}</div>
-            <div>{">> status: active"}</div>
-          </div>
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 4 }}>{">> this_weeks_stock()"}</div>
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginBottom: 12 }}>{">> refreshes: monday"}</div>
 
-          <div style={{ padding: "14px 16px", background: "rgba(51, 204, 102, 0.03)", border: `1px solid ${TD}22`, marginBottom: 16 }}>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: T, lineHeight: 1.8, whiteSpace: "pre-wrap", minHeight: 80 }}>
-              <span>{greeting.displayed}</span>
-              {!greeting.done && <span style={{ animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
-            </div>
-          </div>
-
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 10 }}>{">> pull_lever()"}</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {SLOT_MACHINES.map(m => {
-              const canAfford = playerGold >= m.price;
+        {weeklyStock.length === 0 ? (
+          <div style={{ fontFamily: MONO, fontSize: 12, color: TD, padding: "16px 0" }}>{">> stock depleted. come back monday."}</div>
+        ) : (
+          <div>
+            {weeklyStock.map((item, i) => {
+              const rarity = RARITIES[item.rarity];
+              const canAfford = playerGold >= item.price;
+              const wasBought = justBought === item.id;
               return (
-                <div key={m.id} onClick={() => { if (canAfford && !slotSpinning) handlePull(m); }} style={{
-                  flex: 1, padding: "14px 6px", cursor: canAfford && !slotSpinning ? "pointer" : "default",
-                  background: "transparent", border: `1px solid ${canAfford ? m.color + '55' : TD + '22'}`,
-                  opacity: canAfford ? 1 : 0.25, textAlign: "center",
+                <div key={item.id} onClick={() => { if (!wasBought) setInspectItem(item); }} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "12px 0",
+                  borderBottom: i < weeklyStock.length - 1 ? `1px solid ${TD}18` : "none",
+                  cursor: wasBought ? "default" : "pointer", opacity: wasBought ? 0.2 : 1,
                 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: m.color, lineHeight: 1, marginBottom: 6 }}>{m.winSymbol}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: TD }}>{m.label}</div>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: TD, flexShrink: 0 }}>{">"}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: rarity.color }}>{item.name}</div>
+                    <div style={{ display: "flex", gap: 6, marginTop: 3 }}>
+                      {Object.entries(item.stats).map(([stat, val]) => (
+                        <span key={stat} style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: val > 0 ? T : "#ef4444" }}>{val > 0 ? "+" : ""}{val}{stat.toUpperCase()}</span>
+                      ))}
+                    </div>
+                  </div>
+                  {wasBought ? (
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: T }}>SOLD</span>
+                  ) : (
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: canAfford ? T : TD }}>{item.price}g</span>
+                  )}
                 </div>
               );
             })}
           </div>
-        </div>
+        )}
 
-        {/* ═══ YOUR WARES ZONE ═══ */}
-        <div style={{ padding: "20px 18px 0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${TD}22` }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: TD, letterSpacing: 1 }}>{">> your_inventory"}</div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: isFull ? "#ef4444" : inventory.length >= inventoryCap * 0.8 ? "#f59e0b" : TD }}>[{inventory.length}/{inventoryCap}]</span>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: T }}>[{playerGold}g]</span>
-            </div>
-          </div>
-
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 4 }}>{">> this_weeks_stock()"}</div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginBottom: 12 }}>{">> refreshes: monday"}</div>
-
-          {weeklyStock.length === 0 ? (
-            <div style={{ fontFamily: MONO, fontSize: 12, color: TD, padding: "16px 0" }}>{">> stock depleted. come back monday."}</div>
-          ) : (
-            <div>
-              {weeklyStock.map((item, i) => {
-                const rarity = RARITIES[item.rarity];
-                const canAfford = playerGold >= item.price;
-                const wasBought = justBought === item.id;
-                return (
-                  <div key={item.id} onClick={() => { if (!wasBought) setInspectItem(item); }} style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "12px 0",
-                    borderBottom: i < weeklyStock.length - 1 ? `1px solid ${TD}18` : "none",
-                    cursor: wasBought ? "default" : "pointer", opacity: wasBought ? 0.2 : 1,
-                  }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: TD, flexShrink: 0 }}>{">"}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: rarity.color }}>{item.name}</div>
-                      <div style={{ display: "flex", gap: 6, marginTop: 3 }}>
-                        {Object.entries(item.stats).map(([stat, val]) => (
-                          <span key={stat} style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: val > 0 ? T : "#ef4444" }}>{val > 0 ? "+" : ""}{val}{stat.toUpperCase()}</span>
-                        ))}
-                      </div>
-                    </div>
-                    {wasBought ? (
-                      <span style={{ fontFamily: MONO, fontSize: 10, color: T }}>SOLD</span>
-                    ) : (
-                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: canAfford ? T : TD }}>{item.price}g</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div style={{ height: 16 }} />
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD }}>{">> end_of_transmission"}</div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginTop: 4, animation: "pulse 1.5s ease infinite" }}>{"\u2588"}</div>
-        </div>
+        <div style={{ height: 16 }} />
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD }}>{">> end_of_transmission"}</div>
+        <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginTop: 4, animation: "pulse 1.5s ease infinite" }}>{"\u2588"}</div>
       </div>
 
       {/* ═══ SLOT MACHINE MODAL ═══ */}
@@ -262,8 +328,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
                       <div key={i} style={{
                         width: 60, height: 72, display: "flex", alignItems: "center", justifyContent: "center",
                         border: `1px solid ${locked[i] ? T : TD + '33'}`,
-                        background: locked[i] ? `${T}0a` : "transparent",
-                        transition: "all 0.15s ease",
+                        background: locked[i] ? `${T}0a` : "transparent", transition: "all 0.15s ease",
                       }}>
                         <span style={{ fontFamily: MONO, fontSize: 36, fontWeight: 700, color: locked[i] ? T : TD }}>{sym}</span>
                       </div>
