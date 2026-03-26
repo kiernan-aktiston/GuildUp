@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { C, CLASSES, getRank } from '../constants';
+import { RARITIES, SLOTS } from '../equipmentData';
+import { CHEST_TYPES, rollChest } from '../chestSystem';
 
 const SHIELD_SHAPES = ["shield", "circle", "diamond", "banner"];
 const CREST_COLORS = [
@@ -50,7 +52,7 @@ function GuildCrest({ crest = {}, size = 80 }) {
 const MAX_MEMBERS = 8;
 const WEEKLY_CHEST_THRESHOLD = 15;
 
-export default function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJoinByCode, onLeaveGuild }) {
+export default function GuildScreen({ userId, userGuild, guildMembers = [], onCreateGuild, onJoinByCode, onLeaveGuild, playerLevel = 1, inventory = [], onClaimGuildChest }) {
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -62,6 +64,8 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
   const [crestColor1, setCrestColor1] = useState("#3b82f6");
   const [crestColor2, setCrestColor2] = useState("#1e3a5f");
   const [crestEmblem, setCrestEmblem] = useState("⚔️");
+  const [chestClaiming, setChestClaiming] = useState(false);
+  const [chestReward, setChestReward] = useState(null);
 
   const inputStyle = {
     width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 14,
@@ -292,11 +296,22 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
             </span>
           </div>
           {chestUnlocked && (
-            <div style={{
-              marginTop: 10, padding: "8px 12px", borderRadius: 8, textAlign: "center",
-              background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)",
-            }}>
-              <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 600 }}>🎉 Every member earns an Epic Chest this week!</span>
+            <div style={{ marginTop: 10, textAlign: "center" }}>
+              <button onClick={() => {
+                setChestClaiming(true);
+                const result = rollChest(CHEST_TYPES.guild, playerLevel, inventory);
+                setTimeout(() => {
+                  setChestReward(result);
+                  setChestClaiming(false);
+                  onClaimGuildChest?.(result);
+                }, 1000);
+              }} style={{
+                width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                cursor: "pointer", fontSize: 15, fontWeight: 700,
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                color: "#000",
+                boxShadow: "0 4px 16px rgba(245, 158, 11, 0.4)",
+              }}>👑 Claim Guild Chest</button>
             </div>
           )}
         </div>
@@ -397,6 +412,60 @@ export default function GuildScreen({ userId, userGuild, guildMembers = [], onCr
                   background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 13,
                 }}>Nevermind</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chest Claiming Animation */}
+        {chestClaiming && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ textAlign: "center", animation: "fadeIn 0.3s ease" }}>
+              <div style={{ fontSize: 80, marginBottom: 16, animation: "pulse 0.6s ease infinite" }}>👑</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.gold }}>Opening Guild Chest...</div>
+            </div>
+          </div>
+        )}
+
+        {/* Chest Reward Reveal */}
+        {chestReward && !chestClaiming && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.3s ease", padding: 24 }}>
+            <div style={{ textAlign: "center", width: "100%", maxWidth: 320, animation: "fadeIn 0.5s ease" }}>
+              <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Guild Chest Reward</div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: C.gold, marginBottom: 8 }}>🪙 +{chestReward.gold}</div>
+              {chestReward.item ? (() => {
+                const rarity = RARITIES[chestReward.item.rarity];
+                const slot = SLOTS[chestReward.item.slot];
+                return (
+                  <>
+                    <div style={{ fontSize: 11, color: C.textDim, marginBottom: 12 }}>and an item...</div>
+                    <div style={{
+                      width: 80, height: 80, borderRadius: 20, margin: "0 auto 16px",
+                      background: rarity.bgColor, border: `3px solid ${rarity.color}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 40, boxShadow: `0 0 30px ${rarity.color}44`,
+                    }}>{slot.emoji}</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: rarity.color, marginBottom: 4 }}>{chestReward.item.name}</div>
+                    <div style={{ fontSize: 11, color: rarity.color, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                      {rarity.label} {slot.label}
+                    </div>
+                    <div style={{ padding: "10px", borderRadius: 10, background: C.surfaceLight, marginBottom: 20, display: "inline-flex", gap: 8 }}>
+                      {Object.entries(chestReward.item.stats).map(([stat, val]) => (
+                        <div key={stat} style={{ padding: "4px 8px", borderRadius: 6, background: val > 0 ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", textAlign: "center" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: val > 0 ? "#22c55e" : "#ef4444" }}>{val > 0 ? "+" : ""}{val}</div>
+                          <div style={{ fontSize: 8, color: C.textDim, textTransform: "uppercase" }}>{stat}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })() : (
+                <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 20, marginTop: 8 }}>No item this time. The gold is yours.</div>
+              )}
+              <button onClick={() => setChestReward(null)} style={{
+                padding: "14px 48px", borderRadius: 12, border: "none", cursor: "pointer",
+                background: chestReward.item ? `linear-gradient(135deg, ${RARITIES[chestReward.item.rarity].color}, ${RARITIES[chestReward.item.rarity].color}cc)` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+                color: "#000", fontSize: 15, fontWeight: 700,
+              }}>{chestReward.item ? "Nice!" : "Onward"}</button>
             </div>
           </div>
         )}

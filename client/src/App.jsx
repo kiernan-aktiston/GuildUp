@@ -19,7 +19,6 @@ import RallyAlliesFlow from "./components/RallyAlliesFlow";
 import ForgeTheBodyFlow from "./components/ForgeTheBodyFlow";
 import SharpenTheMindFlow from "./components/SharpenTheMindFlow";
 import MeditationScreen, { getTodayMeditation } from "./components/MeditationScreen";
-import { getItem as getEquipmentItem } from "./equipmentData";
 import StillTheSpiritFlow from "./components/StillTheSpiritFlow";
 import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
@@ -57,6 +56,7 @@ export default function App() {
   const [meditationComplete, setMeditationComplete] = useState(false);
   const [meditationTitle, setMeditationTitle] = useState("");
   const [showMeditation, setShowMeditation] = useState(false);
+  const [guildChestClaimed, setGuildChestClaimed] = useState("");
 
   // Weekly ritual counts (summed from Supabase for Mon-Sun)
   const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
@@ -149,11 +149,11 @@ export default function App() {
   const loadPlayerData = async (uid) => {
     try {
       const { data } = await supabase
-        .from("profiles").select("completed_articles, inventory, equipment, meditation_date, meditation_title").eq("id", uid).single();
+        .from("profiles").select("completed_articles, inventory, equipment, meditation_date, meditation_title, guild_chest_claimed").eq("id", uid).single();
       if (data?.completed_articles) setCompletedArticles(data.completed_articles);
       if (data?.inventory) setInventory(data.inventory);
       if (data?.equipment) setEquipment(prev => ({ ...prev, ...data.equipment }));
-      // Check if today's meditation is complete
+      if (data?.guild_chest_claimed) setGuildChestClaimed(data.guild_chest_claimed);
       const today = getLocalDate();
       if (data?.meditation_date === today) {
         setMeditationComplete(true);
@@ -567,10 +567,8 @@ export default function App() {
   };
 
   // ── EQUIPMENT HANDLERS ──
-  const INVENTORY_CAP = 50;
-
   const handleBuyItem = async (itemId, price) => {
-    if (inventory.includes(itemId) || playerGold < price || inventory.length >= INVENTORY_CAP) return;
+    if (inventory.includes(itemId) || playerGold < price) return;
     const newInventory = [...inventory, itemId];
     const newGold = playerGold - price;
     setInventory(newInventory);
@@ -578,23 +576,6 @@ export default function App() {
     if (userId) {
       saveProfile({ gold: newGold, inventory: newInventory });
     }
-  };
-
-  const handleSellItem = async (itemId) => {
-    if (!inventory.includes(itemId)) return;
-    // Can't sell equipped items
-    if (Object.values(equipment).includes(itemId)) return;
-    const item = getEquipmentItem(itemId);
-    if (!item) return;
-    const sellPrice = Math.floor(item.price * 0.35);
-    const newInventory = inventory.filter(id => id !== itemId);
-    const newGold = playerGold + sellPrice;
-    setInventory(newInventory);
-    setPlayerGold(newGold);
-    if (userId) {
-      saveProfile({ gold: newGold, inventory: newInventory });
-    }
-    return sellPrice;
   };
 
   const handleEquip = async (slot, itemId) => {
@@ -613,30 +594,54 @@ export default function App() {
     }
   };
 
-  // Daily meditation completion
-  const handleMeditationComplete = async (title, chestItem) => {
+  // Daily meditation completion — chestResult is { gold, item }
+  const handleMeditationComplete = async (title, chestResult) => {
     setMeditationComplete(true);
     setMeditationTitle(title);
     setShowMeditation(false);
 
-    // Add chest item to inventory if received
-    if (chestItem) {
-      const newInventory = [...inventory, chestItem.id];
+    const today = getLocalDate();
+    const updates = { meditation_date: today, meditation_title: title };
+
+    // Add gold
+    if (chestResult?.gold) {
+      setPlayerGold(prev => prev + chestResult.gold);
+      updates.gold = playerGold + (chestResult.gold || 0);
+    }
+
+    // Add item to inventory if received
+    if (chestResult?.item) {
+      const newInventory = [...inventory, chestResult.item.id];
       setInventory(newInventory);
-      if (userId) {
-        const today = getLocalDate();
-        saveProfile({
-          meditation_date: today,
-          meditation_title: title,
-          inventory: newInventory,
-        });
-      }
-    } else if (userId) {
-      const today = getLocalDate();
-      saveProfile({
-        meditation_date: today,
-        meditation_title: title,
-      });
+      updates.inventory = newInventory;
+    }
+
+    if (userId) saveProfile(updates);
+  };
+
+  // Store chest reward — deduct price, add gold back + optional item
+  const handleChestReward = async (price, goldReward, item) => {
+    let newGold = playerGold - price + goldReward;
+    let newInventory = [...inventory];
+    if (item) {
+      newInventory = [...newInventory, item.id];
+      setInventory(newInventory);
+    }
+    setPlayerGold(newGold);
+    if (userId) saveProfile({ gold: newGold, inventory: newInventory });
+  };
+
+  // Guild chest claim
+  const handleGuildChestClaim = async (chestResult) => {
+    let newGold = playerGold + (chestResult.gold || 0);
+    let newInventory = [...inventory];
+    if (chestResult.item) {
+      newInventory = [...newInventory, chestResult.item.id];
+      setInventory(newInventory);
+    }
+    setPlayerGold(newGold);
+    if (userId) {
+      saveProfile({ gold: newGold, inventory: newInventory, guild_chest_claimed: getLocalDate() });
     }
   };
 
@@ -836,11 +841,10 @@ export default function App() {
                     avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
                     inventory={inventory} equipment={equipment}
                     onEquip={handleEquip} onUnequip={handleUnequip}
-                    onSell={handleSellItem} inventoryCap={INVENTORY_CAP}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
-                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} userId={userId} onBuy={handleBuyItem} inventoryCap={INVENTORY_CAP} />}
+                {tab === "store" && <StoreScreen playerGold={playerGold} playerLevel={playerLevel} inventory={inventory} userId={userId} onBuy={handleBuyItem} onChestReward={handleChestReward} inventoryCap={INVENTORY_CAP} />}
                 {tab === "guild" && <GuildScreen
                   userId={userId}
                   onCreateGuild={handleCreateGuild}
@@ -848,6 +852,9 @@ export default function App() {
                   onLeaveGuild={handleLeaveGuild}
                   userGuild={userGuild}
                   guildMembers={guildMembers}
+                  playerLevel={playerLevel}
+                  inventory={inventory}
+                  onClaimGuildChest={handleGuildChestClaim}
                 />}
               </>
             )}

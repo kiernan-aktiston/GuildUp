@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { C } from "../constants";
-import { ITEMS, RARITIES, SLOTS, RANKS } from "../equipmentData";
+import { RARITIES, SLOTS } from "../equipmentData";
+import { CHEST_TYPES, rollChest } from "../chestSystem";
 
 // ═══════════════════════════════════════
 // 20 MEDITATION PROMPTS
@@ -34,43 +35,20 @@ export function getTodayMeditation(dateStr, userId = "") {
   return MEDITATION_PROMPTS[seed % MEDITATION_PROMPTS.length];
 }
 
-// Roll a chest reward (double rare/epic chance vs store)
-function rollMeditationChest(playerLevel, ownedIds = []) {
-  const relevantRanks = RANKS.filter(r => r.level <= playerLevel + 5);
-  const rank = relevantRanks[Math.floor(Math.random() * relevantRanks.length)] || RANKS[0];
-
-  // Double chance: 40% common, 40% rare, 20% epic
-  const roll = Math.random();
-  const rarity = roll < 0.4 ? "common" : roll < 0.8 ? "rare" : "epic";
-
-  let candidates = ITEMS.filter(i =>
-    i.levelReq === rank.level && i.rarity === rarity && !ownedIds.includes(i.id)
-  );
-  if (candidates.length === 0) {
-    candidates = ITEMS.filter(i => i.rarity === rarity && !ownedIds.includes(i.id));
-  }
-  if (candidates.length === 0) {
-    candidates = ITEMS.filter(i => !ownedIds.includes(i.id));
-  }
-  if (candidates.length === 0) return null;
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
 export default function MeditationScreen({ meditation, onBack, onComplete, playerLevel = 1, inventory = [] }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [step, setStep] = useState("write"); // write, chest, reveal
-  const [chestItem, setChestItem] = useState(null);
+  const [chestResult, setChestResult] = useState(null); // { gold, item }
 
   const meetsMin = body.length >= meditation.minChars;
   const hasTitle = title.trim().length > 0;
   const canSubmit = meetsMin && hasTitle;
 
   const handleSubmit = () => {
-    const item = rollMeditationChest(playerLevel, inventory);
-    setChestItem(item);
+    const result = rollChest(CHEST_TYPES.meditation, playerLevel, inventory);
+    setChestResult(result);
     setStep("chest");
-    // Brief delay for chest animation
     setTimeout(() => setStep("reveal"), 1000);
   };
 
@@ -200,30 +178,10 @@ export default function MeditationScreen({ meditation, onBack, onComplete, playe
   }
 
   // ── REVEAL ──
-  if (step === "reveal") {
-    if (!chestItem) {
-      return (
-        <div dir="ltr" style={{
-          minHeight: "100vh", display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          padding: "40px 24px", background: "rgba(0,0,0,0.9)",
-        }}>
-          <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease" }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>📜</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.gold, marginBottom: 8 }}>Meditation Complete</div>
-            <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 24 }}>You've claimed all available equipment. The meditation itself is the reward.</div>
-            <button onClick={() => onComplete(title, null)} style={{
-              padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: "linear-gradient(135deg, #2d6a30, #1a5c1e)",
-              color: "#fff", fontSize: 16, fontWeight: 700,
-            }}>Return</button>
-          </div>
-        </div>
-      );
-    }
-
-    const rarity = RARITIES[chestItem.rarity];
-    const slot = SLOTS[chestItem.slot];
+  if (step === "reveal" && chestResult) {
+    const hasItem = !!chestResult.item;
+    const rarity = hasItem ? RARITIES[chestResult.item.rarity] : null;
+    const slot = hasItem ? SLOTS[chestResult.item.slot] : null;
     return (
       <div dir="ltr" style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
@@ -231,38 +189,36 @@ export default function MeditationScreen({ meditation, onBack, onComplete, playe
         padding: "40px 24px", background: "rgba(0,0,0,0.9)",
       }}>
         <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease", maxWidth: 320 }}>
-          <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Meditation Complete — You received</div>
-          <div style={{
-            width: 80, height: 80, borderRadius: 20, margin: "0 auto 16px",
-            background: rarity.bgColor, border: `3px solid ${rarity.color}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 40, boxShadow: `0 0 30px ${rarity.color}44`,
-          }}>{slot.emoji}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: rarity.color, marginBottom: 4 }}>{chestItem.name}</div>
-          <div style={{
-            fontSize: 11, color: rarity.color, fontWeight: 600, letterSpacing: 1,
-            textTransform: "uppercase", marginBottom: 8,
-          }}>{rarity.label} {slot.label}</div>
-          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16, lineHeight: 1.5 }}>{chestItem.desc}</div>
-          <div style={{
-            padding: "10px", borderRadius: 10, background: C.surfaceLight,
-            marginBottom: 24, display: "inline-flex", gap: 8,
-          }}>
-            {Object.entries(chestItem.stats).map(([stat, val]) => (
-              <div key={stat} style={{
-                padding: "4px 8px", borderRadius: 6,
-                background: val > 0 ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
-                textAlign: "center",
-              }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: val > 0 ? "#22c55e" : "#ef4444" }}>{val > 0 ? "+" : ""}{val}</div>
-                <div style={{ fontSize: 8, color: C.textDim, textTransform: "uppercase" }}>{stat}</div>
+          <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Meditation Complete</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: C.gold, marginBottom: 8 }}>{"\u{1FA99}"} +{chestResult.gold}</div>
+
+          {hasItem ? (
+            <>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 12 }}>and an item...</div>
+              <div style={{
+                width: 80, height: 80, borderRadius: 20, margin: "0 auto 16px",
+                background: rarity.bgColor, border: `3px solid ${rarity.color}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 40, boxShadow: `0 0 30px ${rarity.color}44`,
+              }}>{slot.emoji}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: rarity.color, marginBottom: 4 }}>{chestResult.item.name}</div>
+              <div style={{ fontSize: 11, color: rarity.color, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{rarity.label} {slot.label}</div>
+              <div style={{ padding: "10px", borderRadius: 10, background: C.surfaceLight, marginBottom: 20, display: "inline-flex", gap: 8 }}>
+                {Object.entries(chestResult.item.stats).map(([stat, val]) => (
+                  <div key={stat} style={{ padding: "4px 8px", borderRadius: 6, background: val > 0 ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", textAlign: "center" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: val > 0 ? "#22c55e" : "#ef4444" }}>{val > 0 ? "+" : ""}{val}</div>
+                    <div style={{ fontSize: 8, color: C.textDim, textTransform: "uppercase" }}>{stat}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 20, marginTop: 8 }}>No item this time. The gold is yours.</div>
+          )}
           <div>
-            <button onClick={() => onComplete(title, chestItem)} style={{
+            <button onClick={() => onComplete(title, chestResult)} style={{
               padding: "16px 48px", borderRadius: 12, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${rarity.color}, ${rarity.color}cc)`,
+              background: hasItem ? `linear-gradient(135deg, ${rarity.color}, ${rarity.color}cc)` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
               color: "#000", fontSize: 15, fontWeight: 700,
             }}>Claim</button>
           </div>
