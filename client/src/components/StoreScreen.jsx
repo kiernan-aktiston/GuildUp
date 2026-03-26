@@ -1,18 +1,76 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { C } from '../constants';
 import { ITEMS, SLOTS, RARITIES, RANKS, getItem } from '../equipmentData';
-import { STORE_CHESTS, rollChest, getChestDescription } from '../chestSystem';
+import { STORE_CHESTS, rollChest } from '../chestSystem';
 
-const MERCHANT_LINES = [
-  "I've traveled far this week. See anything you like?",
-  "Gold weighs less when spent wisely.",
-  "These won't be here next week. Neither will I.",
-  "Every warrior needs an edge. I sell edges.",
-  "The road gives. The road takes. Today, I give.",
-  "You remind me of someone strong. They bought the good stuff too.",
-  "Choose carefully. Or don't. I get paid either way.",
-  "The chests? Even I don't know what's inside. That's the fun.",
+// ═══════════════════════════════════════
+// MARKET.IO — THE ANONYMOUS TRADER
+// ═══════════════════════════════════════
+
+const TERM = "#33cc66"; // terminal green
+const TERM_DIM = "#1a7a3a";
+const TERM_BG = "rgba(51, 204, 102, 0.04)";
+
+const OCTOPUS_ASCII = `
+      ___
+   .-'   '-.
+  / \\$   \\$ \\
+ |           |
+  \\  \\___/  /
+   '._____.'
+  /  /| |\\  \\
+ /  / | | \\  \\
+'--'  | |  '--'
+     _| |_
+`;
+
+const MARKET_QUOTES = [
+  "You are worth what you can repeat.",
+  "Potential doesn't trade.",
+  "If it's not consistent, it's not real.",
+  "You don't get paid for trying.",
+  "Consistency is the only asset that compounds.",
+  "Miss a day. Pay interest.",
+  "Decay is automatic. Growth is not.",
+  "Delay is the most expensive habit.",
+  "Risk doesn't create character. It exposes it.",
+  "The house isn't smarter. Just consistent.",
+  "You're either compounding or leaking.",
+  "Wealth goes where it's respected.",
+  "Money avoids the undisciplined.",
+  "You have very little leverage.",
+  "You're underperforming your potential. The market noticed.",
+  "You're easier to replace than you think.",
+  "Right now, you're cheap.",
+  "Your network is your liquidity.",
+  "No one invests in the invisible.",
+  "If no one knows you, you don't exist.",
+  "You repeat mistakes like they're free.",
+  "You've already paid for this lesson.",
+  "You didn't learn it.",
+  "Emotion is expensive.",
+  "Everything has a price. Most people misprice themselves.",
 ];
+
+// Typewriter hook
+function useTypewriter(text, speed = 30, startDelay = 500) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    setDisplayed(""); setDone(false);
+    const delayTimer = setTimeout(() => {
+      let i = 0;
+      const interval = setInterval(() => {
+        i++;
+        setDisplayed(text.slice(0, i));
+        if (i >= text.length) { clearInterval(interval); setDone(true); }
+      }, speed);
+      return () => clearInterval(interval);
+    }, startDelay);
+    return () => clearTimeout(delayTimer);
+  }, [text, speed, startDelay]);
+  return { displayed, done };
+}
 
 function seededRandom(seed) {
   let s = seed;
@@ -23,6 +81,10 @@ function getWeekSeed(userId = "") {
   const startOfYear = new Date(now.getFullYear(), 0, 1);
   const weekNum = Math.floor((now - startOfYear) / (7 * 24 * 60 * 60 * 1000));
   return `${now.getFullYear()}-W${weekNum}-${userId}`.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+}
+function getDaySeed(userId = "") {
+  const d = new Date().toISOString().split("T")[0];
+  return (d + userId).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
 }
 function generateWeeklyStock(playerLevel, userId, ownedIds = []) {
   const seed = getWeekSeed(userId);
@@ -47,19 +109,31 @@ const SectionHeader = ({ children, color = C.gold }) => (
   </div>
 );
 
+// Chest display names (no probabilities)
+const CHEST_DISPLAY = [
+  { ...STORE_CHESTS[0], label: "Iron Chest", hint: "Common grade" },
+  { ...STORE_CHESTS[1], label: "Runed Chest", hint: "Rare grade" },
+  { ...STORE_CHESTS[2], label: "Shadow Chest", hint: "Epic grade" },
+  { ...STORE_CHESTS[3], label: "Mystery Chest", hint: "Unknown grade" },
+];
+
 export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory = [], userId = "", onBuy, onChestReward, inventoryCap = 50 }) {
-  const [filterSlot, setFilterSlot] = useState("all");
   const [inspectItem, setInspectItem] = useState(null);
   const [buyConfirm, setBuyConfirm] = useState(null);
   const [openingChest, setOpeningChest] = useState(null);
   const [chestResult, setChestResult] = useState(null);
   const [justBought, setJustBought] = useState(null);
-  const [merchantImgError, setMerchantImgError] = useState(false);
 
   const weeklyStock = useMemo(() => generateWeeklyStock(playerLevel, userId, inventory), [playerLevel, userId, inventory]);
-  const merchantLine = useMemo(() => MERCHANT_LINES[getWeekSeed(userId) % MERCHANT_LINES.length], [userId]);
   const isFull = inventory.length >= inventoryCap;
-  const filteredStock = filterSlot === "all" ? weeklyStock : weeklyStock.filter(i => i.slot === filterSlot);
+
+  // Daily quote — deterministic
+  const todayQuote = useMemo(() => {
+    const seed = getDaySeed(userId);
+    return MARKET_QUOTES[seed % MARKET_QUOTES.length];
+  }, [userId]);
+
+  const greeting = useTypewriter(`>> ${todayQuote}`, 25, 800);
 
   const handleBuy = (item) => {
     if (playerGold < item.price || playerLevel < item.levelReq || isFull) return;
@@ -77,67 +151,92 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
 
   return (
     <div style={{ padding: "16px 18px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
-      {/* Subtle warm glow background */}
+      {/* Subtle scanline overlay */}
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", maxWidth: 430, height: "100vh", pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(ellipse 70% 40% at 50% 15%, rgba(201, 168, 76, 0.05) 0%, transparent 70%)",
+        width: "100%", maxWidth: 430, height: "100vh", pointerEvents: "none", zIndex: 0, opacity: 0.03,
+        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 204, 102, 0.1) 2px, rgba(51, 204, 102, 0.1) 4px)",
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Merchant NPC */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, flexShrink: 0, background: C.surface, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-            {merchantImgError ? (
-              <span style={{ fontSize: 28 }}>{"\u{1F9D9}"}</span>
-            ) : (
-              <img src="/store-merchant.png" alt="The Wanderer" style={{ width: 48, height: 48, objectFit: "contain", imageRendering: "pixelated" }} onError={() => setMerchantImgError(true)} />
-            )}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>The Wanderer</div>
-                <div style={{ fontSize: 10, color: C.textDim, letterSpacing: 1, textTransform: "uppercase" }}>Traveling Merchant</div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <span style={{ fontSize: 11, fontFamily: "monospace", color: isFull ? "#ef4444" : C.textDim }}>{"\u{1F392}"} {inventory.length}/{inventoryCap}</span>
-                <span style={{ fontSize: 11, fontFamily: "monospace", color: C.gold }}>{"\u{1FA99}"} {playerGold}</span>
-              </div>
+
+        {/* ═══ MARKET.IO TERMINAL ═══ */}
+        <div style={{
+          marginBottom: 24, padding: "20px 18px", borderRadius: 12,
+          background: TERM_BG, border: `1px solid ${TERM_DIM}33`,
+        }}>
+          {/* Header bar */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: TERM, letterSpacing: 1 }}>market.io</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <span style={{ fontFamily: "monospace", fontSize: 11, color: C.textDim }}>{"\u{1F392}"} {inventory.length}/{inventoryCap}</span>
+              <span style={{ fontFamily: "monospace", fontSize: 11, color: TERM }}>{"\u{1FA99}"} {playerGold}</span>
             </div>
-            <div style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic", lineHeight: 1.5 }}>"{merchantLine}"</div>
+          </div>
+
+          {/* ASCII octopus */}
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <pre style={{
+              fontFamily: "monospace", fontSize: 11, lineHeight: 1.2,
+              color: TERM, margin: 0, display: "inline-block", textAlign: "left",
+              opacity: 0.7,
+            }}>{OCTOPUS_ASCII}</pre>
+          </div>
+
+          {/* Typewriter quote */}
+          <div style={{ fontFamily: "monospace", fontSize: 13, color: TERM, lineHeight: 1.6, minHeight: 42 }}>
+            <span>{greeting.displayed}</span>
+            {!greeting.done && <span style={{ animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
           </div>
         </div>
 
-        {/* This Week's Stock */}
+        {/* ═══ TEST YOUR LUCK — CHESTS ═══ */}
         <div style={{ marginBottom: 24 }}>
-          <SectionHeader color={C.gold}>This Week's Stock</SectionHeader>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto" }}>
-            {[["all", "All"], ...Object.entries(SLOTS).map(([k, v]) => [k, v.emoji])].map(([key, label]) => (
-              <button key={key} onClick={() => setFilterSlot(key)} style={{
-                padding: "5px 14px", borderRadius: 20, border: "none", cursor: "pointer",
-                fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
-                background: filterSlot === key ? C.gold : C.surface,
-                color: filterSlot === key ? "#000" : C.textMuted,
-              }}>{label}</button>
-            ))}
+          <div style={{ fontFamily: "monospace", fontSize: 11, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>Test your luck...</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            {CHEST_DISPLAY.map(chest => {
+              const canAfford = playerGold >= chest.price;
+              return (
+                <div key={chest.id} onClick={() => { if (canAfford) handleOpenChest(chest); }} style={{
+                  flex: 1, padding: "14px 8px", borderRadius: 10, cursor: canAfford ? "pointer" : "default",
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  opacity: canAfford ? 1 : 0.35, textAlign: "center",
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, margin: "0 auto 8px",
+                    background: `${chest.color}22`, border: `2px solid ${chest.color}66`,
+                  }} />
+                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textMuted }}>{chest.price}g</div>
+                </div>
+              );
+            })}
           </div>
-          {filteredStock.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", color: C.textMuted, fontSize: 13 }}>Nothing left in this category.</div>
+        </div>
+
+        {/* ═══ THIS WEEK'S STOCK ═══ */}
+        <div>
+          <SectionHeader color={TERM}>This week's stock</SectionHeader>
+          {weeklyStock.length === 0 ? (
+            <div style={{ fontFamily: "monospace", fontSize: 12, color: C.textDim, padding: "16px 0" }}>{">> "} Stock depleted. Come back Monday.</div>
           ) : (
             <div>
-              {filteredStock.map((item, i) => {
+              {weeklyStock.map((item, i) => {
                 const rarity = RARITIES[item.rarity];
                 const slot = SLOTS[item.slot];
                 const canAfford = playerGold >= item.price;
+                const meetsLevel = playerLevel >= item.levelReq;
                 const wasBought = justBought === item.id;
                 return (
                   <div key={item.id} onClick={() => { if (!wasBought) setInspectItem(item); }} style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "14px 4px",
-                    borderBottom: i < filteredStock.length - 1 ? `1px solid ${C.border}` : "none",
-                    cursor: wasBought ? "default" : "pointer", opacity: wasBought ? 0.4 : 1,
+                    borderBottom: i < weeklyStock.length - 1 ? `1px solid ${C.border}` : "none",
+                    cursor: wasBought ? "default" : "pointer", opacity: wasBought ? 0.3 : 1,
                   }}>
-                    <span style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0 }}>{slot.emoji}</span>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: `${rarity.color}15`, border: `1px solid ${rarity.color}33`,
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+                    }}>{slot.emoji}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: rarity.color }}>{item.name}</div>
                       <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
@@ -146,38 +245,20 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
                         ))}
                       </div>
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace", color: canAfford ? C.gold : C.textDim, flexShrink: 0 }}>{"\u{1FA99}"} {item.price}</div>
+                    {wasBought ? (
+                      <span style={{ fontFamily: "monospace", fontSize: 11, color: TERM }}>sold</span>
+                    ) : (
+                      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace", color: canAfford ? C.gold : C.textDim }}>{item.price}g</span>
+                    )}
                   </div>
                 );
               })}
             </div>
           )}
         </div>
-
-        {/* Sealed Chests */}
-        <div>
-          <SectionHeader color={C.purple}>Sealed Chests</SectionHeader>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {STORE_CHESTS.map(chest => {
-              const canAfford = playerGold >= chest.price;
-              return (
-                <div key={chest.id} onClick={() => { if (canAfford) handleOpenChest(chest); }} style={{
-                  padding: "16px 14px", borderRadius: 12, cursor: canAfford ? "pointer" : "default",
-                  background: C.surface, border: `1px solid ${C.border}`,
-                  opacity: canAfford ? 1 : 0.4, textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 6 }}>{chest.emoji}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: chest.color }}>{chest.name}</div>
-                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4, lineHeight: 1.4 }}>{getChestDescription(chest)}</div>
-                  <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, fontFamily: "monospace", color: canAfford ? C.gold : C.textDim }}>{"\u{1FA99}"} {chest.price}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
-      {/* Item Inspect Modal */}
+      {/* ═══ ITEM INSPECT MODAL ═══ */}
       {inspectItem && (() => {
         const rarity = RARITIES[inspectItem.rarity];
         const slot = SLOTS[inspectItem.slot];
@@ -208,14 +289,14 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {buyConfirm === inspectItem.id ? (
-                  <button onClick={() => handleBuy(inspectItem)} style={{ width: "100%", padding: "14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 15, fontWeight: 600, background: C.green, color: "#fff" }}>Confirm {"\u2014"} {"\u{1FA99}"} {inspectItem.price}</button>
+                  <button onClick={() => handleBuy(inspectItem)} style={{ width: "100%", padding: "14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 15, fontWeight: 600, background: C.green, color: "#fff" }}>Confirm {"\u2014"} {inspectItem.price}g</button>
                 ) : (
                   <button onClick={() => { if (canBuy) setBuyConfirm(inspectItem.id); }} disabled={!canBuy} style={{
                     width: "100%", padding: "14px", borderRadius: 20, border: "none",
                     cursor: canBuy ? "pointer" : "default", fontSize: 15, fontWeight: 600,
                     background: canBuy ? C.gold : C.surfaceLight, color: canBuy ? "#000" : C.textDim, opacity: canBuy ? 1 : 0.5,
                   }}>
-                    {isFull ? "Inventory full" : !canAfford ? `Need ${inspectItem.price - playerGold} more gold` : !meetsLevel ? `Requires Level ${inspectItem.levelReq}` : `Buy \u2014 \u{1FA99} ${inspectItem.price}`}
+                    {isFull ? "Inventory full" : !canAfford ? `Need ${inspectItem.price - playerGold} more gold` : !meetsLevel ? `Requires Level ${inspectItem.levelReq}` : `Buy \u2014 ${inspectItem.price}g`}
                   </button>
                 )}
                 <button onClick={() => { setInspectItem(null); setBuyConfirm(null); }} style={{ width: "100%", padding: "12px", borderRadius: 20, border: `1px solid ${C.border}`, cursor: "pointer", background: "transparent", color: C.textMuted, fontSize: 13, fontWeight: 500 }}>Close</button>
@@ -225,34 +306,38 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
         );
       })()}
 
-      {/* Chest Opening Modal */}
+      {/* ═══ CHEST OPENING MODAL ═══ */}
       {openingChest && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.95)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ textAlign: "center", width: "100%", maxWidth: 320 }}>
             {!chestResult ? (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <div style={{ fontSize: 80, marginBottom: 16, animation: "pulse 0.6s ease infinite" }}>{openingChest.emoji}</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: openingChest.color }}>Opening {openingChest.name}...</div>
+                <div style={{
+                  width: 64, height: 64, borderRadius: 14, margin: "0 auto 20px",
+                  background: `${openingChest.color}22`, border: `2px solid ${openingChest.color}66`,
+                  animation: "pulse 0.6s ease infinite",
+                }} />
+                <div style={{ fontFamily: "monospace", fontSize: 14, color: TERM }}>{">> "} Processing...</div>
               </div>
             ) : (
               <div style={{ animation: "fadeIn 0.5s ease" }}>
-                <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>{chestResult.item ? "You received" : "Gold only"}</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: C.gold, marginBottom: 8 }}>{"\u{1FA99}"} +{chestResult.gold}</div>
+                <div style={{ fontFamily: "monospace", fontSize: 12, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>{">> "} Transaction complete</div>
+                <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "monospace", color: C.gold, marginBottom: 8 }}>+{chestResult.gold}g</div>
                 {chestResult.item ? (
                   <>
-                    <div style={{ fontSize: 11, color: C.textDim, marginBottom: 12 }}>and an item...</div>
+                    <div style={{ fontFamily: "monospace", fontSize: 11, color: TERM, marginBottom: 12 }}>{">> "} Item acquired</div>
                     <div style={{ fontSize: 36, marginBottom: 8 }}>{SLOTS[chestResult.item.slot].emoji}</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: RARITIES[chestResult.item.rarity].color, marginBottom: 4 }}>{chestResult.item.name}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: RARITIES[chestResult.item.rarity].color, marginBottom: 4 }}>{chestResult.item.name}</div>
                     <div style={{ fontSize: 11, color: RARITIES[chestResult.item.rarity].color, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>{RARITIES[chestResult.item.rarity].label} {SLOTS[chestResult.item.slot].label}</div>
                   </>
                 ) : (
-                  <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 20, marginTop: 8 }}>No item this time. The odds weren't in your favor.</div>
+                  <div style={{ fontFamily: "monospace", fontSize: 13, color: C.textDim, marginBottom: 20, marginTop: 8 }}>{">> "} No item. Better luck next time.</div>
                 )}
                 <button onClick={() => { setOpeningChest(null); setChestResult(null); }} style={{
                   padding: "14px 48px", borderRadius: 20, border: "none", cursor: "pointer",
                   background: chestResult.item ? RARITIES[chestResult.item.rarity].color : C.gold,
                   color: "#000", fontSize: 15, fontWeight: 600,
-                }}>{chestResult.item ? "Nice!" : "Onward"}</button>
+                }}>OK</button>
               </div>
             )}
           </div>
