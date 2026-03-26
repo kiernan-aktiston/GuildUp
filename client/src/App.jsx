@@ -692,7 +692,7 @@ export default function App() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: ${C.bg}; color: ${C.text}; -webkit-font-smoothing: antialiased; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes float {
