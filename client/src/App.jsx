@@ -24,6 +24,8 @@ import ExploreTheLandFlow from "./components/ExploreTheLandFlow";
 import LevelUpModal from "./components/LevelUpModal";
 import ResetPasswordScreen from "./components/ResetPasswordScreen";
 
+const INVENTORY_CAP = 50;
+
 export default function App() {
   const [screen, setScreen] = useState("loading");
   const [tab, setTab] = useState("quests");
