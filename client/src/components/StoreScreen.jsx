@@ -85,7 +85,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
         {/* Merchant NPC */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "16px", borderRadius: 16, background: C.card, border: `1px solid ${C.cardBorder}`, marginBottom: 20 }}>
           <div style={{ width: 72, height: 72, borderRadius: 16, flexShrink: 0, background: "radial-gradient(circle, #1a1a2e 60%, #000 100%)", border: `2px solid ${C.gold}44`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-            <img src="/Merchant.png" alt="The Wanderer" style={{ width: 56, height: 56, objectFit: "contain", imageRendering: "pixelated", filter: "brightness(1.1)" }} onError={e => { e.target.style.display = "none"; e.target.parentElement.innerHTML = '<span style="font-size:32px">\u{1F9D9}</span>'; }} />
+            <img src="/store-merchant.png" alt="The Wanderer" style={{ width: 56, height: 56, objectFit: "contain", imageRendering: "pixelated", filter: "brightness(1.1)" }} onError={e => { e.target.style.display = "none"; e.target.parentElement.innerHTML = '<span style="font-size:32px">\u{1F9D9}</span>'; }} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
