@@ -2,37 +2,45 @@
 // DESIGN TOKENS
 // ============================================
 export const C = {
-  bg: "#0a0e17",
-  surface: "#111827",
-  surfaceLight: "#1a2236",
-  border: "#2a3548",
-  gold: "#f0b232",
-  goldDark: "#c48a1a",
-  xp: "#7c5cfc",
-  text: "#e5e7eb",
-  textMuted: "#6b7280",
-  textDim: "#4b5563",
-  // Tab colors
-  tabStore: "#b8860b",
-  tabQuests: "#8b7d3c",
-  tabBattle: "#8b3a3a",
-  tabAvatar: "#6a4fb5",
-  tabGuild: "#2d7a4f",
-  // Ritual states
-  ritualDone: "#22c55e",
-  ritualPending: "#2a1a1a",
-  ritualPendingBorder: "#4a2a2a",
-  // Standard card
-  card: "rgba(17, 24, 39, 0.6)",
-  cardBorder: "rgba(42, 53, 72, 0.6)",
+  // ── Core surfaces ──
+  bg: "#0a0a0c",
+  surface: "#141416",
+  surfaceLight: "#1c1c1f",
+  border: "#222226",
+  // ── Text ──
+  text: "#e8e0d4",
+  textMuted: "#7a756d",
+  textDim: "#4a4640",
+  // ── Accent: Gold (primary) ──
+  gold: "#c9a84c",
+  goldDark: "#a08838",
+  goldFaint: "rgba(201, 168, 76, 0.12)",
+  // ── Accent: Functional ──
+  xp: "#c9a84c",
+  green: "#4a7c50",
+  greenFaint: "rgba(74, 124, 80, 0.15)",
+  blue: "#4a6a94",
+  blueFaint: "rgba(74, 106, 148, 0.12)",
+  purple: "#6b4a8c",
+  purpleFaint: "rgba(107, 74, 140, 0.12)",
+  red: "#8b3030",
+  // ── Cards & containers (used sparingly) ──
+  card: "#141416",
+  cardBorder: "#222226",
+  // ── Backwards compat (old names used by other screens) ──
+  tabStore: "#c9a84c",
+  tabBattle: "#8b3030",
+  ritualDone: "#4a7c50",
+  ritualPending: "#1c1c1f",
+  ritualPendingBorder: "#222226",
 };
 
 export const TABS = [
-  { key: "store", label: "Store", icon: "/gold-coins.png", color: C.tabStore },
-  { key: "quests", label: "Quests", icon: "/tab-quests.png", color: C.tabQuests },
-  { key: "battle", label: "Arena", icon: "/tab-battle.png", color: C.tabBattle },
-  { key: "avatar", label: "Avatar", icon: "/tab-avatar.png", color: C.tabAvatar },
-  { key: "guild", label: "Guild", icon: "/tab-guild.png", color: C.tabGuild },
+  { key: "store", label: "Store", icon: "/tab-store.png" },
+  { key: "quests", label: "Quests", icon: "/tab-quests.png" },
+  { key: "battle", label: "Arena", icon: "/tab-battle.png" },
+  { key: "avatar", label: "Avatar", icon: "/tab-avatar.png" },
+  { key: "guild", label: "Guild", icon: "/tab-guild.png" },
 ];
 
 export const CLASSES = {
