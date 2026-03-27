@@ -42,10 +42,10 @@ const MARKET_PASSAGES = [
 
 const SLOT_SYMBOLS = ['#', '$', '7', '%', '&', '@', '!', '*', '+', '='];
 const SLOT_MACHINES = [
-  { id: "iron", price: 50, winSymbol: "#", label: "50g", color: "#22c55e" },
-  { id: "runed", price: 200, winSymbol: "$", label: "200g", color: "#3b82f6" },
-  { id: "shadow", price: 600, winSymbol: "7", label: "600g", color: "#a855f7" },
-  { id: "mystery", price: 150, winSymbol: "?", label: "150g", color: "#f59e0b" },
+  { id: "iron", price: 50, winSymbol: "#", label: "50g", color: "#22c55e", icon: "/slot-green.png" },
+  { id: "runed", price: 200, winSymbol: "$", label: "200g", color: "#3b82f6", icon: "/slot-blue.png" },
+  { id: "shadow", price: 600, winSymbol: "7", label: "600g", color: "#a855f7", icon: "/slot-purple.png" },
+  { id: "mystery", price: 150, winSymbol: "?", label: "150g", color: "#f59e0b", icon: "/slot-gold.png" },
 ];
 
 // ── Typewriter hook ──
@@ -250,11 +250,11 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
             const canAfford = playerGold >= m.price;
             return (
               <div key={m.id} onClick={() => { if (canAfford && !slotSpinning) handlePull(m); }} style={{
-                flex: 1, padding: "14px 6px", cursor: canAfford && !slotSpinning ? "pointer" : "default",
-                background: "transparent", border: `1px solid ${canAfford ? m.color + '55' : TD + '22'}`,
+                flex: 1, padding: "8px 4px", cursor: canAfford && !slotSpinning ? "pointer" : "default",
+                background: "transparent", border: `1px solid ${canAfford ? m.color + '44' : TD + '22'}`,
                 opacity: canAfford ? 1 : 0.25, textAlign: "center",
               }}>
-                <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: m.color, lineHeight: 1, marginBottom: 6 }}>{m.winSymbol}</div>
+                <img src={m.icon} alt={m.id} style={{ width: 56, height: 56, objectFit: "contain", marginBottom: 4 }} onError={e => { e.target.style.display = "none"; }} />
                 <div style={{ fontFamily: MONO, fontSize: 9, color: TD }}>{m.label}</div>
               </div>
             );
