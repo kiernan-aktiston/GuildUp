@@ -115,16 +115,16 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   const weeklyStock = useMemo(() => generateWeeklyStock(playerLevel, userId, inventory), [playerLevel, userId, inventory]);
   const isFull = inventory.length >= inventoryCap;
   const todayPassage = useMemo(() => MARKET_PASSAGES[getDaySeed(userId) % MARKET_PASSAGES.length], [userId]);
-  const passage = useTypewriter(todayPassage, 18, 500, bootPhase >= 5);
+  const passage = useTypewriter(todayPassage, 18, 300, bootPhase >= 5);
 
-  // Boot timeline
+  // Boot timeline — fast
   useEffect(() => {
     const timers = [
-      setTimeout(() => setBootPhase(1), 600),
-      setTimeout(() => setBootPhase(2), 1200),
-      setTimeout(() => setBootPhase(3), 1800),
-      setTimeout(() => setBootPhase(4), 2400),
-      setTimeout(() => setBootPhase(5), 3200),
+      setTimeout(() => setBootPhase(1), 400),
+      setTimeout(() => setBootPhase(2), 800),
+      setTimeout(() => setBootPhase(3), 1200),
+      setTimeout(() => setBootPhase(4), 1600),
+      setTimeout(() => setBootPhase(5), 2000),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -132,7 +132,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   // Dot animation for first line
   useEffect(() => {
     if (bootPhase >= 1) return;
-    const iv = setInterval(() => setDotCount(prev => (prev + 1) % 4), 600);
+    const iv = setInterval(() => setDotCount(prev => (prev + 1) % 4), 400);
     return () => clearInterval(iv);
   }, [bootPhase]);
 
