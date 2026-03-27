@@ -18,15 +18,13 @@ export default function TabBar({ active, onSwitch }) {
             padding: "10px 0 8px",
           }}>
             <img src={t.icon} alt={t.label} style={{
-              width: 22, height: 22, objectFit: "contain",
-              opacity: isActive ? 1 : 0.35,
-              filter: isActive
-                ? "brightness(1.3) sepia(1) hue-rotate(10deg) saturate(2)"
-                : "grayscale(100%) brightness(0.6)",
+              width: 24, height: 24, objectFit: "contain",
+              opacity: isActive ? 1 : 0.3,
+              filter: isActive ? "none" : "grayscale(100%) brightness(0.5)",
               transition: "all 0.2s ease",
             }} />
             <span style={{
-              fontSize: 10, fontWeight: isActive ? 600 : 400,
+              fontSize: 9, fontWeight: isActive ? 600 : 400,
               letterSpacing: 0.8,
               color: isActive ? C.gold : C.textDim,
               textTransform: "uppercase",

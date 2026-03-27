@@ -36,10 +36,10 @@ export const C = {
 };
 
 export const TABS = [
-  { key: "store", label: "Store", icon: "/tab-store.png" },
-  { key: "quests", label: "Quests", icon: "/tab-quests.png" },
-  { key: "battle", label: "Arena", icon: "/tab-battle.png" },
-  { key: "avatar", label: "Avatar", icon: "/tab-avatar.png" },
+  { key: "store", label: "Market", icon: "/tab-market.png" },
+  { key: "battle", label: "Contracts", icon: "/tab-contracts.png" },
+  { key: "quests", label: "Training", icon: "/tab-training.png" },
+  { key: "avatar", label: "Profile", icon: "/tab-profile.png" },
   { key: "guild", label: "Guild", icon: "/tab-guild.png" },
 ];
 
