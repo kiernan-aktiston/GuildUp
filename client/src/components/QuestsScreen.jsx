@@ -247,33 +247,48 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
               const mentorLine = p.lines[seed % p.lines.length];
               return (
                 <div key={i} style={{
-                  padding: "16px 14px", marginBottom: 8,
-                  background: done ? C.greenFaint : C.surface,
-                  borderLeft: `3px solid ${done ? C.green + "66" : p.accent + "55"}`,
-                  border: `1px solid ${done ? C.green + "22" : C.border}`,
+                  padding: "18px 16px", marginBottom: 10,
+                  background: done
+                    ? C.greenFaint
+                    : `linear-gradient(135deg, ${p.accent}12 0%, ${C.surface} 60%)`,
+                  borderLeft: `3px solid ${done ? C.green + "66" : p.accent}`,
+                  border: `1px solid ${done ? C.green + "22" : p.accent + "22"}`,
                   borderLeftWidth: 3,
-                  opacity: done ? 0.5 : 1,
+                  opacity: done ? 0.45 : 1,
                   transition: "all 0.3s ease",
+                  position: "relative",
+                  overflow: "hidden",
                 }}>
+                  {/* Faint icon watermark in background */}
+                  {!done && (
+                    <img src={p.icon} alt="" style={{
+                      position: "absolute", right: -10, bottom: -10,
+                      width: 90, height: 90, objectFit: "contain",
+                      opacity: 0.04, pointerEvents: "none",
+                    }} onError={e => { e.target.style.display = "none"; }} />
+                  )}
+
                   {/* Protocol header row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                    <img src={p.icon} alt={p.code} style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0, opacity: done ? 0.4 : 0.85 }} onError={e => { e.target.style.display = "none"; }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10, position: "relative" }}>
+                    <img src={p.icon} alt={p.code} style={{
+                      width: 44, height: 44, objectFit: "contain", flexShrink: 0,
+                      opacity: done ? 0.3 : 1,
+                    }} onError={e => { e.target.style.display = "none"; }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 9, fontFamily: "monospace", color: C.textDim, letterSpacing: 1 }}>{p.code}</span>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: done ? C.textDim : C.text }}>{p.label}</span>
-                      </div>
+                      <div style={{ fontSize: 9, fontFamily: "monospace", color: p.accent, letterSpacing: 1.5, marginBottom: 2, opacity: 0.7 }}>{p.code}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: done ? C.textDim : C.text }}>{p.label}</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       {streak > 0 && (
                         <span style={{ fontFamily: "monospace", fontSize: 11, color: C.gold, fontWeight: 700 }}>{streak}d</span>
                       )}
                       {done ? (
-                        <span style={{ color: C.green, fontSize: 16 }}>{"\u2713"}</span>
+                        <span style={{ color: C.green, fontSize: 18 }}>{"\u2713"}</span>
                       ) : (
                         <button onClick={() => onOpenRitual({ name: p.name, label: p.label })} style={{
-                          padding: "6px 18px", borderRadius: 20, border: "none", cursor: "pointer",
-                          background: p.accent, color: "#fff", fontSize: 12, fontWeight: 600,
+                          padding: "8px 22px", borderRadius: 20, border: "none", cursor: "pointer",
+                          background: p.accent, color: "#fff", fontSize: 13, fontWeight: 600,
+                          boxShadow: `0 2px 12px ${p.accent}33`,
                         }}>Start</button>
                       )}
                     </div>
@@ -281,8 +296,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
 
                   {/* Mentor quote */}
                   {!done && (
-                    <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.6, fontStyle: "italic", paddingLeft: 44 }}>
-                      <span style={{ color: p.accent, fontWeight: 600, fontStyle: "normal", fontSize: 10 }}>{p.mentor}:</span> "{mentorLine}"
+                    <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6, fontStyle: "italic", paddingLeft: 58 }}>
+                      <span style={{ color: p.accent, fontWeight: 600, fontStyle: "normal", fontSize: 11 }}>{p.mentor}:</span> "{mentorLine}"
                     </div>
                   )}
                 </div>
