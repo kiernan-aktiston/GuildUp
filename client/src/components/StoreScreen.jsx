@@ -84,7 +84,12 @@ function useSlotMachine(spinning, chestId) {
   return { reels, locked, phase };
 }
 
-function getDaySeed(userId = "") { return (new Date().toISOString().split("T")[0] + userId).split("").reduce((a, c) => a + c.charCodeAt(0), 0); }
+// Use day-of-year + userId for daily rotation (not just date string)
+function getDaySeed(userId = "") {
+  const now = new Date();
+  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  return (dayOfYear * 7 + userId.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % BROKER_PASSAGES.length;
+}
 function seededRandom(seed) { let s = seed; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return (s >>> 0) / 0x7fffffff; }; }
 function getWeekSeed(userId = "") { const n = new Date(); return `${n.getFullYear()}-W${Math.floor((n - new Date(n.getFullYear(), 0, 1)) / 604800000)}-${userId}`.split("").reduce((a, c) => a + c.charCodeAt(0), 0); }
 function generateWeeklyStock(playerLevel, userId, ownedIds = []) {
@@ -99,9 +104,13 @@ function generateWeeklyStock(playerLevel, userId, ownedIds = []) {
   return stock;
 }
 
+// Typed boot lines content
+const BOOT_TEXT = "> connection established\n> _the_broker_ has entered the chat\n>> hi\n>> market prices as always\n>> remember";
+
 export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory = [], userId = "", onBuy, onChestReward, inventoryCap = 50 }) {
-  // Fast inline boot: 0→sigil, 1→connected, 2→broker, 3→hi, 4→prices, 5→passage+rest
-  const [phase, setPhase] = useState(0);
+  const [showOctopus, setShowOctopus] = useState(false);
+  const [bootReady, setBootReady] = useState(false);
+  const [allReady, setAllReady] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [inspectItem, setInspectItem] = useState(null);
   const [buyConfirm, setBuyConfirm] = useState(null);
@@ -113,19 +122,33 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
 
   const weeklyStock = useMemo(() => generateWeeklyStock(playerLevel, userId, inventory), [playerLevel, userId, inventory]);
   const isFull = inventory.length >= inventoryCap;
-  const todayPassage = useMemo(() => BROKER_PASSAGES[getDaySeed(userId) % BROKER_PASSAGES.length], [userId]);
-  const passage = useTypewriter(todayPassage, 16, 200, phase >= 5);
+  const passageIndex = useMemo(() => getDaySeed(userId), [userId]);
+  const todayPassage = BROKER_PASSAGES[passageIndex];
 
+  // Boot lines typed out
+  const boot = useTypewriter(BOOT_TEXT, 14, 0, bootReady);
+  // Passage typed out after boot completes
+  const passage = useTypewriter(todayPassage, 16, 300, boot.done);
+
+  // Timeline: 800ms wait → octopus fades in → 400ms → boot starts typing
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase(1), 300),
-      setTimeout(() => setPhase(2), 600),
-      setTimeout(() => setPhase(3), 900),
-      setTimeout(() => setPhase(4), 1200),
-      setTimeout(() => setPhase(5), 1600),
-    ];
-    return () => timers.forEach(clearTimeout);
+    const t1 = setTimeout(() => setShowOctopus(true), 800);
+    const t2 = setTimeout(() => setBootReady(true), 1200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  // Once passage is done typing, show everything below
+  useEffect(() => {
+    if (passage.done) setAllReady(true);
+  }, [passage.done]);
+
+  // Show rest immediately once boot is done (don't wait for full passage)
+  useEffect(() => {
+    if (boot.done) {
+      const t = setTimeout(() => setAllReady(true), 500);
+      return () => clearTimeout(t);
+    }
+  }, [boot.done]);
 
   const handlePull = (machine) => {
     if (playerGold < machine.price || slotSpinning) return;
@@ -143,47 +166,64 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
   };
 
   return (
-    <div style={{ padding: "0 0 120px", minHeight: "100vh", background: "#050505", position: "relative" }}>
-      {/* Scanlines — full viewport */}
+    <div style={{ padding: "0 0 80px", minHeight: "100vh", background: "#050505", position: "relative" }}>
+      {/* Scanlines */}
       <div style={{ position: "fixed", inset: 0, opacity: 0.03, pointerEvents: "none", zIndex: 0, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51,204,102,0.15) 2px, rgba(51,204,102,0.15) 4px)" }} />
 
       <div style={{ position: "relative", zIndex: 1, background: TBG, minHeight: "100vh", padding: "20px 18px 40px" }}>
 
-        {/* ═══ MARKETPLACE HEADING ═══ */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        {/* ═══ MARKETPLACE HEADING — distinguished ═══ */}
+        <div style={{ textAlign: "center", marginBottom: 24, paddingBottom: 16 }}>
+          <div style={{ width: "60%", height: 1, background: `${T}22`, margin: "0 auto 14px" }} />
           <div style={{
-            fontFamily: MONO, fontSize: 16, fontWeight: 700, color: T,
-            letterSpacing: 3, textDecoration: "underline", textUnderlineOffset: 6,
-            textDecorationColor: `${TD}66`,
+            fontFamily: MONO, fontSize: 18, fontWeight: 700, color: T,
+            letterSpacing: 4, textTransform: "uppercase",
           }}>Marketplace</div>
+          <div style={{ width: "60%", height: 1, background: `${T}22`, margin: "14px auto 0" }} />
         </div>
 
-        {/* ═══ OCTOPUS SIGIL — appears immediately ═══ */}
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
-          {imgError ? (
-            <div style={{ fontSize: 48, opacity: 0.5 }}>{"\u{1F419}"}</div>
-          ) : (
-            <img src="/market-octopus.png" alt="The Broker" onError={() => setImgError(true)}
-              style={{ width: 140, height: 140, objectFit: "contain", opacity: 0.85 }} />
+        {/* ═══ OCTOPUS SIGIL — delayed fade in ═══ */}
+        <div style={{ textAlign: "center", marginBottom: 20, minHeight: 140 }}>
+          {showOctopus && (
+            imgError ? (
+              <div style={{ fontSize: 48, opacity: 0.5, animation: "fadeIn 0.6s ease" }}>{"\u{1F419}"}</div>
+            ) : (
+              <img src="/market-octopus.png" alt="The Broker" onError={() => setImgError(true)}
+                style={{ width: 140, height: 140, objectFit: "contain", opacity: 0.85, animation: "fadeIn 0.6s ease" }} />
+            )
           )}
         </div>
 
-        {/* ═══ FAST INLINE BOOT LINES ═══ */}
-        {phase >= 1 && <div style={{ ...L, animation: "fadeIn 0.2s ease" }}>{"> connection established"}</div>}
-        {phase >= 2 && <div style={{ ...L, color: T, fontWeight: 700, animation: "fadeIn 0.2s ease" }}>{"> _the_broker_ has entered the chat"}</div>}
-        {phase >= 3 && <div style={{ ...L, animation: "fadeIn 0.2s ease" }}>{">> hi"}</div>}
-        {phase >= 4 && <div style={{ ...L, animation: "fadeIn 0.2s ease", marginBottom: 12 }}>{">> market prices as always"}</div>}
+        {/* ═══ BOOT LINES — typed out as one block ═══ */}
+        {bootReady && (
+          <div style={{ fontFamily: MONO, fontSize: 12, color: TD, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 8 }}>
+            {boot.displayed.split('\n').map((line, i) => {
+              // Color the broker's name line brighter
+              const isBrokerLine = line.includes('_the_broker_');
+              return (
+                <div key={i} style={{
+                  color: isBrokerLine ? T : TD,
+                  fontWeight: isBrokerLine ? 700 : 400,
+                }}>{line}</div>
+              );
+            })}
+            {!boot.done && <span style={{ color: TD, animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
+          </div>
+        )}
 
-        {/* ═══ PASSAGE — inline >> lines, typed out ═══ */}
-        {phase >= 5 && (
+        {/* ═══ PASSAGE — typed in bright green after boot ═══ */}
+        {boot.done && (
+          <div style={{ fontFamily: MONO, fontSize: 12, color: T, fontWeight: 600, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 28 }}>
+            <span>{passage.displayed}</span>
+            {!passage.done && <span style={{ animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
+          </div>
+        )}
+
+        {/* ═══ EVERYTHING BELOW — appears after boot completes ═══ */}
+        {allReady && (
           <>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: T, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 24 }}>
-              <span>{passage.displayed}</span>
-              {!passage.done && <span style={{ animation: "pulse 0.8s ease infinite" }}>{"\u2588"}</span>}
-            </div>
-
-            {/* ═══ SLOT MACHINES ═══ */}
-            <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 10 }}>{"> pull_lever()"}</div>
+            {/* ═══ HIT THE SLOTS ═══ */}
+            <div style={{ fontFamily: MONO, fontSize: 11, color: T, letterSpacing: 1.5, marginBottom: 12, textTransform: "uppercase" }}>{"> hit_the_slots()"}</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
               {SLOT_MACHINES.map(m => {
                 const canAfford = playerGold >= m.price;
@@ -203,17 +243,16 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
             {/* ═══ SEPARATOR ═══ */}
             <div style={{ fontFamily: MONO, fontSize: 10, color: TD, opacity: 0.4, marginBottom: 20 }}>{"\u2500".repeat(44)}</div>
 
-            {/* ═══ YOUR INVENTORY ═══ */}
+            {/* ═══ THIS WEEK'S SUPPLY ═══ */}
+            <div style={{ fontFamily: MONO, fontSize: 11, color: T, letterSpacing: 1.5, marginBottom: 6, textTransform: "uppercase" }}>{"> this_weeks_supply()"}</div>
+
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${TD}22` }}>
-              <div style={{ fontFamily: MONO, fontSize: 11, color: TD, letterSpacing: 1 }}>{"> your_inventory"}</div>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1 }}>{"> refreshes: monday"}</div>
               <div style={{ display: "flex", gap: 12 }}>
                 <span style={{ fontFamily: MONO, fontSize: 11, color: isFull ? "#ef4444" : inventory.length >= inventoryCap * 0.8 ? "#f59e0b" : TD }}>[{inventory.length}/{inventoryCap}]</span>
                 <span style={{ fontFamily: MONO, fontSize: 11, color: T }}>[{playerGold}g]</span>
               </div>
             </div>
-
-            <div style={{ fontFamily: MONO, fontSize: 10, color: TD, letterSpacing: 1, marginBottom: 4 }}>{"> this_weeks_stock()"}</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginBottom: 12 }}>{"> refreshes: monday"}</div>
 
             {weeklyStock.length === 0 ? (
               <div style={{ fontFamily: MONO, fontSize: 12, color: TD, padding: "16px 0" }}>{"> stock depleted. come back monday."}</div>
@@ -249,7 +288,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
               </div>
             )}
 
-            <div style={{ height: 16 }} />
+            <div style={{ height: 12 }} />
             <div style={{ fontFamily: MONO, fontSize: 10, color: TD }}>{"> end_of_transmission"}</div>
             <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginTop: 4, animation: "pulse 1.5s ease infinite" }}>{"\u2588"}</div>
           </>
