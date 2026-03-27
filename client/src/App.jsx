@@ -410,9 +410,11 @@ export default function App() {
   const saveProfile = async (updates) => {
     if (!userId) return;
     try {
-      await supabase.from("profiles").update({
-        ...updates, updated_at: new Date().toISOString(),
-      }).eq("id", userId);
+      await supabase.from("profiles").upsert({
+        id: userId,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" });
     } catch (e) {
       console.error("Failed to save profile:", e);
     }
