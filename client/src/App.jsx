@@ -449,9 +449,9 @@ export default function App() {
       rogue: { str: 1, agi: 1, int: 0, spi: 0, cha: 3 },
       paladin: { str: 2, agi: 0, int: 0, spi: 2, cha: 1 },
       strategist: { str: 0, agi: 1, int: 1, spi: 0, cha: 3 },
-      druid: { str: 0, agi: 2, int: 1, spi: 2, cha: 0 },
-      spellblade: { str: 2, agi: 1, int: 2, spi: 0, cha: 0 },
-      alchemist: { str: 0, agi: 2, int: 0, spi: 2, cha: 1 },
+      outrider: { str: 0, agi: 2, int: 1, spi: 2, cha: 0 },
+      templar: { str: 2, agi: 1, int: 2, spi: 0, cha: 0 },
+      oracle: { str: 0, agi: 2, int: 0, spi: 2, cha: 1 },
       warden: { str: 2, agi: 2, int: 0, spi: 1, cha: 0 },
     };
     const weights = classWeights[cls] || classWeights.warrior;
@@ -824,6 +824,7 @@ export default function App() {
                     meditationComplete={meditationComplete}
                     meditationTitle={meditationTitle}
                     onOpenMeditation={() => setShowMeditation(true)}
+                    userId={userId}
                   />
                 )}
                 {tab === "quests" && showMeditation && (

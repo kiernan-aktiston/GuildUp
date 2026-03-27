@@ -68,10 +68,10 @@ export function evaluateClass(stats) {
     const hybridMap = {
       "str+spi": "paladin", "spi+str": "paladin",
       "cha+int": "strategist", "int+cha": "strategist",
-      "agi+spi": "druid", "spi+agi": "druid",
-      "str+int": "spellblade", "int+str": "spellblade",
+      "agi+spi": "outrider", "spi+agi": "outrider",
+      "str+int": "templar", "int+str": "templar",
       "agi+str": "warden", "str+agi": "warden",
-      "spi+int": "alchemist", "int+spi": "alchemist",
+      "spi+int": "oracle", "int+spi": "oracle",
       "agi+cha": "rogue", "cha+agi": "rogue",
       "str+cha": "warrior", "cha+str": "warrior",
     };

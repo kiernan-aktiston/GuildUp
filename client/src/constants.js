@@ -51,9 +51,9 @@ export const CLASSES = {
   rogue:      { emoji: "🗡️", color: "#f59e0b", title: "Rogue",      desc: "Charm and cunning in equal measure." },
   paladin:    { emoji: "🛡️", color: "#f97316", title: "Paladin",    desc: "Strength tempered by devotion." },
   strategist: { emoji: "🎯", color: "#ec4899", title: "Strategist", desc: "Three moves ahead, always." },
-  druid:      { emoji: "🌿", color: "#14b8a6", title: "Druid",      desc: "Nature's balance flows through you." },
-  spellblade: { emoji: "⚡", color: "#6366f1", title: "Spellblade", desc: "Mind and muscle forged as one." },
-  alchemist:  { emoji: "⚗️", color: "#7c3aed", title: "Alchemist",  desc: "Transform the invisible into the undeniable." },
+    outrider:   { emoji: "🌍", color: "#14b8a6", title: "Outrider",   desc: "Moves through the frontier on instinct and faith." },
+    templar:    { emoji: "⚡", color: "#6366f1", title: "Templar",    desc: "Scholar and soldier forged as one." },
+    oracle:     { emoji: "🔮", color: "#7c3aed", title: "Oracle",     desc: "Sees the pattern others miss." },
   warden:     { emoji: "🗻", color: "#78716c", title: "Warden",     desc: "Immovable, watchful, enduring." },
 };
 
