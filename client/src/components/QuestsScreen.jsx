@@ -257,6 +257,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                 }}>
                   {/* Protocol header row */}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                    <img src={p.icon} alt={p.code} style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0, opacity: done ? 0.4 : 0.85 }} onError={e => { e.target.style.display = "none"; }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 9, fontFamily: "monospace", color: C.textDim, letterSpacing: 1 }}>{p.code}</span>
@@ -280,7 +281,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
 
                   {/* Mentor quote */}
                   {!done && (
-                    <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.6, fontStyle: "italic", paddingLeft: 2 }}>
+                    <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.6, fontStyle: "italic", paddingLeft: 44 }}>
                       <span style={{ color: p.accent, fontWeight: 600, fontStyle: "normal", fontSize: 10 }}>{p.mentor}:</span> "{mentorLine}"
                     </div>
                   )}
