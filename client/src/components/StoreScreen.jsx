@@ -221,7 +221,7 @@ export default function StoreScreen({ playerGold = 0, playerLevel = 1, inventory
             <img
               src="/market-octopus.png" alt="Mark.et"
               onError={() => setImgError(true)}
-              style={{ width: 120, height: 120, objectFit: "contain", opacity: 0.6, filter: "brightness(1.2) sepia(1) hue-rotate(80deg) saturate(3)" }}
+              style={{ width: 160, height: 160, objectFit: "contain", opacity: 0.85 }}
             />
           )}
         </div>
