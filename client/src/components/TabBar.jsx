@@ -18,7 +18,7 @@ export default function TabBar({ active, onSwitch }) {
             padding: "10px 0 8px",
           }}>
             <img src={t.icon} alt={t.label} style={{
-              width: 24, height: 24, objectFit: "contain",
+              width: 28, height: 28, objectFit: "contain",
               opacity: isActive ? 1 : 0.3,
               filter: isActive ? "none" : "grayscale(100%) brightness(0.5)",
               transition: "all 0.2s ease",
