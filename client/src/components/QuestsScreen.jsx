@@ -244,32 +244,31 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
             {PROTOCOLS.map((p, i) => {
               const done = !!completedRituals[p.name];
               const streak = ritualStreaks[p.name] || 0;
-              const mentorLine = p.lines[seed % p.lines.length];
               return (
                 <div key={i} style={{
-                  padding: "18px 16px", marginBottom: 10,
+                  padding: "14px 16px", marginBottom: 10,
                   background: done
                     ? C.greenFaint
-                    : `linear-gradient(135deg, ${p.accent}12 0%, ${C.surface} 60%)`,
+                    : `linear-gradient(135deg, ${p.accent}22 0%, ${C.surface} 70%)`,
                   borderLeft: `3px solid ${done ? C.green + "66" : p.accent}`,
-                  border: `1px solid ${done ? C.green + "22" : p.accent + "22"}`,
+                  border: `1px solid ${done ? C.green + "22" : p.accent + "33"}`,
                   borderLeftWidth: 3,
-                  opacity: done ? 0.45 : 1,
+                  opacity: done ? 0.4 : 1,
                   transition: "all 0.3s ease",
                   position: "relative",
                   overflow: "hidden",
                 }}>
-                  {/* Faint icon watermark in background */}
+                  {/* Watermark icon — vertically centered */}
                   {!done && (
                     <img src={p.icon} alt="" style={{
-                      position: "absolute", right: -10, bottom: -10,
-                      width: 90, height: 90, objectFit: "contain",
-                      opacity: 0.04, pointerEvents: "none",
+                      position: "absolute", right: -8, top: "50%", transform: "translateY(-50%)",
+                      width: 80, height: 80, objectFit: "contain",
+                      opacity: 0.08, pointerEvents: "none",
                     }} onError={e => { e.target.style.display = "none"; }} />
                   )}
 
-                  {/* Protocol header row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10, position: "relative" }}>
+                  {/* Single row — icon centered vertically */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
                     <img src={p.icon} alt={p.code} style={{
                       width: 44, height: 44, objectFit: "contain", flexShrink: 0,
                       opacity: done ? 0.3 : 1,
@@ -293,13 +292,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                       )}
                     </div>
                   </div>
-
-                  {/* Mentor quote */}
-                  {!done && (
-                    <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6, fontStyle: "italic", paddingLeft: 58 }}>
-                      <span style={{ color: p.accent, fontWeight: 600, fontStyle: "normal", fontSize: 11 }}>{p.mentor}:</span> "{mentorLine}"
-                    </div>
-                  )}
                 </div>
               );
             })}
