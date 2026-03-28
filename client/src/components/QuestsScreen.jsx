@@ -68,7 +68,7 @@ const PROTOCOLS = [
   {
     name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM",
     icon: "/icon-sanctum.png", accent: "#6b4a8c",
-    mentor: "Fr. Callum",
+    mentor: "Khalil",
     lines: [
       "You cannot think your way to peace. Stop thinking first.",
       "The desert fathers sat in silence for years. You have ten minutes.",
@@ -82,7 +82,7 @@ const PROTOCOLS = [
   {
     name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL",
     icon: "/icon-signal.png", accent: "#c9a84c",
-    mentor: "Lucien",
+    mentor: "Kade",
     lines: [
       "Your network is your guild's reach. An isolated operator is a dead one.",
       "One message. One contact. That's all it takes to stay visible.",
