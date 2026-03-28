@@ -59,6 +59,7 @@ export default function App() {
   const [meditationTitle, setMeditationTitle] = useState("");
   const [showMeditation, setShowMeditation] = useState(false);
   const [guildChestClaimed, setGuildChestClaimed] = useState("");
+  const [claimedWeeklies, setClaimedWeeklies] = useState([]);
 
   // Weekly ritual counts (summed from Supabase for Mon-Sun)
   const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
@@ -649,6 +650,19 @@ export default function App() {
     }
   };
 
+  // Weekly quest chest claim
+  const handleClaimWeekly = async (questId, chestResult) => {
+    let newGold = playerGold + (chestResult.gold || 0);
+    let newInventory = [...inventory];
+    if (chestResult.item) {
+      newInventory = [...newInventory, chestResult.item.id];
+      setInventory(newInventory);
+    }
+    setPlayerGold(newGold);
+    setClaimedWeeklies(prev => [...prev, questId]);
+    if (userId) saveProfile({ gold: newGold, inventory: newInventory });
+  };
+
   // Guild handlers
   const handleCreateGuild = async (name, description, crest) => {
     if (!userId) return;
@@ -798,7 +812,6 @@ export default function App() {
               ) : showRitualDetail.name === "Walk/Jog 20min" ? (
                 <ExploreTheLandFlow
                   playerStats={playerStats}
-                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
@@ -828,6 +841,9 @@ export default function App() {
                     meditationTitle={meditationTitle}
                     onOpenMeditation={() => setShowMeditation(true)}
                     userId={userId}
+                    onClaimWeekly={handleClaimWeekly}
+                    claimedWeeklies={claimedWeeklies}
+                    inventory={inventory}
                   />
                 )}
                 {tab === "quests" && showMeditation && (

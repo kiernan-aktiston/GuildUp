@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { C, CLASSES, getRank } from '../constants';
+import { CHEST_TYPES, rollChest } from '../chestSystem';
+import { ITEMS, SLOTS, RARITIES } from '../equipmentData';
 
 // ═══════════════════════════════════════
 // DAILY BRIEFINGS — from the guild system
@@ -40,7 +43,7 @@ const PROTOCOLS = [
   {
     name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON",
     icon: "/icon-recon.png", accent: "#5a7a5a",
-    mentor: "Kaya",
+    mentor: "Sable",
     lines: [
       "You've walked this route a hundred times. Today, notice what changed.",
       "Every street is a supply line. Every alley is an exit. Learn them.",
@@ -99,20 +102,27 @@ function getDaySeed(userId = "") {
   return (new Date().toISOString().split("T")[0] + userId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 }
 
-export default function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warrior", playerLevel = 1, ritualStreaks = {}, weeklyRitualCounts = {}, todayMeditation = null, meditationComplete = false, meditationTitle = "", onOpenMeditation, userId = "" }) {
+export default function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warrior", playerLevel = 1, ritualStreaks = {}, weeklyRitualCounts = {}, todayMeditation = null, meditationComplete = false, meditationTitle = "", onOpenMeditation, userId = "", onClaimWeekly, claimedWeeklies = [], inventory = [] }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const seed = getDaySeed(userId);
   const completedCount = PROTOCOLS.filter(p => !!completedRituals[p.name]).length;
   const allDone = completedCount === 5;
+  const [chestResult, setChestResult] = useState(null);
 
   const briefing = BRIEFINGS[seed % BRIEFINGS.length];
 
   const weeklyQuests = [
-    { name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4 },
-    { name: "Sharpen the Mind", desc: "Complete 5x this week", progress: weeklyRitualCounts["Read 20min"] || 0, target: 5 },
-    { name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5 },
+    { id: "forge_weekly", name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4 },
+    { id: "intel_weekly", name: "Sharpen the Mind", desc: "Complete 5x this week", progress: weeklyRitualCounts["Read 20min"] || 0, target: 5 },
+    { id: "signal_weekly", name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5 },
   ];
+
+  const handleClaimChest = (questId) => {
+    const result = rollChest(CHEST_TYPES.mystery, playerLevel, inventory);
+    setChestResult(result);
+    onClaimWeekly?.(questId, result);
+  };
 
   return (
     <div style={{ padding: "16px 18px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
@@ -290,28 +300,66 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {weeklyQuests.map((q, i) => {
               const done = q.progress >= q.target;
+              const claimed = claimedWeeklies.includes(q.id);
               const pct = Math.min((q.progress / q.target) * 100, 100);
               return (
                 <div key={i} style={{
                   padding: "14px 16px",
-                  background: done ? C.greenFaint : C.surface,
-                  border: `1px solid ${done ? C.green + "33" : C.border}`,
+                  background: claimed ? C.greenFaint : done ? `rgba(245, 158, 11, 0.06)` : C.surface,
+                  border: `1px solid ${claimed ? C.green + "33" : done ? "#f59e0b33" : C.border}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: done ? C.green : C.text }}>{q.name}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: claimed ? C.green : done ? "#f59e0b" : C.text }}>{q.name}</div>
                       <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{q.desc}</div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace", color: done ? C.green : C.textMuted }}>{q.progress}/{q.target}</span>
+                    {done && !claimed ? (
+                      <button onClick={() => handleClaimChest(q.id)} style={{
+                        padding: "6px 16px", border: `1px solid #f59e0b55`, cursor: "pointer",
+                        background: "rgba(245, 158, 11, 0.1)", fontFamily: "'Courier New', monospace",
+                        color: "#f59e0b", fontSize: 11, fontWeight: 600, borderRadius: 0,
+                      }}>{"\u{1F381}"} CLAIM</button>
+                    ) : (
+                      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace", color: claimed ? C.green : done ? "#f59e0b" : C.textMuted }}>
+                        {claimed ? "\u2713" : `${q.progress}/${q.target}`}
+                      </span>
+                    )}
                   </div>
                   <div style={{ height: 3, background: C.surfaceLight, overflow: "hidden" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", background: done ? C.green : C.purple, transition: "width 0.5s ease" }} />
+                    <div style={{ width: `${pct}%`, height: "100%", background: claimed ? C.green : done ? "#f59e0b" : C.purple, transition: "width 0.5s ease" }} />
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* ═══ CHEST RESULT MODAL ═══ */}
+        {chestResult && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 320, padding: 28, background: "#0a0a0a", border: `1px solid #f59e0b33`, textAlign: "center" }}>
+              <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: "#f59e0b", letterSpacing: 2, marginBottom: 16 }}>WEEKLY CHEST OPENED</div>
+
+              <div style={{ fontFamily: "'Courier New', monospace", fontSize: 24, fontWeight: 700, color: "#f59e0b", marginBottom: 8 }}>+{chestResult.gold}g</div>
+
+              {chestResult.item ? (
+                <>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>{SLOTS[chestResult.item.slot]?.emoji || "\u{1F392}"}</div>
+                  <div style={{ fontFamily: "'Courier New', monospace", fontSize: 15, fontWeight: 700, color: RARITIES[chestResult.item.rarity]?.color || C.text, marginBottom: 4 }}>{chestResult.item.name}</div>
+                  <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: RARITIES[chestResult.item.rarity]?.color || C.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>{RARITIES[chestResult.item.rarity]?.label} {SLOTS[chestResult.item.slot]?.label}</div>
+                </>
+              ) : (
+                <div style={{ fontFamily: "'Courier New', monospace", fontSize: 12, color: C.textMuted, marginBottom: 20, marginTop: 8 }}>Gold only this time.</div>
+              )}
+
+              <button onClick={() => setChestResult(null)} style={{
+                padding: "12px 40px", border: `1px solid #f59e0b55`, cursor: "pointer",
+                background: "transparent", fontFamily: "'Courier New', monospace", color: "#f59e0b",
+                fontSize: 13, fontWeight: 600, letterSpacing: 1, borderRadius: 0,
+              }}>[ OK ]</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
