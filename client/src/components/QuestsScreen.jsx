@@ -82,7 +82,7 @@ const PROTOCOLS = [
   {
     name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL",
     icon: "/icon-signal.png", accent: "#c9a84c",
-    mentor: "Kade",
+    mentor: "Lucien",
     lines: [
       "Your network is your guild's reach. An isolated operator is a dead one.",
       "One message. One contact. That's all it takes to stay visible.",

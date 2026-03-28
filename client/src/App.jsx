@@ -765,6 +765,7 @@ export default function App() {
               showRitualDetail.name === "Reach Out" ? (
                 <RallyAlliesFlow
                   playerStats={playerStats}
+                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
@@ -773,7 +774,6 @@ export default function App() {
               ) : showRitualDetail.name === "Bodyweight Workout" ? (
                 <ForgeTheBodyFlow
                   playerStats={playerStats}
-                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
