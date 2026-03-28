@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, CLASSES, getRank } from '../constants';
 import { CHEST_TYPES, rollChest } from '../chestSystem';
-import { ITEMS, SLOTS, RARITIES } from '../equipmentData';
+import { SLOTS, RARITIES } from '../equipmentData';
+
+const MONO = "'Courier New', 'Consolas', monospace";
+const SLOT_SYMBOLS = ['#', '$', '7', '%', '&', '@', '!', '*', '+', '='];
 
 // ═══════════════════════════════════════
 // DAILY BRIEFINGS — from the guild system
@@ -24,12 +27,11 @@ const BRIEFINGS = [
   "There are no days off. There are only days you chose not to show up.",
 ];
 
-// Protocol definitions with mentor info
 const PROTOCOLS = [
   {
     name: "Bodyweight Workout", label: "Forge the Body", code: "FORGE",
     icon: "/icon-forge.png", accent: "#c47a20",
-    mentor: "Cmdr. Rask",
+    mentor: "Marcus",
     lines: [
       "Your body is the first tool. Maintain it or be replaced by someone who does.",
       "Suffering is just information. It tells you where you're weak. Listen.",
@@ -43,7 +45,7 @@ const PROTOCOLS = [
   {
     name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON",
     icon: "/icon-recon.png", accent: "#5a7a5a",
-    mentor: "Sable",
+    mentor: "Kaya",
     lines: [
       "You've walked this route a hundred times. Today, notice what changed.",
       "Every street is a supply line. Every alley is an exit. Learn them.",
@@ -71,7 +73,7 @@ const PROTOCOLS = [
   {
     name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM",
     icon: "/icon-sanctum.png", accent: "#6b4a8c",
-    mentor: "Fr. Callum",
+    mentor: "Khalil",
     lines: [
       "You cannot think your way to peace. Stop thinking first.",
       "The desert fathers sat in silence for years. You have ten minutes.",
@@ -85,7 +87,7 @@ const PROTOCOLS = [
   {
     name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL",
     icon: "/icon-signal.png", accent: "#c9a84c",
-    mentor: "Kade",
+    mentor: "Lucien",
     lines: [
       "Your network is your guild's reach. An isolated operator is a dead one.",
       "One message. One contact. That's all it takes to stay visible.",
@@ -102,13 +104,40 @@ function getDaySeed(userId = "") {
   return (new Date().toISOString().split("T")[0] + userId).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 }
 
+// Slot machine hook
+function useSlotMachine(spinning) {
+  const [reels, setReels] = useState(['#', '#', '#']);
+  const [locked, setLocked] = useState([false, false, false]);
+  const [phase, setPhase] = useState('idle');
+  useEffect(() => {
+    if (!spinning) { setPhase('idle'); setLocked([false, false, false]); return; }
+    setPhase('spinning'); setLocked([false, false, false]);
+    const sym = '?';
+    const spinIv = setInterval(() => {
+      setReels(() => SLOT_SYMBOLS.sort(() => Math.random() - 0.5).slice(0, 3));
+    }, 60);
+    const t1 = setTimeout(() => { setReels(prev => [sym, prev[1], prev[2]]); setLocked([true, false, false]); setPhase('locking'); }, 800);
+    const t2 = setTimeout(() => { setReels(prev => [prev[0], sym, prev[2]]); setLocked([true, true, false]); }, 1400);
+    const t3 = setTimeout(() => {
+      const finalSym = ['#', '$', '7'][Math.floor(Math.random() * 3)];
+      setReels(prev => [prev[0], prev[1], finalSym]); setLocked([true, true, true]); setPhase('done');
+    }, 2000);
+    return () => { clearInterval(spinIv); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [spinning]);
+  return { reels, locked, phase };
+}
+
 export default function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warrior", playerLevel = 1, ritualStreaks = {}, weeklyRitualCounts = {}, todayMeditation = null, meditationComplete = false, meditationTitle = "", onOpenMeditation, userId = "", onClaimWeekly, claimedWeeklies = [], inventory = [] }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
   const seed = getDaySeed(userId);
   const completedCount = PROTOCOLS.filter(p => !!completedRituals[p.name]).length;
   const allDone = completedCount === 5;
-  const [chestResult, setChestResult] = useState(null);
+
+  const [slotSpinning, setSlotSpinning] = useState(false);
+  const [slotQuestId, setSlotQuestId] = useState(null);
+  const [slotResult, setSlotResult] = useState(null);
+  const { reels, locked, phase: slotPhase } = useSlotMachine(slotSpinning);
 
   const briefing = BRIEFINGS[seed % BRIEFINGS.length];
 
@@ -120,12 +149,22 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
 
   const handleClaimChest = (questId) => {
     const result = rollChest(CHEST_TYPES.mystery, playerLevel, inventory);
-    setChestResult(result);
-    onClaimWeekly?.(questId, result);
+    setSlotQuestId(questId);
+    setSlotSpinning(true);
+    setSlotResult(null);
+    // After spin completes, show result
+    setTimeout(() => {
+      setSlotSpinning(false);
+      setSlotResult(result);
+      onClaimWeekly?.(questId, result);
+    }, 2200);
   };
 
+  const T = "#f59e0b";
+  const TD = "#92700a";
+
   return (
-    <div style={{ padding: "16px 18px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
+    <div style={{ padding: "16px 18px 100px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
 
       {/* Hex grid command-table wallpaper */}
       <div style={{
@@ -165,7 +204,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
         {/* ═══ MEDITATION BANNER ═══ */}
         {meditationComplete && meditationTitle && (
           <div style={{
-            padding: "14px 18px", marginBottom: 14, borderRadius: 0,
+            padding: "14px 18px", marginBottom: 14,
             background: C.blueFaint, borderLeft: `3px solid ${C.blue}`,
           }}>
             <div style={{ fontSize: 10, color: C.blue, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Today's Meditation</div>
@@ -250,7 +289,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                   position: "relative",
                   overflow: "hidden",
                 }}>
-                  {/* Watermark icon — vertically centered */}
                   {!done && (
                     <img src={p.icon} alt="" style={{
                       position: "absolute", right: -8, top: "50%", transform: "translateY(-50%)",
@@ -258,8 +296,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                       opacity: 0.08, pointerEvents: "none",
                     }} onError={e => { e.target.style.display = "none"; }} />
                   )}
-
-                  {/* Single row — icon centered vertically */}
                   <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
                     <img src={p.icon} alt={p.code} style={{
                       width: 44, height: 44, objectFit: "contain", flexShrink: 0,
@@ -305,25 +341,28 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
               return (
                 <div key={i} style={{
                   padding: "14px 16px",
-                  background: claimed ? C.greenFaint : done ? `rgba(245, 158, 11, 0.06)` : C.surface,
+                  background: claimed ? C.greenFaint : done ? "rgba(245, 158, 11, 0.06)" : C.surface,
                   border: `1px solid ${claimed ? C.green + "33" : done ? "#f59e0b33" : C.border}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: claimed ? C.green : done ? "#f59e0b" : C.text }}>{q.name}</div>
                       <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{q.desc}</div>
                     </div>
-                    {done && !claimed ? (
-                      <button onClick={() => handleClaimChest(q.id)} style={{
-                        padding: "6px 16px", border: `1px solid #f59e0b55`, cursor: "pointer",
-                        background: "rgba(245, 158, 11, 0.1)", fontFamily: "'Courier New', monospace",
-                        color: "#f59e0b", fontSize: 11, fontWeight: 600, borderRadius: 0,
-                      }}>{"\u{1F381}"} CLAIM</button>
-                    ) : (
-                      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace", color: claimed ? C.green : done ? "#f59e0b" : C.textMuted }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {/* Chest icon — always visible */}
+                      <div onClick={() => { if (done && !claimed) handleClaimChest(q.id); }} style={{ cursor: done && !claimed ? "pointer" : "default" }}>
+                        <img src="/slot-gold.png" alt="chest" style={{
+                          width: 36, height: 36, objectFit: "contain",
+                          filter: done && !claimed ? "none" : claimed ? "grayscale(100%) brightness(0.3)" : "grayscale(100%) brightness(0.3)",
+                          opacity: done && !claimed ? 1 : claimed ? 0.25 : 0.35,
+                          transition: "all 0.3s ease",
+                        }} onError={e => { e.target.style.display = "none"; }} />
+                      </div>
+                      <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 600, color: claimed ? C.green : done ? "#f59e0b" : C.textMuted, minWidth: 30, textAlign: "right" }}>
                         {claimed ? "\u2713" : `${q.progress}/${q.target}`}
                       </span>
-                    )}
+                    </div>
                   </div>
                   <div style={{ height: 3, background: C.surfaceLight, overflow: "hidden" }}>
                     <div style={{ width: `${pct}%`, height: "100%", background: claimed ? C.green : done ? "#f59e0b" : C.purple, transition: "width 0.5s ease" }} />
@@ -333,34 +372,65 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
             })}
           </div>
         </div>
-
-        {/* ═══ CHEST RESULT MODAL ═══ */}
-        {chestResult && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 320, padding: 28, background: "#0a0a0a", border: `1px solid #f59e0b33`, textAlign: "center" }}>
-              <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: "#f59e0b", letterSpacing: 2, marginBottom: 16 }}>WEEKLY CHEST OPENED</div>
-
-              <div style={{ fontFamily: "'Courier New', monospace", fontSize: 24, fontWeight: 700, color: "#f59e0b", marginBottom: 8 }}>+{chestResult.gold}g</div>
-
-              {chestResult.item ? (
-                <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>{SLOTS[chestResult.item.slot]?.emoji || "\u{1F392}"}</div>
-                  <div style={{ fontFamily: "'Courier New', monospace", fontSize: 15, fontWeight: 700, color: RARITIES[chestResult.item.rarity]?.color || C.text, marginBottom: 4 }}>{chestResult.item.name}</div>
-                  <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: RARITIES[chestResult.item.rarity]?.color || C.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>{RARITIES[chestResult.item.rarity]?.label} {SLOTS[chestResult.item.slot]?.label}</div>
-                </>
-              ) : (
-                <div style={{ fontFamily: "'Courier New', monospace", fontSize: 12, color: C.textMuted, marginBottom: 20, marginTop: 8 }}>Gold only this time.</div>
-              )}
-
-              <button onClick={() => setChestResult(null)} style={{
-                padding: "12px 40px", border: `1px solid #f59e0b55`, cursor: "pointer",
-                background: "transparent", fontFamily: "'Courier New', monospace", color: "#f59e0b",
-                fontSize: 13, fontWeight: 600, letterSpacing: 1, borderRadius: 0,
-              }}>[ OK ]</button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* ═══ SLOT MACHINE MODAL ═══ */}
+      {(slotSpinning || slotResult) && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.95)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ textAlign: "center", width: "100%", maxWidth: 320 }}>
+            {!slotResult ? (
+              <div style={{ animation: "fadeIn 0.2s ease" }}>
+                <div style={{ fontFamily: MONO, fontSize: 11, color: TD, letterSpacing: 1, marginBottom: 24 }}>{">> weekly reward processing..."}</div>
+                <div style={{ display: "inline-block", padding: "20px 28px", border: `1px solid ${TD}55`, marginBottom: 20 }}>
+                  <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+                    {reels.map((sym, i) => (
+                      <div key={i} style={{
+                        width: 60, height: 72, display: "flex", alignItems: "center", justifyContent: "center",
+                        border: `1px solid ${locked[i] ? T : TD + '33'}`,
+                        background: locked[i] ? `${T}0a` : "transparent", transition: "all 0.15s ease",
+                      }}>
+                        <span style={{ fontFamily: MONO, fontSize: 36, fontWeight: 700, color: locked[i] ? T : TD }}>{sym}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: TD }}>
+                  {slotPhase === 'spinning' && "[ spinning... ]"}
+                  {slotPhase === 'locking' && `[ ${locked.filter(Boolean).length}/3 locked ]`}
+                </div>
+              </div>
+            ) : (
+              <div style={{ animation: "fadeIn 0.5s ease" }}>
+                <div style={{ fontFamily: MONO, fontSize: 11, color: TD, letterSpacing: 1, marginBottom: 16 }}>{">> weekly reward claimed"}</div>
+                <div style={{ display: "inline-block", padding: "12px 24px", border: `1px solid ${T}33`, marginBottom: 16 }}>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    {reels.map((sym, i) => (
+                      <div key={i} style={{ width: 48, height: 56, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${T}55`, background: `${T}0a` }}>
+                        <span style={{ fontFamily: MONO, fontSize: 28, fontWeight: 700, color: T }}>{sym}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: T, marginBottom: 8 }}>+{slotResult.gold}g</div>
+                {slotResult.item ? (
+                  <>
+                    <div style={{ fontFamily: MONO, fontSize: 10, color: TD, marginBottom: 12 }}>{">> item acquired"}</div>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>{SLOTS[slotResult.item.slot]?.emoji || "\u{1F392}"}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: RARITIES[slotResult.item.rarity]?.color || C.text, marginBottom: 4 }}>{slotResult.item.name}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 10, color: RARITIES[slotResult.item.rarity]?.color || C.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>{RARITIES[slotResult.item.rarity]?.label} {SLOTS[slotResult.item.slot]?.label}</div>
+                  </>
+                ) : (
+                  <div style={{ fontFamily: MONO, fontSize: 11, color: TD, marginBottom: 20, marginTop: 8 }}>{">> gold only. better luck next time."}</div>
+                )}
+                <button onClick={() => { setSlotResult(null); setSlotQuestId(null); }} style={{
+                  padding: "12px 40px", border: `1px solid ${T}55`, cursor: "pointer",
+                  background: "transparent", fontFamily: MONO, color: T, fontSize: 13, fontWeight: 600, letterSpacing: 1, borderRadius: 0,
+                }}>[ OK ]</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
