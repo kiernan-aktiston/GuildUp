@@ -3,36 +3,36 @@
 // ============================================
 export const C = {
   // ── Core surfaces ──
-  bg: "#0a0a0c",
-  surface: "#141416",
-  surfaceLight: "#1c1c1f",
-  border: "#222226",
+  bg: "#0d0d10",
+  surface: "#18181c",
+  surfaceLight: "#242428",
+  border: "#2c2c32",
   // ── Text ──
-  text: "#e8e0d4",
-  textMuted: "#7a756d",
-  textDim: "#4a4640",
+  text: "#ede6db",
+  textMuted: "#9e9890",
+  textDim: "#706b62",
   // ── Accent: Gold (primary) ──
-  gold: "#c9a84c",
+  gold: "#d4b255",
   goldDark: "#a08838",
-  goldFaint: "rgba(201, 168, 76, 0.12)",
+  goldFaint: "rgba(212, 178, 85, 0.15)",
   // ── Accent: Functional ──
-  xp: "#c9a84c",
-  green: "#4a7c50",
-  greenFaint: "rgba(74, 124, 80, 0.15)",
-  blue: "#4a6a94",
-  blueFaint: "rgba(74, 106, 148, 0.12)",
-  purple: "#6b4a8c",
-  purpleFaint: "rgba(107, 74, 140, 0.12)",
-  red: "#8b3030",
+  xp: "#d4b255",
+  green: "#5a9a62",
+  greenFaint: "rgba(90, 154, 98, 0.18)",
+  blue: "#5a80b0",
+  blueFaint: "rgba(90, 128, 176, 0.15)",
+  purple: "#8260a8",
+  purpleFaint: "rgba(130, 96, 168, 0.15)",
+  red: "#a83838",
   // ── Cards & containers (used sparingly) ──
-  card: "#141416",
-  cardBorder: "#222226",
+  card: "#18181c",
+  cardBorder: "#2c2c32",
   // ── Backwards compat (old names used by other screens) ──
-  tabStore: "#c9a84c",
-  tabBattle: "#8b3030",
-  ritualDone: "#4a7c50",
-  ritualPending: "#1c1c1f",
-  ritualPendingBorder: "#222226",
+  tabStore: "#d4b255",
+  tabBattle: "#a83838",
+  ritualDone: "#5a9a62",
+  ritualPending: "#242428",
+  ritualPendingBorder: "#2c2c32",
 };
 
 export const TABS = [
