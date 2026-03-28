@@ -40,7 +40,7 @@ const PROTOCOLS = [
   {
     name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON",
     icon: "/icon-recon.png", accent: "#5a7a5a",
-    mentor: "Sable",
+    mentor: "Kaya",
     lines: [
       "You've walked this route a hundred times. Today, notice what changed.",
       "Every street is a supply line. Every alley is an exit. Learn them.",
@@ -68,7 +68,7 @@ const PROTOCOLS = [
   {
     name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM",
     icon: "/icon-sanctum.png", accent: "#6b4a8c",
-    mentor: "Khalil",
+    mentor: "Fr. Callum",
     lines: [
       "You cannot think your way to peace. Stop thinking first.",
       "The desert fathers sat in silence for years. You have ten minutes.",
