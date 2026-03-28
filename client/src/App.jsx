@@ -773,6 +773,7 @@ export default function App() {
               ) : showRitualDetail.name === "Bodyweight Workout" ? (
                 <ForgeTheBodyFlow
                   playerStats={playerStats}
+                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
