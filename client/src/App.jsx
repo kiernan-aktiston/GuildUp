@@ -782,6 +782,7 @@ export default function App() {
                 <SharpenTheMindFlow
                   playerStats={playerStats}
                   completedArticles={completedArticles}
+                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
@@ -790,7 +791,6 @@ export default function App() {
               ) : showRitualDetail.name === "Pray/Meditate 10min" ? (
                 <StillTheSpiritFlow
                   playerStats={playerStats}
-                  userId={userId}
                   onBack={(didComplete, rewards) => {
                     if (didComplete) handleRitualComplete(showRitualDetail.name, rewards);
                     setShowRitualDetail(null);
