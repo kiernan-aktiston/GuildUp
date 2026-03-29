@@ -6,6 +6,7 @@ const PURPLE_DIM = "#4a3562";
 const PURPLE_FAINT = "rgba(107, 74, 140, 0.08)";
 const PURPLE_LIGHT = "#a78bfa";
 const MONO = "'Courier New', 'Consolas', monospace";
+const TEXTBOX = { background: "rgba(0,0,0,0.7)", padding: "20px 22px", border: "1px solid rgba(107,74,140,0.25)" };
 
 const TIERS = [
   { name: "First Flame", code: "FF-01", duration: 300, xp: 10, gold: 2, reqSpi: 0, desc: "5 minutes. Light the first flame." },
@@ -35,9 +36,7 @@ function CaveBg({ opacity = 1 }) {
       position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
       backgroundImage: "url(/sanctum-cave.png)", backgroundSize: "cover", backgroundPosition: "center",
       opacity,
-    }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.95) 100%)" }} />
-    </div>
+    }} />
   );
 }
 
@@ -111,16 +110,16 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
   if (step === "intro1") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <CaveBg opacity={0.3} />
+        <CaveBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: PURPLE_DIM, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: PURPLE_LIGHT, letterSpacing: 3, marginBottom: 32, fontWeight: 700, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
 
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 2, fontFamily: "'Inter', sans-serif", marginBottom: 48 }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#fff", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontWeight: 500, marginBottom: 36 }}>
             Contractors who operate without spiritual discipline become liabilities. The mind fractures under pressure. The spirit anchors it.
             <span style={{ display: "block", height: 16 }} />
             This protocol exists because the Compact has learned what happens when operators neglect the interior.
             <span style={{ display: "block", height: 16 }} />
-            <span style={{ color: PURPLE_LIGHT }}>Sit. Breathe. Return to yourself.</span>
+            <span style={{ color: PURPLE_LIGHT, fontWeight: 700 }}>Sit. Breathe. Return to yourself.</span>
           </div>
 
           <button onClick={() => setStep("intro2")} style={{
@@ -139,7 +138,7 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
   if (step === "intro2") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <CaveBg opacity={0.2} />
+        <CaveBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
           <div style={{ marginBottom: 20 }}>
             <img src="/khalil-portrait.png" alt="Khalil" style={{
@@ -148,10 +147,10 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
             }} onError={e => { e.target.style.display = "none"; }} />
           </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: PURPLE_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>Sanctum Protocol Director</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: 2, marginBottom: 20 }}>Khalil</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: PURPLE_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontWeight: 700 }}>Sanctum Protocol Director</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 2, marginBottom: 20 }}>Khalil</div>
 
-          <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, padding: "0 8px" }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#ddd", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, border: `1px solid ${PURPLE}33` }}>
             "{khalilQuote}"
           </div>
 
@@ -171,7 +170,7 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
   if (step === "tierSelect") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <CaveBg opacity={0.1} />
+        <CaveBg opacity={0.75} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => onBack(false)} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0, fontFamily: MONO }}>{"\u2190"} abort</button>
 
@@ -258,13 +257,9 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px 100px", position: "relative", background: "#000",
       }}>
-        <CaveBg opacity={0.45} />
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none",
-          background: "radial-gradient(circle at 50% 50%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)",
-        }} />
+        <CaveBg opacity={0.75} />
 
-        <div style={{ position: "relative", zIndex: 2, textAlign: "center", width: "100%" }}>
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
           {/* Breathing circle */}
           <div style={{
             width: 160, height: 160, borderRadius: "50%",
@@ -327,7 +322,7 @@ export default function StillTheSpiritFlow({ onBack, playerStats = {}, userId = 
   if (step === "done") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <CaveBg opacity={0.2} />
+        <CaveBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: PURPLE_DIM, letterSpacing: 2, marginBottom: 16 }}>SANCTUM COMPLETE</div>
 

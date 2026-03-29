@@ -7,6 +7,7 @@ const BLUE_DIM = "#2d4060";
 const BLUE_FAINT = "rgba(74, 106, 148, 0.08)";
 const BLUE_LIGHT = "#6b9fd4";
 const MONO = "'Courier New', 'Consolas', monospace";
+const TEXTBOX = { background: "rgba(0,0,0,0.7)", padding: "20px 22px", border: "1px solid rgba(74,106,148,0.25)" };
 
 const TIERS = [
   { name: "Skim", code: "SK-01", qCount: 2, timer: 0, xp: 10, gold: 2, reqInt: 0, desc: "2 easy questions. No time pressure." },
@@ -31,9 +32,7 @@ function ArchiveBg({ opacity = 1 }) {
       position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
       backgroundImage: "url(/intel-archive.png)", backgroundSize: "cover", backgroundPosition: "center",
       opacity,
-    }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.95) 100%)" }} />
-    </div>
+    }} />
   );
 }
 
@@ -83,16 +82,16 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
   if (step === "intro1") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <ArchiveBg opacity={0.3} />
+        <ArchiveBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: BLUE_DIM, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: BLUE_LIGHT, letterSpacing: 3, marginBottom: 32, fontWeight: 700, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
 
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 2, fontFamily: "'Inter', sans-serif", marginBottom: 48 }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#fff", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontWeight: 500, marginBottom: 36 }}>
             Contractors who stop learning become obsolete. The Compact does not employ obsolete operators.
             <span style={{ display: "block", height: 16 }} />
             Intelligence is not a talent. It is a discipline maintained through daily study.
             <span style={{ display: "block", height: 16 }} />
-            <span style={{ color: BLUE_LIGHT }}>Read. Comprehend. Prove it.</span>
+            <span style={{ color: BLUE_LIGHT, fontWeight: 700 }}>Read. Comprehend. Prove it.</span>
           </div>
 
           <button onClick={() => setStep("intro2")} style={{
@@ -111,7 +110,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
   if (step === "intro2") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <ArchiveBg opacity={0.2} />
+        <ArchiveBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
           <div style={{ marginBottom: 20 }}>
             <img src="/aldric-portrait.png" alt="Aldric" style={{
@@ -120,10 +119,10 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
             }} onError={e => { e.target.style.display = "none"; }} />
           </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: BLUE_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>Intel Protocol Director</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: 2, marginBottom: 20 }}>Aldric</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: BLUE_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontWeight: 700 }}>Intel Protocol Director</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 2, marginBottom: 20 }}>Aldric</div>
 
-          <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, padding: "0 8px" }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#ddd", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, border: `1px solid ${BLUE}33` }}>
             "{aldricQuote}"
           </div>
 
@@ -143,7 +142,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
   if (step === "tierSelect") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.1} />
+        <ArchiveBg opacity={0.45} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => onBack(false)} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0, fontFamily: MONO }}>{"\u2190"} abort</button>
 
@@ -223,7 +222,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
   if (step === "topics") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.08} />
+        <ArchiveBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => setStep("tierSelect")} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
           <div style={{ fontFamily: MONO, fontSize: 10, color: BLUE_DIM, letterSpacing: 2, marginBottom: 8 }}>{tier.code} {"\u2022"} {tier.name}</div>
@@ -260,7 +259,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
   if (step === "articles" && selectedTopic) {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.08} />
+        <ArchiveBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => { setSelectedTopic(null); setStep("topics"); }} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
           <div style={{ fontFamily: MONO, fontSize: 10, color: selectedTopic.color, letterSpacing: 2, marginBottom: 8 }}>{selectedTopic.name}</div>
@@ -303,7 +302,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
     const wordCount = selectedArticle.content.split(/\s+/).length;
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.06} />
+        <ArchiveBg opacity={0.35} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => setStep("articles")} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 16, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
 
@@ -333,7 +332,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
     const allAnswered = questions.every((_, i) => answers[i] !== undefined || timedOut[i]);
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.06} />
+        <ArchiveBg opacity={0.35} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => { setStep("reading"); setAnswers({}); setSubmitted(false); setTimedOut({}); clearInterval(timerRef.current); }} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back to article</button>
 
@@ -422,7 +421,7 @@ export default function SharpenTheMindFlow({ onBack, playerStats = {}, completed
     const passed = score >= passThreshold;
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ArchiveBg opacity={0.15} />
+        <ArchiveBg opacity={0.5} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: BLUE_DIM, letterSpacing: 2, marginBottom: 16 }}>{passed ? "INTEL COMPLETE" : "INSUFFICIENT"}</div>
 

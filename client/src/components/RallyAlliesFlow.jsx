@@ -5,6 +5,7 @@ const GOLD = "#c9a84c";
 const GOLD_DIM = "#7a6a3a";
 const GOLD_FAINT = "rgba(201, 168, 76, 0.08)";
 const MONO = "'Courier New', 'Consolas', monospace";
+const TEXTBOX = { background: "rgba(0,0,0,0.7)", padding: "20px 22px", border: "1px solid rgba(201,168,76,0.25)" };
 
 const TIERS = [
   { name: "Signal Fire", code: "SF-01", xp: 10, gold: 2, reqCha: 0, minAway: 60,
@@ -50,9 +51,7 @@ function ChamberBg({ opacity = 1 }) {
       position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
       backgroundImage: "url(/signal-chamber.png)", backgroundSize: "cover", backgroundPosition: "center",
       opacity,
-    }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.95) 100%)" }} />
-    </div>
+    }} />
   );
 }
 
@@ -125,16 +124,16 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "intro1") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <ChamberBg opacity={0.35} />
+        <ChamberBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: GOLD_DIM, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD, letterSpacing: 3, marginBottom: 32, fontWeight: 700, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
 
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 2, fontFamily: "'Inter', sans-serif", marginBottom: 48 }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#fff", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontWeight: 500, marginBottom: 36 }}>
             Contractors are required to maintain active communication within their network. An isolated operator is a compromised operator.
             <span style={{ display: "block", height: 16 }} />
             Your guild's reach depends on every member's connections. Neglected relationships are structural vulnerabilities.
             <span style={{ display: "block", height: 16 }} />
-            <span style={{ color: GOLD }}>One contact. One message. That is the minimum.</span>
+            <span style={{ color: GOLD, fontWeight: 700 }}>One contact. One message. That is the minimum.</span>
           </div>
 
           <button onClick={() => setStep("intro2")} style={{
@@ -153,7 +152,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "intro2") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <ChamberBg opacity={0.25} />
+        <ChamberBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
           <div style={{ marginBottom: 20 }}>
             <img src="/lucien-portrait.png" alt="Lucien" style={{
@@ -162,10 +161,10 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
             }} onError={e => { e.target.style.display = "none"; }} />
           </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>Signal Protocol Director</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: 2, marginBottom: 20 }}>Lucien</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontWeight: 700 }}>Signal Protocol Director</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 2, marginBottom: 20 }}>Lucien</div>
 
-          <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, padding: "0 8px" }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#ddd", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, border: `1px solid ${GOLD}33` }}>
             "{lucienQuote}"
           </div>
 
@@ -185,7 +184,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "tierSelect") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ChamberBg opacity={0.12} />
+        <ChamberBg opacity={0.45} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => onBack(false)} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0, fontFamily: MONO }}>{"\u2190"} abort</button>
 
@@ -265,7 +264,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "category") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ChamberBg opacity={0.1} />
+        <ChamberBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => setStep("tierSelect")} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD_DIM, letterSpacing: 2, marginBottom: 8 }}>{tier.code} {"\u2022"} {tier.name}</div>
@@ -301,7 +300,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "recipient") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ChamberBg opacity={0.1} />
+        <ChamberBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => setStep("category")} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD_DIM, letterSpacing: 2, marginBottom: 8 }}>{tier.code} {"\u2022"} {CATEGORIES.find(c => c.key === category)?.label}</div>
@@ -337,7 +336,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "intent") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ChamberBg opacity={0.1} />
+        <ChamberBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => setStep("recipient")} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0, fontFamily: MONO }}>{"\u2190"} back</button>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD_DIM, letterSpacing: 2, marginBottom: 8 }}>{tier.code} {"\u2022"} {recipientName}</div>
@@ -377,7 +376,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
     const int = INTENTS.find(i => i.key === intent);
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <ChamberBg opacity={0.2} />
+        <ChamberBg opacity={0.55} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: 340 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD_DIM, letterSpacing: 2, marginBottom: 12 }}>YOUR MISSION</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: GOLD, marginBottom: 20 }}>{tier.name}</div>
@@ -419,7 +418,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
     const int = INTENTS.find(i => i.key === intent);
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative" }}>
-        <ChamberBg opacity={0.15} />
+        <ChamberBg opacity={0.5} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: 320 }}>
           {canConfirm ? (
             <>
@@ -468,7 +467,7 @@ export default function RallyAlliesFlow({ onBack, playerStats = {}, userId = "" 
   if (step === "done") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative", animation: "fadeIn 0.3s ease" }}>
-        <ChamberBg opacity={0.2} />
+        <ChamberBg opacity={0.55} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GOLD_DIM, letterSpacing: 2, marginBottom: 16 }}>SIGNAL COMPLETE</div>
 

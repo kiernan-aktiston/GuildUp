@@ -6,6 +6,7 @@ const GREEN_DIM = "#3a5a3a";
 const GREEN_FAINT = "rgba(90, 122, 90, 0.08)";
 const GREEN_LIGHT = "#7aaa7a";
 const MONO = "'Courier New', 'Consolas', monospace";
+const TEXTBOX = { background: "rgba(0,0,0,0.7)", padding: "20px 22px", border: "1px solid rgba(90,122,90,0.25)" };
 
 const TIERS = [
   { name: "First Steps", code: "FS-01", duration: 600, type: "Walk", xp: 10, gold: 2, reqAgi: 0, desc: "10 minutes on your feet. Build the habit.", distMiles: "~0.5 mi" },
@@ -38,9 +39,7 @@ function RidgeBg({ opacity = 1 }) {
       position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
       backgroundImage: "url(/recon-ridge.png)", backgroundSize: "cover", backgroundPosition: "center",
       opacity,
-    }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.95) 100%)" }} />
-    </div>
+    }} />
   );
 }
 
@@ -89,16 +88,16 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
   if (step === "intro1") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <RidgeBg opacity={0.35} />
+        <RidgeBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: GREEN_DIM, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: GREEN_LIGHT, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase", fontWeight: 700 }}>The Compact {"\u2014"} Contractor Protocol</div>
 
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 2, fontFamily: "'Inter', sans-serif", marginBottom: 48 }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#fff", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontWeight: 500, marginBottom: 36 }}>
             An operator who does not know the ground is already compromised. Territorial awareness is not optional.
             <span style={{ display: "block", height: 16 }} />
             The Compact requires regular reconnaissance of your operating environment. Walk it. Map it. Know it.
             <span style={{ display: "block", height: 16 }} />
-            <span style={{ color: GREEN_LIGHT }}>Move out. Report what you find.</span>
+            <span style={{ color: GREEN_LIGHT, fontWeight: 700 }}>Move out. Report what you find.</span>
           </div>
 
           <button onClick={() => setStep("intro2")} style={{
@@ -117,7 +116,7 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
   if (step === "intro2") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <RidgeBg opacity={0.25} />
+        <RidgeBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
           <div style={{ marginBottom: 20 }}>
             <img src="/kaya-portrait.png" alt="Kaya" style={{
@@ -126,10 +125,10 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
             }} onError={e => { e.target.style.display = "none"; }} />
           </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: GREEN_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>Recon Protocol Director</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: 2, marginBottom: 20 }}>Kaya</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: GREEN_LIGHT, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontWeight: 700 }}>Recon Protocol Director</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 2, marginBottom: 20 }}>Kaya</div>
 
-          <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, padding: "0 8px" }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#ddd", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, border: `1px solid ${GREEN}33` }}>
             "{kayaQuote}"
           </div>
 
@@ -149,7 +148,7 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
   if (step === "tierSelect") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <RidgeBg opacity={0.12} />
+        <RidgeBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => onBack(false)} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0, fontFamily: MONO }}>{"\u2190"} abort</button>
 
@@ -239,12 +238,8 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px 100px", position: "relative", background: "#000",
       }}>
-        <RidgeBg opacity={0.45} />
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none",
-          background: "radial-gradient(circle at 50% 40%, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%)",
-        }} />
-        <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+        <RidgeBg opacity={0.7} />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
           {/* Progress ring */}
           <div style={{ position: "relative", width: 220, height: 220, margin: "0 auto 24px" }}>
             <svg viewBox="0 0 220 220" width="220" height="220" style={{ transform: "rotate(-90deg)" }}>
@@ -286,7 +281,7 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
     ];
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <RidgeBg opacity={0.15} />
+        <RidgeBg opacity={0.5} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GREEN_DIM, letterSpacing: 2, marginBottom: 16 }}>DEBRIEF</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 8 }}>How Was That?</div>
@@ -319,7 +314,7 @@ export default function ExploreTheLandFlow({ onBack, playerStats = {}, userId = 
   if (step === "done") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <RidgeBg opacity={0.2} />
+        <RidgeBg opacity={0.55} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: GREEN_DIM, letterSpacing: 2, marginBottom: 16 }}>RECON COMPLETE</div>
 

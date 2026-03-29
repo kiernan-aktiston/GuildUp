@@ -5,6 +5,7 @@ const AMBER = "#c47a20";
 const AMBER_DIM = "#7a4d14";
 const AMBER_FAINT = "rgba(196, 122, 32, 0.08)";
 const MONO = "'Courier New', 'Consolas', monospace";
+const TEXTBOX = { background: "rgba(0,0,0,0.7)", padding: "20px 22px", border: "1px solid rgba(196,122,32,0.25)" };
 
 const TIERS = [
   {
@@ -96,9 +97,7 @@ function CanyonBg({ opacity = 1 }) {
       position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
       backgroundImage: "url(/forge-canyon.png)", backgroundSize: "cover", backgroundPosition: "center",
       opacity,
-    }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.95) 100%)" }} />
-    </div>
+    }} />
   );
 }
 
@@ -159,16 +158,16 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
   if (step === "intro1") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <CanyonBg opacity={0.4} />
+        <CanyonBg opacity={0.7} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: AMBER_DIM, letterSpacing: 3, marginBottom: 32, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER, letterSpacing: 3, marginBottom: 32, fontWeight: 700, textTransform: "uppercase" }}>The Compact {"\u2014"} Contractor Protocol</div>
 
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 2, fontFamily: "'Inter', sans-serif", marginBottom: 48 }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#fff", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontWeight: 500, marginBottom: 36 }}>
             The Compact requires that all contractors maintain physical readiness sufficient to meet operational demands.
             <span style={{ display: "block", height: 16 }} />
             Failure to maintain baseline conditioning may result in contract reassignment.
             <span style={{ display: "block", height: 16 }} />
-            <span style={{ color: AMBER }}>This protocol is not optional.</span>
+            <span style={{ color: AMBER, fontWeight: 700 }}>This protocol is not optional.</span>
           </div>
 
           <button onClick={() => setStep("intro2")} style={{
@@ -187,7 +186,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
   if (step === "intro2") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px 28px", background: "#050505", position: "relative", animation: "fadeIn 0.5s ease" }}>
-        <CanyonBg opacity={0.25} />
+        <CanyonBg opacity={0.6} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 340 }}>
 
           {/* Portrait */}
@@ -198,10 +197,10 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
             }} onError={e => { e.target.style.display = "none"; }} />
           </div>
 
-          <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>Forge Protocol Director</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: 2, marginBottom: 20 }}>Marcus</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontWeight: 700 }}>Forge Protocol Director</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 2, marginBottom: 20 }}>Marcus</div>
 
-          <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, padding: "0 8px" }}>
+          <div style={{ ...TEXTBOX, fontSize: 14, color: "#ddd", lineHeight: 2, fontFamily: "'Inter', sans-serif", fontStyle: "italic", marginBottom: 40, border: `1px solid ${AMBER}33` }}>
             "{marcusQuote}"
           </div>
 
@@ -221,7 +220,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
   if (step === "briefing") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", padding: "24px 18px 100px", background: "#050505", animation: "fadeIn 0.3s ease", position: "relative" }}>
-        <CanyonBg opacity={0.15} />
+        <CanyonBg opacity={0.5} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <button onClick={() => onBack(false)} style={{ background: "none", border: "none", color: C.textDim, fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0, fontFamily: MONO }}>{"\u2190"} abort</button>
 
@@ -306,7 +305,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
     const isRest = currentExercise.type === "rest";
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative" }}>
-        <CanyonBg opacity={0.12} />
+        <CanyonBg opacity={0.45} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER_DIM, letterSpacing: 2, marginBottom: 16 }}>{exerciseIdx + 1} / {tier.exercises.length}</div>
           <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, color: isRest ? C.textDim : C.text, marginBottom: 8 }}>{currentExercise.name}</div>
@@ -343,7 +342,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
         minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         padding: "40px 24px 100px", position: "relative", background: "#050505",
       }}>
-        <CanyonBg opacity={0.1} />
+        <CanyonBg opacity={0.4} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER_DIM, letterSpacing: 2, marginBottom: 8 }}>{exerciseIdx + 1} / {tier.exercises.length}</div>
           <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: isBurnout ? "#ef4444" : isRest ? C.textDim : AMBER, marginBottom: 16, letterSpacing: 1 }}>{currentExercise.name}</div>
@@ -395,7 +394,7 @@ export default function ForgeTheBodyFlow({ onBack, playerStats = {}, userId = ""
   if (step === "done") {
     return (
       <div dir="ltr" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 100px", background: "#050505", position: "relative" }}>
-        <CanyonBg opacity={0.2} />
+        <CanyonBg opacity={0.55} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 320 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: AMBER_DIM, letterSpacing: 2, marginBottom: 16 }}>SESSION COMPLETE</div>
 
