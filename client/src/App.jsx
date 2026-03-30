@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import { C, CLASSES, ACTIVITY_STAT_MAP, getLocalDate, getWeekStart } from "./constants";
 import { xpForLevel, totalXpForLevel, statPointsForLevel, distributeStatPoints, evaluateClass, processLevelUp } from "./gameLogic";
+import { getItem } from "./equipmentData";
 import TabBar from "./components/TabBar";
 import XPBar from "./components/XPBar";
 import LandingScreen from "./components/LandingScreen";
@@ -599,6 +600,20 @@ export default function App() {
     }
   };
 
+  const handleSell = async (itemId) => {
+    if (!inventory.includes(itemId)) return;
+    const itemData = getItem(itemId);
+    const sellPrice = itemData ? Math.floor(itemData.price * 0.35) : 0;
+    let newEquipment = { ...equipment };
+    Object.entries(newEquipment).forEach(([slot, eqId]) => { if (eqId === itemId) newEquipment[slot] = null; });
+    const newInventory = inventory.filter(id => id !== itemId);
+    const newGold = playerGold + sellPrice;
+    setInventory(newInventory);
+    setPlayerGold(newGold);
+    setEquipment(newEquipment);
+    if (userId) saveProfile({ gold: newGold, inventory: newInventory, equipment: newEquipment });
+  };
+
   // Daily meditation completion — chestResult is { gold, item }
   const handleMeditationComplete = async (title, chestResult) => {
     setMeditationComplete(true);
@@ -863,6 +878,8 @@ export default function App() {
                     avatarUrl={avatarUrl} onAvatarUpload={handleAvatarUpload}
                     inventory={inventory} equipment={equipment}
                     onEquip={handleEquip} onUnequip={handleUnequip}
+                    onSell={handleSell} inventoryCap={INVENTORY_CAP}
+                    claimedWeeklies={claimedWeeklies}
                   />
                 )}
                 {tab === "battle" && <BattleScreen />}
