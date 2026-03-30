@@ -153,11 +153,18 @@ export default function App() {
   const loadPlayerData = async (uid) => {
     try {
       const { data } = await supabase
-        .from("profiles").select("completed_articles, inventory, equipment, meditation_date, meditation_title, guild_chest_claimed").eq("id", uid).single();
+        .from("profiles").select("completed_articles, inventory, equipment, meditation_date, meditation_title, guild_chest_claimed, claimed_weeklies_data").eq("id", uid).single();
       if (data?.completed_articles) setCompletedArticles(data.completed_articles);
       if (data?.inventory) setInventory(data.inventory);
       if (data?.equipment) setEquipment(prev => ({ ...prev, ...data.equipment }));
       if (data?.guild_chest_claimed) setGuildChestClaimed(data.guild_chest_claimed);
+      // Load claimed weeklies — reset if it's a new week
+      const currentWeek = getWeekStart();
+      if (data?.claimed_weeklies_data && data.claimed_weeklies_data.week === currentWeek) {
+        setClaimedWeeklies(data.claimed_weeklies_data.ids || []);
+      } else {
+        setClaimedWeeklies([]);
+      }
       const today = getLocalDate();
       if (data?.meditation_date === today) {
         setMeditationComplete(true);
@@ -674,8 +681,15 @@ export default function App() {
       setInventory(newInventory);
     }
     setPlayerGold(newGold);
-    setClaimedWeeklies(prev => [...prev, questId]);
-    if (userId) saveProfile({ gold: newGold, inventory: newInventory });
+    const newClaimed = [...claimedWeeklies, questId];
+    setClaimedWeeklies(newClaimed);
+    if (userId) {
+      saveProfile({
+        gold: newGold,
+        inventory: newInventory,
+        claimed_weeklies_data: { week: getWeekStart(), ids: newClaimed },
+      });
+    }
   };
 
   // Guild handlers
@@ -746,7 +760,7 @@ export default function App() {
 
         {screen === "loading" && (
           <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+            <img src="/guildup-sigil.png" alt="GuildUp" style={{ width: 100, height: 100, objectFit: "contain", marginBottom: 16, opacity: 0.85 }} />
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: C.gold, letterSpacing: 2 }}>GUILDUP</div>
           </div>
         )}
