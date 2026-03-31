@@ -3,34 +3,37 @@
 // ============================================
 export const C = {
   // ── Core surfaces ──
-  bg: "#0a0a0c",
-  surface: "#141416",
-  surfaceLight: "#1c1c1f",
-  border: "#222226",
+  bg: "#111114",
+  surface: "#1a1a1f",
+  surfaceLight: "#242428",
+  border: "#2a2a30",
   // ── Text ──
-  text: "#e8e0d4",
-  textMuted: "#7a756d",
-  textDim: "#4a4640",
+  text: "#ffffff",
+  textMuted: "#9a958e",
+  textDim: "#6a655f",
   // ── Accent: Gold (primary) ──
-  gold: "#c9a84c",
-  goldDark: "#a08838",
-  goldFaint: "rgba(201, 168, 76, 0.12)",
+  gold: "#dbb85c",
+  goldDark: "#b89a3a",
+  goldFaint: "rgba(219, 184, 92, 0.1)",
   // ── Accent: Functional ──
-  xp: "#c9a84c",
-  green: "#4a7c50",
-  greenFaint: "rgba(74, 124, 80, 0.15)",
-  blue: "#4a6a94",
-  blueFaint: "rgba(74, 106, 148, 0.12)",
-  purple: "#6b4a8c",
-  purpleFaint: "rgba(107, 74, 140, 0.12)",
-  red: "#8b3030",
-  // ── Cards & containers (used sparingly) ──
-  card: "#141416",
-  cardBorder: "#222226",
-  // ── Backwards compat (old names used by other screens) ──
-  tabStore: "#c9a84c",
-  tabBattle: "#8b3030",
-  ritualDone: "#4a7c50",
+  xp: "#dbb85c",
+  green: "#4eba6f",
+  greenFaint: "rgba(78, 186, 111, 0.1)",
+  blue: "#5b9bd5",
+  blueFaint: "rgba(91, 155, 213, 0.1)",
+  purple: "#9b6dcc",
+  purpleFaint: "rgba(155, 109, 204, 0.1)",
+  red: "#d85a5a",
+  // ── Protocol accents ──
+  amber: "#e8922d",
+  amberFaint: "rgba(232, 146, 45, 0.1)",
+  // ── Cards & containers ──
+  card: "#1a1a1f",
+  cardBorder: "#2a2a30",
+  // ── Backwards compat ──
+  tabStore: "#dbb85c",
+  tabBattle: "#d85a5a",
+  ritualDone: "#4eba6f",
   ritualPending: "#1c1c1f",
   ritualPendingBorder: "#222226",
 };
