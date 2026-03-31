@@ -272,27 +272,6 @@ export const INTERVIEW_QUESTIONS = [
 ];
 
 // ============================================
-// QUEST POOL — all possible daily quests
-// ============================================
-export const QUEST_POOL = [
-  { id: "q1", name: "Cold Shower Challenge", desc: "60 seconds of cold water", xp: 15, gold: 2, stats: ["str", "spi"] },
-  { id: "q2", name: "Journal Entry", desc: "Write half a page in your journal", xp: 15, gold: 2, stats: ["int", "spi"] },
-  { id: "q3", name: "Expand Your Network", desc: "Send a personalized message to someone new", xp: 15, gold: 2, stats: ["cha", "agi"] },
-  { id: "q4", name: "Connect with a Mentor", desc: "Have a meaningful conversation with a mentor", xp: 15, gold: 2, stats: ["cha", "int"] },
-  { id: "q5", name: "Cook a Healthy Meal", desc: "Prepare a nutritious meal from scratch", xp: 15, gold: 2, stats: ["str", "int"] },
-  { id: "q6", name: "Learn Something New", desc: "Watch a tutorial or take an online lesson", xp: 15, gold: 2, stats: ["int", "agi"] },
-  { id: "q7", name: "Declutter Your Space", desc: "Clean and organize one area of your room", xp: 15, gold: 2, stats: ["str", "spi"] },
-  { id: "q8", name: "No Social Media", desc: "Stay off all social media for 4 hours", xp: 15, gold: 2, stats: ["spi", "int"] },
-  { id: "q9", name: "Compliment Three People", desc: "Give three genuine, specific compliments today", xp: 15, gold: 2, stats: ["cha", "spi"] },
-  { id: "q10", name: "Stretch for 10 Minutes", desc: "Full-body stretching routine", xp: 15, gold: 2, stats: ["str", "agi"] },
-  { id: "q11", name: "Write Down 3 Goals", desc: "Write three goals for this week and how you'll achieve them", xp: 15, gold: 2, stats: ["int", "spi"] },
-  { id: "q12", name: "Help Someone", desc: "Do something helpful for someone without being asked", xp: 15, gold: 2, stats: ["cha", "spi"] },
-  { id: "q13", name: "Practice a Skill", desc: "Spend 20 minutes practicing a skill you're developing", xp: 15, gold: 2, stats: ["int", "agi"] },
-  { id: "q14", name: "Budget Check", desc: "Review your spending and set a budget for the week", xp: 15, gold: 2, stats: ["int", "cha"] },
-  { id: "q15", name: "Hydration Quest", desc: "Drink 8 glasses of water today", xp: 15, gold: 2, stats: ["str", "spi"] },
-  { id: "q16", name: "Gratitude List", desc: "Write down 5 things you're grateful for", xp: 15, gold: 2, stats: ["spi", "cha"] },
-];
-
 // Get local date string (YYYY-MM-DD) in user's timezone
 export function getLocalDate() {
   const now = new Date();
@@ -307,19 +286,6 @@ export function getWeekStart() {
   const monday = new Date(now);
   monday.setDate(now.getDate() - diff);
   return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-}
-
-// Deterministic daily quest picker — same quests for same date+userId, shuffles daily
-export function getDailyQuests(dateStr, usrId = "", count = 4) {
-  const seed = (dateStr + usrId).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const pool = [...QUEST_POOL];
-  let s = seed;
-  for (let i = pool.length - 1; i > 0; i--) {
-    s = (s * 1103515245 + 12345) & 0x7fffffff;
-    const j = s % (i + 1);
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, count);
 }
 
 // Get a random quote for a given ritual name
