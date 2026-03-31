@@ -10,6 +10,7 @@ import WelcomeSlides from "./components/WelcomeSlides";
 import AuthScreen from "./components/AuthScreen";
 import InterviewScreen from "./components/InterviewScreen";
 import ClassRevealScreen from "./components/ClassRevealScreen";
+import PaymentScreen from "./components/PaymentScreen";
 import QuestsScreen from "./components/QuestsScreen";
 import RitualDetailScreen from "./components/RitualDetailScreen";
 import AvatarScreen from "./components/AvatarScreen";
@@ -62,6 +63,9 @@ export default function App() {
   const [guildChestClaimed, setGuildChestClaimed] = useState("");
   const [claimedWeeklies, setClaimedWeeklies] = useState([]);
 
+  // Payment status
+  const [isPaid, setIsPaid] = useState(false);
+
   // Weekly ritual counts (summed from Supabase for Mon-Sun)
   const [weeklyRitualCounts, setWeeklyRitualCounts] = useState({
     "Bodyweight Workout": 0, "Walk/Jog 20min": 0, "Read 20min": 0,
@@ -95,7 +99,7 @@ export default function App() {
     try {
       const { data, error } = await supabase
         .from("profiles").select("*").eq("id", uid).single();
-      if (error || !data) return false;
+      if (error || !data) return { onboarded: false, paid: false };
       setPlayerName(data.display_name || "Adventurer");
       setPlayerClass(data.class || "warrior");
 
@@ -124,10 +128,11 @@ export default function App() {
         cha: data.tally_cha || 0,
       });
       if (data.avatar_url) setAvatarUrl(data.avatar_url);
-      return data.onboarding_complete;
+      setIsPaid(!!data.is_paid);
+      return { onboarded: !!data.onboarding_complete, paid: !!data.is_paid };
     } catch (e) {
       console.error("Failed to load profile:", e);
-      return false;
+      return { onboarded: false, paid: false };
     }
   };
 
@@ -298,6 +303,14 @@ export default function App() {
       recoveryMode.current = true;
     }
 
+    // Check if returning from Stripe payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("payment");
+    if (paymentStatus === "success") {
+      // Clean URL
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     // Subscribe to auth events FIRST — Supabase will process the hash tokens
     // and fire PASSWORD_RECOVERY when the recovery session is ready
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -330,14 +343,14 @@ export default function App() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserId(session.user.id);
-        const onboarded = await loadProfile(session.user.id);
-        if (onboarded) {
+        const result = await loadProfile(session.user.id);
+        if (result.onboarded) {
           await loadTodayRituals(session.user.id);
           await loadWeeklyRituals(session.user.id);
           await loadGuild(session.user.id);
           await loadStreaks(session.user.id);
           await loadPlayerData(session.user.id);
-          setScreen("dashboard");
+          setScreen(result.paid ? "dashboard" : "payment");
         } else {
           setScreen("interviewIntro");
         }
@@ -370,14 +383,14 @@ export default function App() {
         if (error) throw error;
         if (data.user) {
           setUserId(data.user.id);
-          const onboarded = await loadProfile(data.user.id);
-          if (onboarded) {
+          const result = await loadProfile(data.user.id);
+          if (result.onboarded) {
             await loadTodayRituals(data.user.id);
             await loadWeeklyRituals(data.user.id);
             await loadGuild(data.user.id);
             await loadStreaks(data.user.id);
             await loadPlayerData(data.user.id);
-            setScreen("dashboard");
+            setScreen(result.paid ? "dashboard" : "payment");
           } else {
             setPlayerName(data.user.user_metadata?.display_name || email.split("@")[0]);
             setScreen("interviewIntro");
@@ -800,7 +813,26 @@ export default function App() {
         )}
         {screen === "interview" && <InterviewScreen onComplete={handleInterviewComplete} />}
         {screen === "reveal" && (
-          <ClassRevealScreen className={playerClass} startingLevel={playerLevel} onContinue={() => setScreen("dashboard")} />
+          <ClassRevealScreen className={playerClass} startingLevel={playerLevel} onContinue={() => setScreen("payment")} />
+        )}
+        {screen === "payment" && (
+          <PaymentScreen
+            playerClass={playerClass}
+            playerLevel={playerLevel}
+            playerName={playerName}
+            userId={userId}
+            onPaid={async () => {
+              setIsPaid(true);
+              if (userId) {
+                await loadTodayRituals(userId);
+                await loadWeeklyRituals(userId);
+                await loadGuild(userId);
+                await loadStreaks(userId);
+                await loadPlayerData(userId);
+              }
+              setScreen("dashboard");
+            }}
+          />
         )}
         {screen === "dashboard" && (
           <>
