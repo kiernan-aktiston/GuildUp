@@ -12,17 +12,21 @@ export default function PaymentScreen({ playerClass = "warrior", playerLevel = 1
   const cls = CLASSES[playerClass] || CLASSES.warrior;
 
   // Check if payment was completed (handles webhook race condition)
-  const checkPaymentStatus = async () => {
+  const checkPaymentStatus = async (retries = 5) => {
     setChecking(true);
-    try {
-      const { data } = await supabase.from("profiles").select("is_paid").eq("id", userId).single();
-      if (data?.is_paid) {
-        onPaid?.();
-        return;
-      }
-    } catch (e) { /* ignore */ }
+    setError("");
+    for (let i = 0; i < retries; i++) {
+      try {
+        const { data } = await supabase.from("profiles").select("is_paid").eq("id", userId).single();
+        if (data?.is_paid) {
+          onPaid?.();
+          return;
+        }
+      } catch (e) { /* ignore */ }
+      if (i < retries - 1) await new Promise(r => setTimeout(r, 2000));
+    }
     setChecking(false);
-    setError("Payment not yet confirmed. It may take a moment — try again shortly.");
+    setError("Payment not yet confirmed. Try again in a moment.");
   };
 
   // Auto-check on mount if returning from Stripe
@@ -30,8 +34,7 @@ export default function PaymentScreen({ playerClass = "warrior", playerLevel = 1
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success") {
       window.history.replaceState(null, "", window.location.pathname);
-      // Give webhook a moment, then check
-      setTimeout(checkPaymentStatus, 2000);
+      checkPaymentStatus(6);
     }
   }, []);
 

@@ -303,13 +303,9 @@ export default function App() {
       recoveryMode.current = true;
     }
 
-    // Check if returning from Stripe payment
+    // Check if returning from Stripe payment — flag it for PaymentScreen
     const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get("payment");
-    if (paymentStatus === "success") {
-      // Clean URL
-      window.history.replaceState(null, "", window.location.pathname);
-    }
+    const isPaymentReturn = urlParams.get("payment") === "success";
 
     // Subscribe to auth events FIRST — Supabase will process the hash tokens
     // and fire PASSWORD_RECOVERY when the recovery session is ready
@@ -350,7 +346,22 @@ export default function App() {
           await loadGuild(session.user.id);
           await loadStreaks(session.user.id);
           await loadPlayerData(session.user.id);
-          setScreen(result.paid ? "dashboard" : "payment");
+          if (result.paid) {
+            setScreen("dashboard");
+          } else if (isPaymentReturn) {
+            // Returning from Stripe — webhook may be slow, poll a few times
+            let paid = false;
+            for (let i = 0; i < 5; i++) {
+              await new Promise(r => setTimeout(r, 2000));
+              const { data } = await supabase.from("profiles").select("is_paid").eq("id", session.user.id).single();
+              if (data?.is_paid) { paid = true; setIsPaid(true); break; }
+            }
+            window.history.replaceState(null, "", window.location.pathname);
+            if (paid) { setScreen("dashboard"); }
+            else { setScreen("payment"); }
+          } else {
+            setScreen("payment");
+          }
         } else {
           setScreen("interviewIntro");
         }
