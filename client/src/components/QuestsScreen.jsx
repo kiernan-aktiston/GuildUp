@@ -4,95 +4,12 @@ import { CHEST_TYPES, rollChest } from '../chestSystem';
 
 const MONO = "'Courier New', 'Consolas', monospace";
 
-const BRIEFINGS = [
-  "Readiness is not optional. It is the price of belonging.",
-  "Border activity reported in the eastern corridor. Maintain operational status.",
-  "Three guilds were dissolved this quarter. All cited member attrition. Don't be next.",
-  "Your guild's contract rating depends on every operator's daily output.",
-  "No one remembers the guild that almost won the contract.",
-  "Field conditions are deteriorating across all dominions. Sharpen everything.",
-  "Intelligence reports indicate increased competition for Tier 2 contracts. Stay ready.",
-  "The guild that trains hardest in peacetime survives the longest in conflict.",
-  "A guild member who doesn't train is a liability with a name.",
-  "Discipline is the only infrastructure that doesn't decay.",
-  "Your readiness score is visible to guild leadership. Act accordingly.",
-  "Two operators were reassigned last week for protocol noncompliance. Don't join them.",
-  "The difference between a mercenary and a liability is consistency.",
-  "Supply lines are thinning. Every resource you earn today matters more tomorrow.",
-  "There are no days off. There are only days you chose not to show up.",
-];
-
 const PROTOCOLS = [
-  {
-    name: "Bodyweight Workout", label: "Forge the Body", code: "FORGE",
-    icon: "/icon-forge.png", accent: "#e8922d",
-    mentor: "Marcus",
-    lines: [
-      "Your body is the first tool. Maintain it or be replaced by someone who does.",
-      "Suffering is just information. It tells you where you're weak. Listen.",
-      "I don't care how you feel. I care if you showed up.",
-      "The enemy trains on the days you rest. Remember that.",
-      "Discipline weighs ounces. Regret weighs tons.",
-      "You're not training to get strong. You're training to be useful.",
-      "A dull blade is a dead operator. Sharpen yourself.",
-    ],
-  },
-  {
-    name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON",
-    icon: "/icon-recon.png", accent: "#4eba6f",
-    mentor: "Kaya",
-    lines: [
-      "You've walked this route a hundred times. Today, notice what changed.",
-      "Every street is a supply line. Every alley is an exit. Learn them.",
-      "The territory doesn't care about your map. Walk it. Know it.",
-      "An operator who doesn't know the ground is already lost.",
-      "Move through your city like it's hostile territory. Because someday it might be.",
-      "Recon isn't exercise. It's survival intelligence gathered on foot.",
-      "The land tells you things if you stop and listen. Start walking.",
-    ],
-  },
-  {
-    name: "Read 20min", label: "Sharpen the Mind", code: "INTEL",
-    icon: "/icon-intel.png", accent: "#5b9bd5",
-    mentor: "Aldric",
-    lines: [
-      "Knowledge is the only weapon that gets sharper with use. Read.",
-      "A book is a dead strategist's best argument. Find the flaw in it.",
-      "The guild that hoards knowledge outlasts the guild that hoards gold.",
-      "Twenty minutes of reading is twenty minutes of competitive advantage.",
-      "What you read today becomes the decision you make under pressure tomorrow.",
-      "Ignorance isn't neutral. It's a vulnerability your enemies will exploit.",
-      "The scriptorium survived the collapse. Libraries outlast empires. Read.",
-    ],
-  },
-  {
-    name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM",
-    icon: "/icon-sanctum.png", accent: "#9b6dcc",
-    mentor: "Khalil",
-    lines: [
-      "You cannot think your way to peace. Stop thinking first.",
-      "The desert fathers sat in silence for years. You have ten minutes.",
-      "Stillness is not weakness. It is the deepest kind of readiness.",
-      "An operator who cannot quiet the mind will break in the field.",
-      "Sit. Breathe. The answers come when you stop chasing them.",
-      "There is something larger than you. Acknowledge it. It changes everything.",
-      "The spirit is the last thing to fail. Keep it sharp.",
-    ],
-  },
-  {
-    name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL",
-    icon: "/icon-signal.png", accent: "#dbb85c",
-    mentor: "Lucien",
-    lines: [
-      "Your network is your guild's reach. An isolated operator is a dead one.",
-      "One message. One contact. That's all it takes to stay visible.",
-      "Silence is how you disappear. Send the message.",
-      "Every relationship is infrastructure. Neglected infrastructure collapses.",
-      "The best contract your guild ever wins will come through someone you know.",
-      "Influence isn't charm. It's consistent, strategic presence. Be present.",
-      "A guild of eight connected operators outperforms a guild of fifty strangers.",
-    ],
-  },
+  { name: "Bodyweight Workout", label: "Forge the Body", code: "FORGE", icon: "/icon-forge.png", accent: "#e8922d", mentor: "Marcus" },
+  { name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON", icon: "/icon-recon.png", accent: "#4eba6f", mentor: "Kaya" },
+  { name: "Read 20min", label: "Sharpen the Mind", code: "INTEL", icon: "/icon-intel.png", accent: "#5b9bd5", mentor: "Aldric" },
+  { name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM", icon: "/icon-sanctum.png", accent: "#9b6dcc", mentor: "Khalil" },
+  { name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL", icon: "/icon-signal.png", accent: "#dbb85c", mentor: "Lucien" },
 ];
 
 const SLOT_SYMBOLS = ['#', '$', '7', '%', '&', '@', '!', '*', '+', '='];
@@ -125,11 +42,8 @@ function getDaySeed(userId = "") {
 export default function QuestsScreen({ onOpenRitual, completedRituals = {}, playerClass = "warrior", playerLevel = 1, ritualStreaks = {}, weeklyRitualCounts = {}, todayMeditation = null, meditationComplete = false, meditationTitle = "", onOpenMeditation, userId = "", onClaimWeekly, claimedWeeklies = [], inventory = [] }) {
   const cls = CLASSES[playerClass] || CLASSES.warrior;
   const rank = getRank(playerLevel);
-  const seed = getDaySeed(userId);
   const completedCount = PROTOCOLS.filter(p => !!completedRituals[p.name]).length;
   const allDone = completedCount === 5;
-
-  const briefing = BRIEFINGS[seed % BRIEFINGS.length];
 
   const weeklyQuests = [
     { id: "forge_weekly", name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4, accent: "#e8922d" },
@@ -137,7 +51,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
     { id: "signal_weekly", name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5, accent: "#dbb85c" },
   ];
 
-  // Slot machine state for weekly chest claim
   const [slotSpinning, setSlotSpinning] = useState(false);
   const [slotResult, setSlotResult] = useState(null);
   const [claimingQuest, setClaimingQuest] = useState(null);
@@ -172,21 +85,10 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
           }}>{allDone ? "OPERATIONAL" : `${completedCount}/5`}</div>
         </div>
 
-        {/* ═══ DAILY BRIEFING ═══ */}
-        <div style={{
-          padding: "14px 16px", marginTop: 10, marginBottom: 16, borderRadius: 12,
-          background: C.goldFaint, borderLeft: `3px solid ${C.gold}`,
-        }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: C.gold, fontWeight: 600, letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 6 }}>
-            DAILY BRIEFING {"\u2014"} {new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}
-          </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}>{briefing}</div>
-        </div>
-
         {/* ═══ MEDITATION BANNER ═══ */}
         {meditationComplete && meditationTitle && (
           <div style={{
-            padding: "14px 18px", marginBottom: 14, borderRadius: 12,
+            padding: "14px 18px", marginTop: 10, marginBottom: 14, borderRadius: 12,
             background: C.blueFaint, borderLeft: `3px solid ${C.blue}`,
           }}>
             <div style={{ fontFamily: MONO, fontSize: 10, color: C.blue, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Today's Meditation</div>
@@ -195,7 +97,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
         )}
 
         {/* ═══ READINESS BAR ═══ */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, marginBottom: 20 }}>
           <div style={{ fontFamily: MONO, fontSize: 9, color: C.textDim, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase", flexShrink: 0 }}>Readiness</div>
           <div style={{ flex: 1, height: 3, background: C.surfaceLight, overflow: "hidden", borderRadius: 2 }}>
             <div style={{ width: `${(completedCount / 5) * 100}%`, height: "100%", background: allDone ? C.green : C.gold, transition: "width 0.5s ease" }} />
@@ -215,32 +117,27 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
         </div>
 
         {/* ═══ DAILY MEDITATION ═══ */}
-        {todayMeditation && (
+        {todayMeditation && !meditationComplete && (
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.blue, whiteSpace: "nowrap" }}>Daily Meditation</span>
               <div style={{ flex: 1, height: 1, background: `${C.blue}33` }} />
             </div>
             <div
-              onClick={() => { if (!meditationComplete) onOpenMeditation?.(); }}
+              onClick={() => onOpenMeditation?.()}
               style={{
-                padding: "16px 18px", cursor: meditationComplete ? "default" : "pointer",
-                background: meditationComplete ? C.greenFaint : C.surface,
-                border: `1px solid ${meditationComplete ? C.green + "33" : C.border}`,
+                padding: "16px 18px", cursor: "pointer",
+                background: C.surface, border: `1px solid ${C.border}`,
                 borderRadius: 12, transition: "all 0.2s ease",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 22, opacity: meditationComplete ? 0.4 : 1 }}>{todayMeditation.emoji}</span>
+                <span style={{ fontSize: 22 }}>{todayMeditation.emoji}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: meditationComplete ? C.textDim : C.text }}>{todayMeditation.title}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{todayMeditation.title}</div>
                   <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{todayMeditation.prompt}</div>
                 </div>
-                {meditationComplete ? (
-                  <span style={{ color: C.green, fontSize: 18 }}>{"\u2713"}</span>
-                ) : (
-                  <div style={{ padding: "6px 18px", background: C.blue, color: "#fff", fontFamily: MONO, fontSize: 11, fontWeight: 600 }}>Start</div>
-                )}
+                <div style={{ padding: "6px 18px", background: C.blue, color: "#fff", fontFamily: MONO, fontSize: 11, fontWeight: 600 }}>Start</div>
               </div>
             </div>
           </div>
@@ -257,7 +154,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
             {PROTOCOLS.map((p, i) => {
               const done = !!completedRituals[p.name];
               const streak = ritualStreaks[p.name] || 0;
-              const mentorLine = p.lines[seed % p.lines.length];
               return (
                 <div key={i} style={{
                   padding: "14px 16px", borderRadius: 12,
@@ -268,8 +164,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                   opacity: done ? 0.45 : 1,
                   transition: "all 0.3s ease",
                 }}>
-                  {/* Protocol header row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: done ? 0 : 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: MONO, fontSize: 9, color: p.accent, letterSpacing: 1, fontWeight: 600 }}>{p.code}</span>
@@ -291,13 +186,6 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
                       )}
                     </div>
                   </div>
-
-                  {/* Mentor quote */}
-                  {!done && (
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, fontStyle: "italic", paddingLeft: 2 }}>
-                      <span style={{ color: p.accent, fontWeight: 600, fontStyle: "normal", fontSize: 11 }}>{p.mentor}:</span> "{mentorLine}"
-                    </div>
-                  )}
                 </div>
               );
             })}
