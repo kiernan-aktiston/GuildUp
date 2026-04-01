@@ -3,13 +3,20 @@ import { C, CLASSES, getRank } from '../constants';
 import { CHEST_TYPES, rollChest } from '../chestSystem';
 
 const MONO = "'Courier New', 'Consolas', monospace";
+const CINZEL = "'Cinzel', serif";
+const GOLD_BORDER = `2px solid ${C.goldDark || '#8b6f2a'}`;
+const CARD = {
+  border: GOLD_BORDER,
+  borderRadius: 12,
+  boxShadow: `inset 0 1px 0 rgba(232,212,139,0.15), 0 2px 8px rgba(0,0,0,0.5)`,
+};
 
 const PROTOCOLS = [
-  { name: "Bodyweight Workout", label: "Forge the Body", code: "FORGE", icon: "/icon-forge.png", accent: "#e8922d", mentor: "Marcus" },
-  { name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON", icon: "/icon-recon.png", accent: "#4eba6f", mentor: "Kaya" },
-  { name: "Read 20min", label: "Sharpen the Mind", code: "INTEL", icon: "/icon-intel.png", accent: "#5b9bd5", mentor: "Aldric" },
-  { name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM", icon: "/icon-sanctum.png", accent: "#9b6dcc", mentor: "Khalil" },
-  { name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL", icon: "/icon-signal.png", accent: "#dbb85c", mentor: "Lucien" },
+  { name: "Bodyweight Workout", label: "Forge the Body", code: "FORGE", icon: "/icon-forge.png", accent: "#d4782a", bg: "linear-gradient(135deg, #3a2818 0%, #4a3520 50%, #3a2818 100%)" },
+  { name: "Walk/Jog 20min", label: "Explore the Land", code: "RECON", icon: "/icon-recon.png", accent: "#3ab888", bg: "linear-gradient(135deg, #1a2e22 0%, #253a2e 50%, #1a2e22 100%)" },
+  { name: "Read 20min", label: "Sharpen the Mind", code: "INTEL", icon: "/icon-intel.png", accent: "#3ab0d4", bg: "linear-gradient(135deg, #1a2535 0%, #253545 50%, #1a2535 100%)" },
+  { name: "Pray/Meditate 10min", label: "Still the Spirit", code: "SANCTUM", icon: "/icon-sanctum.png", accent: "#9b6dcc", bg: "linear-gradient(135deg, #251a30 0%, #352a45 50%, #251a30 100%)" },
+  { name: "Reach Out", label: "Rally Your Allies", code: "SIGNAL", icon: "/icon-signal.png", accent: "#c9a84c", bg: "linear-gradient(135deg, #2a2210 0%, #3a3020 50%, #2a2210 100%)" },
 ];
 
 const SLOT_SYMBOLS = ['#', '$', '7', '%', '&', '@', '!', '*', '+', '='];
@@ -24,11 +31,10 @@ function useSlotMachine(spinning) {
     const spinIv = setInterval(() => {
       setReels(prev => prev.map(() => SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]));
     }, 60);
-    const t1 = setTimeout(() => { setReels(prev => ['?', prev[1], prev[2]]); setLocked([true, false, false]); setPhase('locking'); }, 800);
-    const t2 = setTimeout(() => { setReels(prev => [prev[0], '?', prev[2]]); setLocked([true, true, false]); }, 1400);
+    const t1 = setTimeout(() => { setReels(['?', '?', '?']); setLocked([true, false, false]); setPhase('locking'); }, 800);
+    const t2 = setTimeout(() => { setLocked([true, true, false]); }, 1400);
     const t3 = setTimeout(() => {
-      const finalSym = ['#', '$', '7'][Math.floor(Math.random() * 3)];
-      setReels(prev => [prev[0], prev[1], finalSym]); setLocked([true, true, true]); setPhase('done');
+      setReels(['#', '$', '7']); setLocked([true, true, true]); setPhase('done');
     }, 2000);
     return () => { clearInterval(spinIv); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [spinning]);
@@ -46,9 +52,9 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
   const allDone = completedCount === 5;
 
   const weeklyQuests = [
-    { id: "forge_weekly", name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4, accent: "#e8922d" },
-    { id: "intel_weekly", name: "Sharpen the Mind", desc: "Complete 5x this week", progress: weeklyRitualCounts["Read 20min"] || 0, target: 5, accent: "#5b9bd5" },
-    { id: "signal_weekly", name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5, accent: "#dbb85c" },
+    { id: "forge_weekly", name: "Forge the Body", desc: "Complete 4x this week", progress: weeklyRitualCounts["Bodyweight Workout"] || 0, target: 4, accent: "#d4782a" },
+    { id: "intel_weekly", name: "Sharpen the Mind", desc: "Complete 5x this week", progress: weeklyRitualCounts["Read 20min"] || 0, target: 5, accent: "#3ab0d4" },
+    { id: "signal_weekly", name: "Rally Your Allies", desc: "Complete 5x this week", progress: weeklyRitualCounts["Reach Out"] || 0, target: 5, accent: "#c9a84c" },
   ];
 
   const [slotSpinning, setSlotSpinning] = useState(false);
@@ -62,217 +68,219 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
     setSlotSpinning(true);
     setSlotResult(null);
     const result = rollChest(CHEST_TYPES.mystery, playerLevel, inventory);
-    setTimeout(() => {
-      setSlotSpinning(false);
-      setSlotResult(result);
-      onClaimWeekly?.(questId, result);
-    }, 2200);
+    setTimeout(() => { setSlotSpinning(false); setSlotResult(result); onClaimWeekly?.(questId, result); }, 2200);
   };
 
   return (
-    <div style={{ padding: "16px 18px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
+    <div style={{ padding: "16px 14px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
+      {/* Warm ambient glow */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: `radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 60%)` }} />
+
       <div style={{ position: "relative", zIndex: 1 }}>
 
-        {/* ═══ HEADER ═══ */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, paddingBottom: 12, borderBottom: `1px solid ${C.border}` }}>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>Level {playerLevel} {cls.title}</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: C.gold, fontWeight: 500, letterSpacing: 1.5, textTransform: "uppercase" }}>{rank}</div>
-          </div>
+        {/* ═══ HEADER BADGE ═══ */}
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
-            fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: 1,
-            color: allDone ? C.green : C.textDim,
-          }}>{allDone ? "OPERATIONAL" : `${completedCount}/5`}</div>
+            ...CARD, display: "inline-block", padding: "12px 32px",
+            background: `linear-gradient(135deg, #2a2018, #3a3020, #2a2018)`,
+            position: "relative",
+          }}>
+            <div style={{ fontFamily: CINZEL, fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: 2, textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
+              Level {playerLevel} {cls.title}
+            </div>
+            <div style={{ fontFamily: CINZEL, fontSize: 11, fontWeight: 600, color: C.goldLight || C.gold, letterSpacing: 3, textTransform: "uppercase" }}>
+              {rank}
+            </div>
+          </div>
         </div>
 
-        {/* ═══ MEDITATION BANNER ═══ */}
-        {meditationComplete && meditationTitle && (
-          <div style={{
-            padding: "14px 18px", marginTop: 10, marginBottom: 14, borderRadius: 12,
-            background: C.blueFaint, borderLeft: `3px solid ${C.blue}`,
-          }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: C.blue, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Today's Meditation</div>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 600, color: C.text, fontStyle: "italic" }}>"{meditationTitle}"</div>
-          </div>
-        )}
-
-        {/* ═══ READINESS BAR ═══ */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, marginBottom: 20 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: C.textDim, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase", flexShrink: 0 }}>Readiness</div>
-          <div style={{ flex: 1, height: 3, background: C.surfaceLight, overflow: "hidden", borderRadius: 2 }}>
-            <div style={{ width: `${(completedCount / 5) * 100}%`, height: "100%", background: allDone ? C.green : C.gold, transition: "width 0.5s ease" }} />
-          </div>
-          <div style={{ display: "flex", gap: 5 }}>
-            {PROTOCOLS.map((p, i) => {
-              const done = !!completedRituals[p.name];
-              return (
-                <div key={i} style={{
-                  width: 7, height: 7, borderRadius: 2,
-                  background: done ? p.accent : C.surfaceLight,
-                  transition: "background 0.3s ease",
-                }} />
-              );
-            })}
-          </div>
+        {/* ═══ READINESS PIPS ═══ */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 20 }}>
+          <span style={{ fontFamily: CINZEL, fontSize: 10, color: C.goldLight || C.gold, letterSpacing: 2, fontWeight: 600 }}>READINESS</span>
+          {PROTOCOLS.map((p, i) => {
+            const done = !!completedRituals[p.name];
+            return (
+              <div key={i} style={{
+                width: 16, height: 16, borderRadius: "50%",
+                border: `2px solid ${C.goldDark || '#8b6f2a'}`,
+                background: done
+                  ? `radial-gradient(circle at 40% 35%, ${C.goldLight || '#e8d48b'}, ${C.gold})`
+                  : C.bg,
+                boxShadow: done ? `0 0 6px ${C.gold}60` : `inset 0 1px 3px rgba(0,0,0,0.5)`,
+                transition: "all 0.3s ease",
+              }} />
+            );
+          })}
+          <span style={{ fontFamily: CINZEL, fontSize: 11, color: allDone ? C.green : C.textDim, fontWeight: 600 }}>
+            {allDone ? "OPERATIONAL" : `${completedCount}/5`}
+          </span>
         </div>
 
         {/* ═══ DAILY MEDITATION ═══ */}
         {todayMeditation && !meditationComplete && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.blue, whiteSpace: "nowrap" }}>Daily Meditation</span>
-              <div style={{ flex: 1, height: 1, background: `${C.blue}33` }} />
-            </div>
+          <div style={{ marginBottom: 18 }}>
             <div
               onClick={() => onOpenMeditation?.()}
               style={{
-                padding: "16px 18px", cursor: "pointer",
-                background: C.surface, border: `1px solid ${C.border}`,
-                borderRadius: 12, transition: "all 0.2s ease",
+                ...CARD, padding: "14px 16px", cursor: "pointer",
+                background: `linear-gradient(135deg, rgba(240,228,200,0.06), rgba(240,228,200,0.02))`,
+                display: "flex", alignItems: "center", gap: 12,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 22 }}>{todayMeditation.emoji}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{todayMeditation.title}</div>
-                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{todayMeditation.prompt}</div>
-                </div>
-                <div style={{ padding: "6px 18px", background: C.blue, color: "#fff", fontFamily: MONO, fontSize: 11, fontWeight: 600 }}>Start</div>
+              <span style={{ fontSize: 22 }}>{todayMeditation.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: CINZEL, fontSize: 10, fontWeight: 700, color: C.goldLight || C.gold, letterSpacing: 1.5, marginBottom: 2 }}>DAILY MEDITATION</div>
+                <div style={{ fontFamily: CINZEL, fontSize: 14, fontWeight: 700, color: C.text }}>{todayMeditation.title}</div>
+                <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{todayMeditation.prompt}</div>
               </div>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                border: `2px solid ${C.goldDark || '#8b6f2a'}`,
+                background: `radial-gradient(circle at 35% 35%, #5b9bd5cc, #5b9bd580 60%, #5b9bd540)`,
+                boxShadow: `0 0 12px rgba(91,155,213,0.3), inset 0 -2px 4px rgba(0,0,0,0.3)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontFamily: CINZEL, fontWeight: 700, color: "#fff",
+              }}>Go</div>
             </div>
           </div>
         )}
 
-        {/* ═══ PROTOCOLS ═══ */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.text, whiteSpace: "nowrap" }}>Protocols</span>
-            <div style={{ flex: 1, height: 1, background: `${C.text}15` }} />
+        {meditationComplete && meditationTitle && (
+          <div style={{ ...CARD, padding: "12px 16px", marginBottom: 18, background: `linear-gradient(135deg, rgba(78,186,111,0.08), rgba(78,186,111,0.02))` }}>
+            <div style={{ fontFamily: CINZEL, fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: 1.5, marginBottom: 2 }}>TODAY'S MEDITATION</div>
+            <div style={{ fontFamily: CINZEL, fontSize: 14, fontWeight: 600, color: C.text, fontStyle: "italic" }}>"{meditationTitle}"</div>
           </div>
+        )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {PROTOCOLS.map((p, i) => {
-              const done = !!completedRituals[p.name];
-              const streak = ritualStreaks[p.name] || 0;
-              return (
-                <div key={i} style={{
-                  padding: "14px 16px", borderRadius: 12,
-                  background: done ? C.greenFaint : `${p.accent}0d`,
-                  borderLeft: `3px solid ${done ? C.green + "66" : p.accent}`,
-                  border: `1px solid ${done ? C.green + "22" : p.accent + "20"}`,
-                  borderLeftWidth: 3,
-                  opacity: done ? 0.45 : 1,
-                  transition: "all 0.3s ease",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 9, color: p.accent, letterSpacing: 1, fontWeight: 600 }}>{p.code}</span>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: done ? C.textDim : C.text }}>{p.label}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {streak > 0 && (
-                        <span style={{ fontFamily: MONO, fontSize: 11, color: C.gold, fontWeight: 600 }}>{streak}d</span>
-                      )}
-                      {done ? (
-                        <span style={{ color: C.green, fontSize: 16 }}>{"\u2713"}</span>
-                      ) : (
-                        <button onClick={() => onOpenRitual({ name: p.name, label: p.label })} style={{
-                          padding: "6px 18px", border: "none", cursor: "pointer",
-                          background: p.accent, color: "#fff", fontFamily: MONO, fontSize: 11, fontWeight: 600,
-                          borderRadius: 0, letterSpacing: 0.5,
-                        }}>Start</button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* ═══ SECTION: PROTOCOLS ═══ */}
+        <div style={{ fontFamily: CINZEL, fontSize: 12, fontWeight: 700, color: C.goldLight || C.gold, letterSpacing: 3, textAlign: "center", marginBottom: 12 }}>
+          PROTOCOLS
         </div>
 
-        {/* ═══ WEEKLY CONTRACTS ═══ */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.purple, whiteSpace: "nowrap" }}>Weekly Contracts</span>
-            <div style={{ flex: 1, height: 1, background: `${C.purple}33` }} />
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+          {PROTOCOLS.map((p, i) => {
+            const done = !!completedRituals[p.name];
+            const streak = ritualStreaks[p.name] || 0;
+            return (
+              <div key={i} style={{
+                ...CARD, padding: "14px 16px",
+                background: done ? `linear-gradient(135deg, rgba(78,186,111,0.08), rgba(78,186,111,0.03))` : p.bg,
+                opacity: done ? 0.5 : 1,
+                display: "flex", alignItems: "center", gap: 14,
+                position: "relative", overflow: "hidden",
+              }}>
+                {/* Subtle cross-hatch pattern */}
+                <div style={{
+                  position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.04,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 0v20M0 10h20' stroke='%23ffffff' stroke-width='.5'/%3E%3C/svg%3E")`,
+                }} />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {weeklyQuests.map((q, i) => {
-              const done = q.progress >= q.target;
-              const claimed = claimedWeeklies.includes(q.id);
-              const pct = Math.min((q.progress / q.target) * 100, 100);
-              return (
-                <div key={i} style={{
-                  padding: "14px 16px", borderRadius: 12,
-                  background: done ? (claimed ? C.greenFaint : `${q.accent}0d`) : C.surface,
-                  border: `1px solid ${done ? (claimed ? C.green + "33" : q.accent + "33") : C.border}`,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: done ? (claimed ? C.green : C.text) : C.text }}>{q.name}</div>
-                      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{q.desc}</div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {done && !claimed && (
-                        <div onClick={() => handleClaimChest(q.id)} style={{ cursor: "pointer" }}>
-                          <img src="/slot-gold.png" alt="chest" style={{ width: 32, height: 32, objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
-                        </div>
-                      )}
-                      {claimed && <span style={{ color: C.green, fontSize: 14 }}>{"\u2713"}</span>}
-                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: done ? C.green : C.textMuted }}>{q.progress}/{q.target}</span>
-                    </div>
+                <img src={p.icon} alt={p.code} style={{ width: 36, height: 36, objectFit: "contain", filter: done ? "grayscale(1)" : "none", opacity: done ? 0.5 : 0.85, zIndex: 1 }} onError={e => { e.target.style.display = "none"; }} />
+
+                <div style={{ flex: 1, zIndex: 1 }}>
+                  <div style={{ fontFamily: CINZEL, fontSize: 16, fontWeight: 700, color: done ? C.textDim : "#fff", letterSpacing: 1.5, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+                    {p.code}
                   </div>
-                  <div style={{ height: 3, background: C.surfaceLight, overflow: "hidden", borderRadius: 2 }}>
-                    <div style={{ width: `${pct}%`, height: "100%", background: done ? C.green : q.accent, transition: "width 0.5s ease", borderRadius: 2 }} />
+                  <div style={{ fontFamily: CINZEL, fontSize: 11, color: done ? C.textDim : "rgba(255,255,255,0.7)", letterSpacing: 1 }}>
+                    {p.label}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10, zIndex: 1 }}>
+                  {streak > 0 && <span style={{ fontFamily: MONO, fontSize: 11, color: C.gold, fontWeight: 600 }}>{streak}d</span>}
+                  {done ? (
+                    <span style={{ color: C.green, fontSize: 18 }}>{"\u2713"}</span>
+                  ) : (
+                    <div onClick={() => onOpenRitual({ name: p.name, label: p.label })} style={{
+                      width: 44, height: 44, borderRadius: "50%", cursor: "pointer",
+                      border: `2px solid ${C.goldDark || '#8b6f2a'}`,
+                      background: `radial-gradient(circle at 35% 35%, ${p.accent}cc, ${p.accent}80 60%, ${p.accent}40)`,
+                      boxShadow: `0 0 12px ${p.accent}40, inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px ${p.accent}60`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: CINZEL, fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1,
+                      textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                    }}>Start</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ═══ SECTION: WEEKLY ═══ */}
+        <div style={{ fontFamily: CINZEL, fontSize: 12, fontWeight: 700, color: C.purple, letterSpacing: 3, textAlign: "center", marginBottom: 12 }}>
+          WEEKLY CONTRACTS
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {weeklyQuests.map((q, i) => {
+            const done = q.progress >= q.target;
+            const claimed = claimedWeeklies.includes(q.id);
+            const pct = Math.min((q.progress / q.target) * 100, 100);
+            return (
+              <div key={i} style={{
+                ...CARD, padding: "14px 16px",
+                background: done ? (claimed ? `linear-gradient(135deg, rgba(78,186,111,0.06), rgba(78,186,111,0.02))` : `${q.accent}0a`) : `linear-gradient(135deg, ${C.surface}, ${C.surfaceLight})`,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontFamily: CINZEL, fontSize: 13, fontWeight: 700, color: done ? (claimed ? C.green : C.text) : C.text }}>{q.name}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>{q.desc}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {done && !claimed && (
+                      <div onClick={() => handleClaimChest(q.id)} style={{ cursor: "pointer" }}>
+                        <img src="/slot-gold.png" alt="chest" style={{ width: 32, height: 32, objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
+                      </div>
+                    )}
+                    {claimed && <span style={{ color: C.green, fontSize: 14 }}>{"\u2713"}</span>}
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: done ? C.green : C.textMuted }}>{q.progress}/{q.target}</span>
+                  </div>
+                </div>
+                <div style={{ height: 10, borderRadius: 5, background: C.bg, border: `1px solid ${C.goldDark || '#8b6f2a'}`, overflow: "hidden", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.5)" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${done ? C.green : q.accent}90, ${done ? C.green : q.accent})`, boxShadow: `0 0 6px ${done ? C.green : q.accent}40, inset 0 1px 0 rgba(255,255,255,0.2)`, transition: "width 0.5s ease" }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* ═══ SLOT MACHINE MODAL ═══ */}
       {(slotSpinning || slotResult) && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,8,5,0.95)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ textAlign: "center", width: "100%", maxWidth: 320 }}>
             {!slotResult ? (
               <div style={{ animation: "fadeIn 0.2s ease" }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: C.textDim, letterSpacing: 1, marginBottom: 24 }}>{"> processing..."}</div>
-                <div style={{ display: "inline-block", padding: "20px 28px", border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 20 }}>
+                <div style={{ fontFamily: CINZEL, fontSize: 12, color: C.gold, letterSpacing: 2, marginBottom: 24 }}>OPENING CHEST...</div>
+                <div style={{ ...CARD, display: "inline-block", padding: "20px 28px", background: C.surface }}>
                   <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
                     {reels.map((sym, i) => (
                       <div key={i} style={{
                         width: 60, height: 72, display: "flex", alignItems: "center", justifyContent: "center",
-                        border: `1px solid ${locked[i] ? C.gold : C.border}`, borderRadius: 8,
-                        background: locked[i] ? C.goldFaint : "transparent", transition: "all 0.15s ease",
+                        border: `2px solid ${locked[i] ? C.gold : C.border}`, borderRadius: 8,
+                        background: locked[i] ? C.goldFaint : C.bg, transition: "all 0.15s ease",
                       }}>
-                        <span style={{ fontFamily: MONO, fontSize: 36, fontWeight: 700, color: locked[i] ? C.gold : C.textDim }}>{sym}</span>
+                        <span style={{ fontFamily: CINZEL, fontSize: 32, fontWeight: 700, color: locked[i] ? C.gold : C.textDim }}>{sym}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 10, color: C.textDim }}>
-                  {slotPhase === 'spinning' && "[ spinning... ]"}
-                  {slotPhase === 'locking' && `[ ${locked.filter(Boolean).length}/3 locked ]`}
-                </div>
               </div>
             ) : (
               <div style={{ animation: "fadeIn 0.5s ease" }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: C.textDim, letterSpacing: 1, marginBottom: 16 }}>{"> reward claimed"}</div>
-                <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 700, color: C.gold, marginBottom: 8 }}>+{slotResult.gold}g</div>
+                <div style={{ fontFamily: CINZEL, fontSize: 14, color: C.gold, letterSpacing: 2, marginBottom: 12 }}>REWARD</div>
+                <div style={{ fontFamily: CINZEL, fontSize: 32, fontWeight: 700, color: C.goldLight || C.gold, marginBottom: 8, textShadow: `0 0 16px ${C.gold}60` }}>+{slotResult.gold}g</div>
                 {slotResult.item ? (
-                  <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 600, color: C.green, marginBottom: 20 }}>{slotResult.item.name}</div>
+                  <div style={{ fontFamily: CINZEL, fontSize: 14, fontWeight: 600, color: C.green, marginBottom: 20 }}>{slotResult.item.name}</div>
                 ) : (
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.textDim, marginBottom: 20 }}>Gold only this time.</div>
+                  <div style={{ fontSize: 12, color: C.textDim, marginBottom: 20 }}>Gold only this time.</div>
                 )}
                 <button onClick={() => { setSlotResult(null); setClaimingQuest(null); }} style={{
-                  padding: "12px 40px", border: `1px solid ${C.gold}55`, cursor: "pointer",
-                  background: "transparent", fontFamily: MONO, color: C.gold, fontSize: 13, fontWeight: 600, letterSpacing: 1, borderRadius: 0,
-                }}>[ OK ]</button>
+                  ...CARD, padding: "10px 32px", cursor: "pointer",
+                  background: `linear-gradient(135deg, ${C.goldDark || '#8b6f2a'}, #5c4a2a)`,
+                  fontFamily: CINZEL, color: C.text, fontSize: 12, fontWeight: 700, letterSpacing: 2,
+                }}>CONTINUE</button>
               </div>
             )}
           </div>
