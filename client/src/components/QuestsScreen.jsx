@@ -72,7 +72,7 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
   return (
     <div style={{ padding: "16px 18px 120px", minHeight: "100vh", background: C.bg, animation: "fadeIn 0.3s ease", position: "relative" }}>
       {/* Space background */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 0, backgroundImage: "url(/space-bg.png)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.35, pointerEvents: "none" }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, backgroundImage: "url(/space-bg.png)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.44, pointerEvents: "none" }} />
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* ═══ HEADER ═══ */}
@@ -159,9 +159,9 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
               return (
                 <div key={i} style={{
                   padding: "14px 16px", borderRadius: 12,
-                  background: done ? C.greenFaint : `${p.accent}0d`,
+                  background: done ? C.greenFaint : `${p.accent}1a`,
                   borderLeft: `3px solid ${done ? C.green + "66" : p.accent}`,
-                  border: `1px solid ${done ? C.green + "22" : p.accent + "20"}`,
+                  border: `1px solid ${done ? C.green + "33" : p.accent + "30"}`,
                   borderLeftWidth: 3,
                   opacity: done ? 0.45 : 1,
                   transition: "all 0.3s ease",
@@ -209,8 +209,8 @@ export default function QuestsScreen({ onOpenRitual, completedRituals = {}, play
               return (
                 <div key={i} style={{
                   padding: "14px 16px", borderRadius: 12,
-                  background: done ? (claimed ? C.greenFaint : `${q.accent}0d`) : C.surface,
-                  border: `1px solid ${done ? (claimed ? C.green + "33" : q.accent + "33") : C.border}`,
+                  background: done ? (claimed ? C.greenFaint : `${q.accent}07`) : `${C.surface}cc`,
+                  border: `1px solid ${done ? (claimed ? C.green + "1a" : q.accent + "1a") : C.border}80`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <div>
